@@ -915,8 +915,22 @@
                     const isRunning = App.State.offlineInterval !== null;
                     const isDone = App.State.offlineTimer === 0 && !isRunning && App.State.offlineQuestion;
 
+                    let btnText = 'התחל שיחה';
+                    let btnIcon = 'fa-play';
+                    let btnClass = 'bg-indigo-600 text-white';
+                    
+                    if (isRunning) {
+                        btnText = 'עצור';
+                        btnIcon = 'fa-pause';
+                        btnClass = 'bg-orange-100 text-orange-600 border border-orange-200';
+                    } else if (App.State.offlineTimer < 300) {
+                        btnText = 'המשך';
+                        btnIcon = 'fa-play';
+                        btnClass = 'bg-indigo-600 text-white';
+                    }
+
                     return `
-                    <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white relative">
+                        <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white relative">
                             ${!isDone ? `
                             <div class="absolute top-5 right-5">
                                 <button onclick="App.Actions.switchIntimacyMode('qa')" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl hover:bg-red-100 active:scale-95 transition flex items-center gap-1.5 shadow-sm">
@@ -927,11 +941,11 @@
                             <i class="fa-solid fa-mug-hot text-5xl text-indigo-300 mb-6 mt-4"></i>
                             <h2 class="text-xl font-bold text-stone-800 mb-3 leading-relaxed px-4">"${App.State.offlineQuestion}"</h2>
                             
-                            <div class="text-6xl font-extrabold text-indigo-600 tracking-widest my-8 font-mono">${mins}:${secs}</div>
+                            <div id="offline-timer-display" class="text-6xl font-extrabold text-indigo-600 tracking-widest my-8 font-mono">${mins}:${secs}</div>
                             
                             ${!isDone ? `
-                                <button onclick="App.Actions.toggleOfflineTimer()" class="w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base ${isRunning ? 'bg-orange-100 text-orange-600 border border-orange-200' : 'bg-indigo-600 text-white'}" >
-                                    ${isRunning ? '<i class="fa-solid fa-pause ml-2"></i> השהה שיחה' : '<i class="fa-solid fa-play ml-2"></i> התחל שיחה'}
+                                <button id="offline-timer-btn" onclick="App.Actions.toggleOfflineTimer()" class="w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base ${btnClass}" >
+                                    <i id="offline-timer-icon" class="fa-solid ${btnIcon} ml-2"></i> <span id="offline-timer-text">${btnText}</span>
                                 </button>
                                 <p class="text-xs text-stone-400 mt-6 max-w-[250px] leading-relaxed">שימו את הטלפון בצד, הסתכלו בעיניים ודברו. כשהטיימר יסתיים תקבלו הודעה.</p>
                             ` : `
@@ -1105,7 +1119,7 @@
             },
 
             Actions: {
-              toggleSplashForm(mode) {
+                toggleSplashForm(mode) {
                     if(mode === 'join') {
                         document.getElementById('splash-register-form').classList.add('hidden');
                         document.getElementById('splash-join-form').classList.remove('hidden');
@@ -1124,7 +1138,7 @@
                     App.State.save('partnerSyncCode', code);
                     App.State.save('userName', 'אני'); 
                     App.State.save('partnerName', 'השותפ/ה');
-                    App.State.save('userPin', '0000'); // קוד ברירת מחדל עד שישנו
+                    App.State.save('userPin', '0000');
                     
                     localStorage.setItem('duet_onboarding_complete', 'true');
                     document.getElementById('splash-screen').classList.add('hidden');
@@ -1143,20 +1157,13 @@
                         </div>
                     `);
                 },
-              connectDevice() {
+
+                connectDevice() {
                     const codeInput = document.getElementById('partner-sync-input').value.trim().toUpperCase();
+                    if (!codeInput) return App.UI.showToast("נא להזין קוד סנכרון...", "info");
+                    if (codeInput === App.State.syncCode) return App.UI.showToast("זהו הקוד של המכשיר שלך 😉", "info");
+                    if (!codeInput.startsWith('DUET-')) return App.UI.showToast("קוד לא תקין. הקוד אמור להתחיל ב-DUET", "info");
                     
-                    if (!codeInput) {
-                        return App.UI.showToast("נא להזין קוד סנכרון...", "info");
-                    }
-                    if (codeInput === App.State.syncCode) {
-                        return App.UI.showToast("זהו הקוד של המכשיר שלך 😉", "info");
-                    }
-                    if (!codeInput.startsWith('DUET-')) {
-                        return App.UI.showToast("קוד לא תקין. הקוד אמור להתחיל ב-DUET", "info");
-                    }
-                    
-                    // שמירת קוד בן/בת הזוג (סימולציה של חיבור)
                     App.State.save('partnerSyncCode', codeInput);
                     document.getElementById('partner-sync-input').value = '';
                     
@@ -1171,6 +1178,7 @@
                         </div>
                     `);
                 },
+
                 completeOnboarding() {
                     const uName = document.getElementById('ob-user-name').value.trim(); 
                     const pName = document.getElementById('ob-partner-name').value.trim();
@@ -1233,9 +1241,7 @@
                     App.State.save('partnerBirthday', pBday);
                     
                     const pinInput = document.getElementById('prof-user-pin').value.trim();
-                    if (pinInput && pinInput.length !== 4) {
-                        return App.UI.showToast("הקוד הסודי חייב להכיל בדיוק 4 ספרות", "info");
-                    }
+                    if (pinInput && pinInput.length !== 4) return App.UI.showToast("הקוד הסודי חייב להכיל בדיוק 4 ספרות", "info");
                     App.State.save('userPin', pinInput);
                     
                     const uPrefs = { loveLang: document.getElementById('pref-user-love').value.trim(), coffee: document.getElementById('pref-user-coffee').value.trim(), comfort: document.getElementById('pref-user-comfort').value.trim() };
@@ -1289,10 +1295,7 @@
                     `);
                 },
 
-                executeClearData() {
-                    localStorage.clear();
-                    location.reload();
-                },
+                executeClearData() { localStorage.clear(); location.reload(); },
 
                 waterPlant() { const today = new Date().toDateString(); if (App.State.lastWateredDate === today) return App.UI.showToast("הגינה כבר הושקתה היום!", "info"); App.State.save('lastWateredDate', today); App.State.addXP(15); App.UI.showToast("השקיתם בהצלחה 🌱 +15 XP", "success"); App.Navigation.navigate('garden'); },
                 
@@ -1311,10 +1314,9 @@
                 deleteBucketItem(id) { if(!confirm("למחוק את החלום מהרשימה?")) return; let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if(list[idx].completed) App.State.subtractXP(50); list.splice(idx, 1); App.State.save('bucketList', list); App.UI.showToast("החלום נמחק", "info"); App.Navigation.navigate('garden'); } },
                 promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.Navigation.navigate('garden'); } },
                 insertWritingPrompt() { const prompts = App.Data.writingPrompts; const random = prompts[Math.floor(Math.random() * prompts.length)]; const el = document.getElementById('journal-input'); if(el) { el.value = random; el.focus(); } },
+                
                 openJournalDay(dateKey, day) { 
-                    document.querySelectorAll('.day-cell').forEach(el => {
-                        el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105');
-                    });
+                    document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105'));
                     const activeCell = document.getElementById(`day-cell-${dateKey}`);
                     if(activeCell) activeCell.classList.add('border-orange-500', 'border-2', 'shadow-md', 'scale-105');
 
@@ -1395,7 +1397,6 @@
                 },
 
                 selectJournalTag(dateKey, tagKey) { 
-                    // 1. שמירת הערכים הזמניים שהקלטת בטופס כדי שלא יתרסקו ברינדור מחדש
                     const inputEl = document.getElementById('journal-input');
                     const locEl = document.getElementById('journal-location');
                     const moodEl = document.getElementById('journal-mood');
@@ -1406,16 +1407,13 @@
                     const tempMood = moodEl ? moodEl.value : '';
                     const tempEnd = endEl ? endEl.value : '';
 
-                    // 2. עדכון התגית בתוך ה-State של האפליקציה
                     const tags = {...App.State.journalTags}; 
                     if(tags[dateKey] === tagKey) delete tags[dateKey]; 
                     else tags[dateKey] = tagKey; 
                     App.State.save('journalTags', tags); 
                     
-                    // 3. בנייה מחדש של חלון העריכה
                     this.openJournalDay(dateKey, dateKey.split('-')[2]); 
                     
-                    // 4. השתלת הערכים הזמניים חזרה לתוך השדות החדשים
                     if(document.getElementById('journal-input')) document.getElementById('journal-input').value = tempText;
                     if(document.getElementById('journal-location')) document.getElementById('journal-location').value = tempLoc;
                     if(document.getElementById('journal-mood')) document.getElementById('journal-mood').value = tempMood;
@@ -1473,68 +1471,34 @@
                         App.UI.showToast(datesToUpdate.length > 1 ? "אירוע מתמשך נשמר בהצלחה! 📝" : "היומן עודכן בהצלחה! +20 XP 📝", "success"); 
                     } else { 
                         datesToUpdate.forEach(dKey => {
-                            delete notes[dKey]; 
-                            delete highlights[dKey]; 
-                            delete tags[dKey];
-                            delete locs[dKey];
-                            delete moods[dKey];
+                            delete notes[dKey]; delete highlights[dKey]; delete tags[dKey]; delete locs[dKey]; delete moods[dKey];
                         });
                         App.UI.showToast("הרשומה הוסרה", "info"); 
                     } 
                     
-                    App.State.save('journalNotes', notes); 
-                    App.State.save('journalHighlights', highlights); 
-                    App.State.save('journalTags', tags); 
-                    App.State.save('journalLocations', locs);
-                    App.State.save('journalMoods', moods);
-                    
+                    App.State.save('journalNotes', notes); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
                     App.Navigation.navigate('journal'); 
                 },
                 deleteJournalDay(dateKey) {
                     if (!confirm("למחוק לחלוטין את הרשומה והתיוגים של יום זה? 🗑️")) return;
 
-                    const notes = {...App.State.journalNotes}; 
-                    const highlights = {...App.State.journalHighlights}; 
-                    const tags = {...App.State.journalTags};
-                    const locs = {...App.State.journalLocations};
-                    const moods = {...App.State.journalMoods};
-
-                    delete notes[dateKey]; 
-                    delete highlights[dateKey]; 
-                    delete tags[dateKey];
-                    delete locs[dateKey];
-                    delete moods[dateKey];
-
-                    App.State.save('journalNotes', notes); 
-                    App.State.save('journalHighlights', highlights); 
-                    App.State.save('journalTags', tags); 
-                    App.State.save('journalLocations', locs);
-                    App.State.save('journalMoods', moods);
+                    const notes = {...App.State.journalNotes}; const highlights = {...App.State.journalHighlights}; const tags = {...App.State.journalTags}; const locs = {...App.State.journalLocations}; const moods = {...App.State.journalMoods};
+                    delete notes[dateKey]; delete highlights[dateKey]; delete tags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
+                    App.State.save('journalNotes', notes); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
 
                     App.UI.showToast("הרשומה נמחקה בהצלחה", "info");
                     App.Navigation.navigate('journal');
                 },
                 setJournalView(mode) { App.State.save('journalViewMode', mode); App.Navigation.navigate('journal'); },
                 changeJournalMonth(delta) {
-                    let month = App.State.journalViewMonth + delta;
-                    let year = App.State.journalViewYear;
-                    if (month > 11) { month = 0; year++; }
-                    if (month < 0) { month = 11; year--; }
-                    App.State.journalViewMonth = month;
-                    App.State.journalViewYear = year;
-                    App.Navigation.navigate('journal');
+                    let month = App.State.journalViewMonth + delta; let year = App.State.journalViewYear;
+                    if (month > 11) { month = 0; year++; } if (month < 0) { month = 11; year--; }
+                    App.State.journalViewMonth = month; App.State.journalViewYear = year; App.Navigation.navigate('journal');
                 },
-                goToTodayMonth() {
-                    App.State.journalViewMonth = new Date().getMonth();
-                    App.State.journalViewYear = new Date().getFullYear();
-                    App.Navigation.navigate('journal');
-                },
+                goToTodayMonth() { App.State.journalViewMonth = new Date().getMonth(); App.State.journalViewYear = new Date().getFullYear(); App.Navigation.navigate('journal'); },
                 openMonthlyWrapUp() { App.UI.showModal(`<div class="space-y-4 text-right"><h3 class="text-xl font-bold text-stone-800 text-center">סיכום חודש זוגי 🌟</h3><p class="text-xs text-stone-500 text-center leading-relaxed">קחו 2 דקות להביט לאחור ולחגוג את השותפות שלכם.</p><div class="space-y-3 pt-2"><div><label class="text-xs font-bold text-stone-400">1. מה היה רגע השיא שלכם החודש?</label><input type="text" id="wrap-q1" class="w-full bg-stone-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-purple-400 mt-1"></div><div><label class="text-xs font-bold text-stone-400">2. על מה את/ה רוצה להגיד תודה?</label><input type="text" id="wrap-q2" class="w-full bg-stone-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-purple-400 mt-1"></div></div><button onclick="App.Actions.submitMonthlyWrapUp()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition mt-2 shadow-md">שלח סיכום וקבל +50 XP</button></div>`); },
                 submitMonthlyWrapUp() { const q1 = document.getElementById('wrap-q1').value.trim(); const q2 = document.getElementById('wrap-q2').value.trim(); if(!q1 || !q2) return App.UI.showToast("בבקשה ענו על השאלות...", "info"); App.State.save('monthlyWrapUpDone', true); App.State.addXP(50); App.UI.closeModal(); App.UI.showToast("סיכום חודשי נשמר! הגינה קיבלה +50 XP 🎉", "success"); App.Navigation.navigate('journal'); },
-                setMood(mood) {
-                    App.State.save('userMood', mood);
-                    App.Navigation.navigate('intimacy');
-                },
+                setMood(mood) { App.State.save('userMood', mood); App.Navigation.navigate('intimacy'); },
 
                 saveIntimacyAnswer() { 
                     const val = document.getElementById('answer-box').value.trim(); 
@@ -1543,16 +1507,13 @@
                     
                     const todayStr = new Date().toDateString(); 
                     
-                    // חישוב ועדכון רצף ההתמדה (Intimacy Streak)
                     let streak = App.State.intimacyStreak || 0;
                     const lastDate = localStorage.getItem('duet_last_intimacy_date') || '';
                     if (lastDate && lastDate !== todayStr) {
                         const last = new Date(lastDate); const today = new Date(todayStr);
                         const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
                         if (diffDays === 1) streak++; else if (diffDays > 1) streak = 1;
-                    } else if (!lastDate) {
-                        streak = 1;
-                    }
+                    } else if (!lastDate) { streak = 1; }
                     App.State.save('intimacyStreak', streak);
 
                     App.State.save('savedAnswer', val); 
@@ -1583,21 +1544,14 @@
                 },
 
                 switchIntimacyMode(mode) {
-                    // ביטול הטיימר במקרה שיוצאים מ"דייט על הספה" באמצע
-                    if (App.State.offlineInterval) {
-                        clearInterval(App.State.offlineInterval);
-                        App.State.offlineInterval = null;
-                        App.State.offlineTimer = 0;
-                    }
+                    if (App.State.offlineInterval) { clearInterval(App.State.offlineInterval); App.State.offlineInterval = null; App.State.offlineTimer = 0; }
                     App.State.save('intimacyMode', mode);
                     App.Navigation.navigate('intimacy');
                 },
 
                 startThisOrThatGame() {
-                    // הגרלת 10 שאלות אקראיות מתוך בנק 60 האפשרויות
                     const shuffled = [...App.Data.thisOrThatBank].sort(() => 0.5 - Math.random());
                     const selectedQuestions = shuffled.slice(0, 10);
-                    
                     App.State.save('gameQuestions', selectedQuestions);
                     App.State.save('gameAnswers', {});
                     App.State.save('intimacyMode', 'game');
@@ -1605,16 +1559,13 @@
                 },
 
                 selectGameAnswer(qIdx, choice) {
-                    const answers = {...App.State.gameAnswers};
-                    answers[qIdx] = choice;
+                    const answers = {...App.State.gameAnswers}; answers[qIdx] = choice;
                     App.State.save('gameAnswers', answers);
-                    App.Navigation.navigate('intimacy');
+                    App.Navigation.navigate('intimacy'); 
                 },
 
                 submitThisOrThatGame() {
                     const todayStr = new Date().toDateString();
-                    
-                    // עדכון הרצף גם בסיום משחק מלא
                     let streak = App.State.intimacyStreak || 0;
                     const lastDate = localStorage.getItem('duet_last_intimacy_date') || '';
                     if (lastDate && lastDate !== todayStr) {
@@ -1623,14 +1574,10 @@
                         if (diffDays === 1) streak++; else if (diffDays > 1) streak = 1;
                     } else if (!lastDate) { streak = 1; }
                     
-                    App.State.save('intimacyStreak', streak);
-                    App.State.save('lastIntimacyDate', todayStr);
-
+                    App.State.save('intimacyStreak', streak); App.State.save('lastIntimacyDate', todayStr);
                     App.State.addXP(30);
                     App.State.save('questionsAnsweredCountToday', (App.State.questionsAnsweredCountToday || 0) + 10);
-                    App.State.save('gameQuestions', []);
-                    App.State.save('gameAnswers', {});
-                    App.State.save('intimacyMode', 'qa');
+                    App.State.save('gameQuestions', []); App.State.save('gameAnswers', {}); App.State.save('intimacyMode', 'qa');
                     
                     App.Navigation.navigate('intimacy');
                     App.UI.throwPetals();
@@ -1638,35 +1585,56 @@
                 },
 
                 startOfflineMode() {
-                    // הגרלת שאלת עומק אקראית מתוך החפיסות הרגילות
                     const allDecks = Object.values(App.Data.decks);
                     const randomDeck = allDecks[Math.floor(Math.random() * allDecks.length)];
                     const randomQuestion = randomDeck.questions[Math.floor(Math.random() * randomDeck.questions.length)];
                     
                     App.State.offlineQuestion = randomQuestion;
-                    App.State.offlineTimer = 300; // 5 דקות = 300 שניות
+                    App.State.offlineTimer = 300; 
                     App.State.save('intimacyMode', 'offline');
                     App.Navigation.navigate('intimacy');
                 },
 
                 toggleOfflineTimer() {
+                    const btn = document.getElementById('offline-timer-btn');
+                    const icon = document.getElementById('offline-timer-icon');
+                    const text = document.getElementById('offline-timer-text');
+
                     if (App.State.offlineInterval) {
                         clearInterval(App.State.offlineInterval);
                         App.State.offlineInterval = null;
-                        App.Navigation.navigate('intimacy');
+                        
+                        if (btn && icon && text) {
+                            btn.className = "w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base bg-indigo-600 text-white";
+                            icon.className = "fa-solid fa-play ml-2";
+                            text.innerText = "המשך";
+                        }
                     } else {
+                        if (btn && icon && text) {
+                            btn.className = "w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base bg-orange-100 text-orange-600 border border-orange-200";
+                            icon.className = "fa-solid fa-pause ml-2";
+                            text.innerText = "עצור";
+                        }
+
                         App.State.offlineInterval = setInterval(() => {
                             if (App.State.offlineTimer > 0) {
                                 App.State.offlineTimer--;
-                                App.Navigation.navigate('intimacy'); // עדכון תצוגה
+                                
+                                const displayEl = document.getElementById('offline-timer-display');
+                                if (displayEl) {
+                                    const m = Math.floor(App.State.offlineTimer / 60).toString().padStart(2, '0');
+                                    const s = (App.State.offlineTimer % 60).toString().padStart(2, '0');
+                                    displayEl.innerText = `${m}:${s}`;
+                                }
                             } else {
                                 clearInterval(App.State.offlineInterval);
                                 App.State.offlineInterval = null;
-                                App.UI.throwPetals();
-                                App.Navigation.navigate('intimacy');
+                                if (App.State.activeTab === 'intimacy') {
+                                    App.UI.throwPetals();
+                                    App.Navigation.navigate('intimacy'); 
+                                }
                             }
                         }, 1000);
-                        App.Navigation.navigate('intimacy');
                     }
                 },
 
