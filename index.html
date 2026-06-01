@@ -232,6 +232,12 @@
                 userBirthday: localStorage.getItem('duet_user_birthday') || '',
                 partnerBirthday: localStorage.getItem('duet_partner_birthday') || '',
                 appTheme: localStorage.getItem('duet_app_theme') || 'sage',
+                intimacyStreak: parseInt(localStorage.getItem('duet_intimacy_streak')) || 0,
+                intimacyMode: localStorage.getItem('duet_intimacy_mode') || 'qa', 
+                gameQuestions: JSON.parse(localStorage.getItem('duet_game_questions')) || [],
+                gameAnswers: JSON.parse(localStorage.getItem('duet_game_answers')) || {},
+                questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_q_count_today')) || 0,
+                dailyDeepQCount: parseInt(localStorage.getItem('duet_daily_deep_q')) || 0,
 
                 init() {
                     const hasOnboarded = localStorage.getItem('duet_onboarding_complete');
@@ -369,6 +375,75 @@
                     { text: "להזמין צלם מקצועי לצילומי זוגיות בטבע 📸", category: "רומנטיקה" },
                     { text: "התנדבות יחד בעמותה למען בעלי חיים 🐕", category: "נתינה" },
                     { text: "להרכיב פאזל של 1000 חלקים יחד 🧩", category: "חוויה" }
+                ],
+                catalystsBank: [
+                    "קחו 2 דקות וספרו אחד לשנייה על זיכרון ילדות קטן שקשור לנושא שעניתם עליו.",
+                    "מה הדבר שהכי ריגש, הצחיק או הפתיע אותך בתשובה של החצי השני שלך?",
+                    "תנו אחד לשנייה חיבוק חם של 20 שניות ותגידו תודה על הכנות והשיתוף.",
+                    "איך אתם יכולים לעזור אחד לשנייה השבוע להגשים משהו קטן מתוך מה שכתבתם פה?",
+                    "שתפו במילה אחת מה ההרגשה שלכם עכשיו אחרי שקראתם את התשובות הכפולות."
+                ],
+                thisOrThatBank: [
+                    { q: "חופשה מושלמת: בטן-גב מרגיע או טיול תרמילאים הרפתקני?", a1: "בטן-גב 🏖️", a2: "תרמילאים 🎒" },
+                    { q: "ארוחה רומנטית: סושי איכותי או המבורגר מושחת?", a1: "סושי 🍣", a2: "המבורגר 🍔" },
+                    { q: "טיפוסים של: לקום מוקדם בבוקר או להישאר ערים בלילה?", a1: "בוקר ☀️", a2: "לילה 🌙" },
+                    { q: "ערב דייט מושלם: סרט בקולנוע או בינג' שמיכות בבית?", a1: "קולנוע 🎬", a2: "בית 🍿" },
+                    { q: "בגזרת המתוקים: שוקולד מריר איכותי או שוקולד לבן מתוק?", a1: "מריר 🍫", a2: "לבן 🤍" },
+                    { q: "עונת השנה המועדפת עליכם: קיץ חם או חורף גשום?", a1: "קיץ ☀️", a2: "חורף 🌧️" },
+                    { q: "חופשה בארץ: חוף הים הרגוע או נוף הררי ירוק?", a1: "ים 🌊", a2: "הרים ⛰️" },
+                    { q: "המשקה לפתוח איתו את היום: קפה חזק או תה חם?", a1: "קפה ☕", a2: "תה 🫖" },
+                    { q: "במטבח הביתי: לבשל מאפס או לשטוף את הכלים?", a1: "לבשל 🍳", a2: "לשטוף 🧼" },
+                    { q: "תכנון נסיעות: טיסה ספונטנית מחר או תכנון חודשים מראש?", a1: "ספונטני ✈️", a2: "מתוכנן 🗓️" },
+                    { q: "מוזיקה ברקע: שקטה ורגועה או קצבית ומקפיצה?", a1: "שקטה 🎵", a2: "קצבית 🎸" },
+                    { q: "בילוי מועדף בסופ\"ש: טיול בטבע או מנוחה מוחלטת בבית?", a1: "טבע 🌳", a2: "בית 🛌" },
+                    { q: "סגנון לבוש קבוע: אלגנטי ומושקע או נוח וספורטיבי?", a1: "אלגנטי 👔", a2: "נוח 👟" },
+                    { q: "כשקצת קריר בבית: להדליק מזגן על חימום או להתכרבל בשמיכה?", a1: "מזגן 🔥", a2: "שמיכה 🛋️" },
+                    { q: "מתנת יום הולדת מושלמת: משהו שימושי או חוויה משותפת?", a1: "שימושי 🎁", a2: "חוויה ✨" },
+                    { q: "בנסיעה ארוכה ברכב: להקשיב לפודקאסט מעניין או לפלייליסט שירים?", a1: "פודקאסט 🎙️", a2: "שירים 🎶" },
+                    { q: "סגנון סרטים מועדף: מתח ופעולה או קומדיה רומנטית?", a1: "מתח 🍿", a2: "קומדיה ❤️" },
+                    { q: "תוספת חובה לפיצה: זיתים ירוקים או פטריות טריות?", a1: "זיתים 🫒", a2: "פטריות 🍄" },
+                    { q: "בישול בסופ\"ש: לעקוב במדויק אחרי מתכון או לאלתר מהראש?", a1: "מתכון 📖", a2: "אלתור 👨‍🍳" },
+                    { q: "בילוי עם חברים: אירוח אצלנו בסלון או יציאה לפאב/מסעדה?", a1: "אירוח בבית 🏡", a2: "יציאה בחוץ 🍻" },
+                    { q: "קניות באינטרנט: להזמין מיד או להשאיר בעגלה שבוע?", a1: "מיד 🛒", a2: "לחכות ⏳" },
+                    { q: "כשמתעוררים בשבת: לקום ישר להכין ארוחה או להישאר במיטה?", a1: "לקום 🥞", a2: "להישאר 💤" },
+                    { q: "סגנון ריהוט לבית: מודרני ונקי או כפרי וחם?", a1: "מודרני 🤍", a2: "כפרי 🪵" },
+                    { q: "בגזרת הפירות: אבטיח קר בקיץ או תותים עם קצפת בחורף?", a1: "אבטיח 🍉", a2: "תותים 🍓" },
+                    { q: "אינטראקציה יומיומית: שיחת טלפון קולית או הודעת טקסט?", a1: "טלפון 📞", a2: "הודעה 💬" },
+                    { q: "העדפה לקינוח: עוגת שוקולד חמה או פאי פירות מרענן?", a1: "שוקולד 🍰", a2: "פירות 🥧" },
+                    { q: "חיות מחמד מועדפות: כלב נאמן או חתול עצמאי?", a1: "כלב 🐶", a2: "חתול 🐱" },
+                    { q: "על האש או פיקניק: בשרים על האש או גבינות, פוקאצ'ות ויין?", a1: "על האש 🥩", a2: "גבינות ויין 🍇" },
+                    { q: "פארק שעשועים: רכבות הרים מפחידות או מתקנים רגועים?", a1: "אקסטרים 🎢", a2: "רגוע 🎡" },
+                    { q: "נהיגה בכביש: לנהוג בעצמי או לשבת ליד הנהג וליהנות מהדרך?", a1: "לנהוג 🚗", a2: "להביט בנוף 🗺️" },
+                    { q: "תיעוד זיכרונות: לצלם המון תמונות או ליהנות מהרגע בלי טלפון?", a1: "לצלם 📸", a2: "לחוות 👁️" },
+                    { q: "טעם מועדף בחטיפים: מלוח וקראנצ'י או מתוק ונמס בפה?", a1: "מלוח 🥨", a2: "מתוק 🍬" },
+                    { q: "ניקיונות בבית: לסדר קודם את הבלאגן או להתחיל ישר משטיפה?", a1: "לסדר 🧹", a2: "לשטוף 🪣" },
+                    { q: "סוג קפה אהוב: אייס קפה קר ומפנק או קפה הפוך חם?", a1: "קר 🧊", a2: "חם ☕" },
+                    { q: "הליכה משותפת: סיבוב קצר בשכונה או מסלול הליכה ארוך בטבע?", a1: "בשכונה 🏘️", a2: "בטבע 🪵" },
+                    { q: "כשקונים מוצר חדש: לקרוא את הוראות ההפעלה או להרכיב מהראש?", a1: "הוראות 📑", a2: "אינטואיציה 🛠️" },
+                    { q: "בילוי קבוצתי: משחק קופסה מאתגר או שיחה זורמת סביב שולחן?", a1: "משחק 🎲", a2: "שיחה 🗣️" },
+                    { q: "בגזרת המאפים: קרואסון חמאה קלאסי או קרואסון שוקולד מושחת?", a1: "חמאה 🥐", a2: "שוקולד 🍫" },
+                    { q: "גלידה מועדפת: טעמי שמנת עשירים או סורבה פירות מרענן?", a1: "שמנת 🍦", a2: "סורבה 🍧" },
+                    { q: "ספרים או סרטים: לקרוא את הספר המקורי או לראות את הסרט?", a1: "ספר 📚", a2: "סרט 🎥" },
+                    { q: "בגזרת הפינוקים: עיסוי גוף מרגיע או טבילה בג'קוזי חם?", a1: "עיסוי 💆‍♂️", a2: "ג'קוזי 🛁" },
+                    { q: "קצב החיים המועדף: שקט של מושב וכפר או קצב של עיר גדולה?", a1: "כפר 🏡", a2: "עיר 🏙️" },
+                    { q: "בילוי זוגי מפתיע: הופעת סטנדאפ קורעת או הופעה מוזיקלית חיה?", a1: "סטנדאפ 🎤", a2: "מוזיקה 🎼" },
+                    { q: "לסדר את המיטה בבוקר: מיד כשקמים או להשאיר ככה עד הלילה?", a1: "מיד 🛏️", a2: "בערב 🤷‍♂️" },
+                    { q: "טעמים באוכל: חריף ופיקנטי או מתוק וחמוץ?", a1: "חריף 🌶️", a2: "מתוק-חמוץ 🍍" },
+                    { q: "בישול ביצים בבוקר: חביתה קלאסית או ביצת עין מושלמת?", a1: "חביתה 🍳", a2: "עין 🍳" },
+                    { q: "סדר יום מועדף: לו\"ז מתוכנן לפי שעות או זרימה חופשית?", a1: "לו\"ז קבוע 📅", a2: "זרימה 🌊" },
+                    { q: "כשבוחרים מסעדה: ללכת למקום מוכר ואהוב או לנסות מקום חדש?", a1: "מוכר 🍕", a2: "חדש ✨" },
+                    { q: "חלק מועדף בארוחה: המנה העיקרית הטעימה או הקינוח שאחרי?", a1: "עיקרית 🥩", a2: "קינוח 🍩" },
+                    { q: "בגזרת האקססוריז: שעון יד קלאסי או תכשיט עדין?", a1: "שעון ⌚", a2: "תכשיט 💍" },
+                    { q: "שטיפת רצפה: עם המון מים זורמים או העברה מהירה עם סמרטוט לח?", a1: "הרבה מים 🌊", a2: "סמרטוט לח 🧹" },
+                    { q: "כשמנקים את הבית: לשים מוזיקה בפול ווליום או ליהנות מהשקט?", a1: "מוזיקה 🎵", a2: "שקט 🔇" },
+                    { q: "בילוי מועדף בבריכה: לשחות מסלולים או לצוף בכיף על מזרן?", a1: "שחייה 🏊‍♂️", a2: "ציפה 🛶" },
+                    { q: "סגנון הומור מועדף: הומור ציני ומתוחכם או שטותי ומצחיק ברמות?", a1: "ציני 🧠", a2: "שטותי 🤪" },
+                    { q: "מתנה זוגית מושלמת: אלבום תמונות מודפס או שובר ליום ספא קסום?", a1: "אלבום 📖", a2: "ספא 🧖‍♂️" },
+                    { q: "בנסיעה משותפת: לפתוח חלום וליהנות מהאוויר או להדליק מזגן?", a1: "חלון פתוח 🍃", a2: "מזגן קריר ❄️" },
+                    { q: "לגו או פאזל: להרכיב פרויקט לגו תלת-ממדי או פאזל 1000 חלקים?", a1: "לגו 🧱", a2: "פאזל 🧩" },
+                    { q: "צפייה בטלוויזיה: לראות פרק אחד כל יום או לסיים עונה שלמה בלילה?", a1: "פרק ביום 📺", a2: "מרתון עונה 🍿" },
+                    { q: "בבית קפה: לשבת בפנים באוויר הממוזג או בחוץ תחת השמש?", a1: "בפנים 🏢", a2: "בחוץ ☀️" },
+                    { q: "כריך מושלם בבוקר: עם גבינה צהובה מותכת או ממרח שוקולד עשיר?", a1: "צהובה מותכת 🥪", a2: "שוקולד 🍫" }
                 ],
                 decks: {
                     deep: { name: "עומק ורגש", icon: "fa-brain-circuit", color: "bg-purple-100 text-purple-600", questions: ["מהו הרגע השבוע שבו הרגשת הכי קרוב/ה אליי?", "איזו תכונה שלי גורמת לך להרגיש בטוח/ה?", "מה גורם לך להרגיש שהקשבתי לך באמת?"] },
@@ -657,11 +732,26 @@
                 },
 
                 Intimacy() {
-                    const todayStr = new Date().toDateString();
+                  const todayStr = new Date().toDateString();
                     if (App.State.questionDate !== todayStr) {
-                        App.State.save('questionDate', todayStr); App.State.save('selectedDeck', null); App.State.save('answeredToday', false); App.State.save('savedAnswer', ''); App.State.save('userMood', '');
+                        App.State.save('questionDate', todayStr); App.State.save('selectedDeck', null); App.State.save('answeredToday', false); App.State.save('savedAnswer', ''); App.State.save('userMood', ''); App.State.save('questionsAnsweredCountToday', 0); App.State.save('dailyDeepQCount', 0);
                     }
-                    if (!App.State.selectedDeck) return this.renderDeckSelector();
+
+                    // תצוגת רצף ימים בראש העמוד
+                    const streakHTML = `
+                        <div class="flex items-center justify-between bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-100 rounded-2xl p-3.5 mb-4 text-orange-800 text-sm font-bold shadow-sm">
+                            <span>🔥 רצף ימי חיבור:</span>
+                            <span class="text-base text-orange-600 font-extrabold bg-white px-2.5 py-0.5 rounded-xl shadow-inner">${App.State.intimacyStreak || 0} ימים</span>
+                        </div>
+                    `;
+
+                    // בדיקה האם אנחנו במצב משחק "זה או זה"
+                    if (App.State.intimacyMode === 'game') {
+                        return `<div class="space-y-4">${streakHTML}${this.renderThisOrThatGame()}</div>`;
+                    }
+
+                    if (!App.State.selectedDeck) return `<div class="space-y-4">${streakHTML}${this.renderDeckSelector()}</div>`;
+                    
                     const deck = App.Data.decks[App.State.selectedDeck];
                     const question = deck.questions[App.State.questionIndex % deck.questions.length];
                     const isUnlocked = App.State.answeredToday;
@@ -689,8 +779,26 @@
 
                     const partnerMoodDisplay = isUnlocked ? `<div class="absolute top-4 left-4 text-xs font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-lg">🛋️ צריכה שקט</div>` : '';
 
+                    // בניית כרטיסיית מניע שיחה (Catalyst) לאחר חשיפת התשובות
+                    const catalystPrompt = App.Data.catalystsBank[App.State.questionIndex % App.Data.catalystsBank.length];
+                    const catalystHTML = isUnlocked ? `
+                        <div class="bg-gradient-to-br from-indigo-50 to-blue-50/60 border border-blue-100 rounded-[32px] p-5 text-right shadow-sm relative overflow-hidden">
+                            <div class="absolute -left-4 -bottom-4 text-6xl text-blue-500/10"><i class="fa-solid fa-comments"></i></div>
+                            <h4 class="text-xs font-extrabold text-blue-600 uppercase tracking-widest mb-1.5"><i class="fa-solid fa-wand-magic-sparkles ml-1"></i> מניע שיחה לסלון</h4>
+                            <p class="text-stone-700 text-xs font-bold leading-relaxed">${catalystPrompt}</p>
+                        </div>
+                    ` : '';
+
+                    // כפתור מעבר לשאלה הבאה (מופיע רק אחרי שהשאלה נפתחה)
+                    const nextQHTML = isUnlocked ? (
+                        (App.State.dailyDeepQCount || 0) < 5 ? 
+                        `<button onclick="App.Actions.nextDeepQuestion()" class="w-full bg-stone-100 text-stone-600 py-4 rounded-2xl font-bold active:scale-95 transition shadow-sm border border-stone-200 flex justify-center items-center gap-2"><i class="fa-solid fa-rotate-right"></i> שאלה הבאה (${App.State.dailyDeepQCount || 0}/5)</button>` : 
+                        `<div class="w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl font-bold text-center shadow-sm border border-emerald-100">סיימתם 5 שאלות עומק להיום! נתראה מחר 🌱</div>`
+                    ) : '';
+
                     return `
                         <div class="space-y-6">
+                            ${streakHTML}
                             <div class="glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-xl ${deck.color} flex items-center justify-center"><i class="fa-solid ${deck.icon}"></i></div><span class="text-xs font-bold text-stone-400 tracking-widest uppercase">${deck.name}</span></div><h2 class="text-xl font-bold text-stone-800 leading-relaxed">${question}</h2></div>
                             
                             <div class="glass-panel rounded-[32px] p-6 space-y-4">
@@ -712,8 +820,96 @@
                                 ${isUnlocked ? `<a href="https://wa.me/?text=${whatsappText}" target="_blank" class="w-full text-center mt-6 text-xs font-bold text-green-600 bg-green-50 py-2.5 rounded-xl border border-green-100 active:scale-95 transition"><i class="fa-brands fa-whatsapp mr-1 text-sm"></i> שלח נדנוד בוואטסאפ ל${App.State.partnerName}</a>` : ''}
                             </div>
                             
+                            ${catalystHTML}
+                            ${nextQHTML}
+                            
                             <div class="px-2"><h3 class="text-sm font-bold text-stone-400 mb-4 uppercase tracking-widest"><i class="fa-solid fa-box-archive ml-1"></i> קפסולת זמן</h3><div class="space-y-2">${historyHTML}</div></div>
                         </div>`;
+                },
+
+                renderDeckSelector() {
+                    const hasPlayedToday = (App.State.questionsAnsweredCountToday || 0) >= 10;
+
+                    // יצירת דינמיות לכפתור המשחק בהתאם למונה
+                    const gameButtonHTML = hasPlayedToday ? `
+                        <div class="category-card bg-stone-100 border border-stone-200 rounded-[32px] p-5 flex items-center gap-5 opacity-70 pointer-events-none text-stone-400">
+                            <div class="w-14 h-14 rounded-[22px] bg-stone-200 flex items-center justify-center text-2xl shadow-inner"><i class="fa-solid fa-lock text-stone-400"></i></div>
+                            <div>
+                                <h3 class="font-bold text-base text-stone-500">משחק זוגי: זה או זה?</h3>
+                                <p class="text-stone-500 text-xs font-bold mt-0.5">שיחקתם כבר 10 שאלות היום, נתראה מחר! 🔒</p>
+                            </div>
+                        </div>
+                    ` : `
+                        <div onclick="App.Actions.startThisOrThatGame()" class="category-card bg-gradient-to-br from-amber-500 to-orange-500 rounded-[32px] p-5 flex items-center gap-5 cursor-pointer transition shadow-md hover:brightness-105 text-white">
+                            <div class="w-14 h-14 rounded-[22px] bg-white/20 flex items-center justify-center text-3xl shadow-inner"><i class="fa-solid fa-shuffle"></i></div>
+                            <div>
+                                <h3 class="font-extrabold text-lg">משחק זוגי: זה או זה? ⚡</h3>
+                                <p class="text-white/80 text-xs">10 שאלות בחירה מהירות שיבדקו מי מכיר את מי</p>
+                            </div>
+                        </div>
+                    `;
+
+                    return `
+                        <div class="space-y-4">
+                            <div class="text-center py-2">
+                                <h2 class="text-2xl font-bold text-stone-800">בואו נצלול עמוק...</h2>
+                                <p class="text-stone-500 text-sm">בחרו חפיסת שאלות להיום או עברו למשחק מהיר</p>
+                            </div>
+
+                            ${gameButtonHTML}
+
+                            <div class="grid grid-cols-1 gap-3 pt-2">
+                                ${Object.entries(App.Data.decks).map(([key, deck]) => `
+                                    <div onclick="App.Actions.selectDeck('${key}')" class="category-card glass-panel rounded-[32px] p-5 flex items-center gap-5 border border-white cursor-pointer hover:bg-white transition shadow-sm">
+                                        <div class="w-14 h-14 rounded-[22px] ${deck.color} flex items-center justify-center text-2xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
+                                        <div>
+                                            <h3 class="font-bold text-base text-stone-800">${deck.name}</h3>
+                                            <p class="text-xs text-stone-400">שאלות עומק וקרבה בנושא ${deck.name.toLowerCase()}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>`;
+                },
+
+                renderThisOrThatGame() {
+                    let itemsHTML = '';
+                    App.State.gameQuestions.forEach((item, idx) => {
+                        const currentSelection = App.State.gameAnswers[idx];
+                        itemsHTML += `
+                            <div class="bg-white/80 border border-stone-100 rounded-3xl p-5 shadow-sm space-y-3">
+                                <div class="text-xs font-bold text-stone-400">שאלה ${idx + 1} מתוך 10</div>
+                                <h4 class="font-bold text-stone-800 text-base leading-relaxed">${item.q}</h4>
+                                <div class="flex gap-2.5 pt-1">
+                                    <button onclick="App.Actions.selectGameAnswer(${idx}, 1)" class="flex-1 py-3 px-2 rounded-2xl border font-bold text-xs transition active:scale-95 ${currentSelection === 1 ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}" >${item.a1}</button>
+                                    <button onclick="App.Actions.selectGameAnswer(${idx}, 2)" class="flex-1 py-3 px-2 rounded-2xl border font-bold text-xs transition active:scale-95 ${currentSelection === 2 ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-stone-50 border-stone-100 text-stone-600 hover:bg-stone-100'}" >${item.a2}</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    const totalAnswered = Object.keys(App.State.gameAnswers).length;
+                    const isFinishable = totalAnswered === 10;
+
+                    return `
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center bg-white p-3 rounded-2xl border shadow-sm">
+                                <div class="text-right">
+                                    <h3 class="font-extrabold text-stone-800 text-sm">משחק זה או זה</h3>
+                                    <p class="text-[10px] font-bold text-orange-400">עניתם על ${totalAnswered}/10 שאלות</p>
+                                </div>
+                                <button onclick="App.Actions.switchIntimacyMode('qa')" class="text-xs font-bold bg-stone-100 text-stone-600 py-1.5 px-3 rounded-xl hover:bg-stone-200">צא מהמשחק</button>
+                            </div>
+                            
+                            <div class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
+                                ${itemsHTML}
+                            </div>
+
+                            <button onclick="App.Actions.submitThisOrThatGame()" ${!isFinishable ? 'disabled' : ''} class="w-full py-4 rounded-2xl font-bold transition shadow-md text-base ${isFinishable ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white active:scale-95' : 'bg-stone-200 text-stone-400 pointer-events-none'}" >
+                                ${isFinishable ? '🎉 סיימנו! שלח תשובות וקבל +30 XP' : 'ענו על כל השאלות כדי לסיים'}
+                            </button>
+                        </div>
+                    `;
                 },
 
                 renderDeckSelector() {
@@ -861,6 +1057,12 @@
                                 </div>
                             </div>
 
+                            <div class="glass-panel rounded-[32px] p-6 space-y-3 text-right">
+                                <h3 class="text-sm font-bold text-stone-700 uppercase tracking-wider"><i class="fa-solid fa-lock text-orange-400 ml-1"></i> אבטחה וקוד גישה</h3>
+                                <p class="text-xs text-stone-500">הגדירו קוד סודי בן 4 ספרות לנעילת האפליקציה (השאירו ריק כדי לבטל את הנעילה לחלוטין):</p>
+                                <input type="password" id="prof-user-pin" value="${App.State.userPin || ''}" placeholder="••••" maxlength="4" dir="ltr" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="w-full bg-white border border-stone-200 rounded-xl py-3 text-center text-lg font-bold text-stone-800 focus:border-orange-400 outline-none tracking-[0.3em] shadow-sm">
+                            </div>
+
                             <div class="glass-panel rounded-[32px] p-6 border-stone-200 border-2 bg-stone-50/50 text-center space-y-3">
                                 <h3 class="text-sm font-bold text-stone-700 mb-2">ניהול נתונים</h3>
                                 <button onclick="App.Actions.exportData()" class="w-full bg-white border border-stone-200 text-stone-700 py-3 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center justify-center gap-2">
@@ -1002,6 +1204,12 @@
                     App.State.save('userBirthday', uBday);
                     App.State.save('partnerBirthday', pBday);
                     
+                    const pinInput = document.getElementById('prof-user-pin').value.trim();
+                    if (pinInput && pinInput.length !== 4) {
+                        return App.UI.showToast("הקוד הסודי חייב להכיל בדיוק 4 ספרות", "info");
+                    }
+                    App.State.save('userPin', pinInput);
+                    
                     const uPrefs = { loveLang: document.getElementById('pref-user-love').value.trim(), coffee: document.getElementById('pref-user-coffee').value.trim(), comfort: document.getElementById('pref-user-comfort').value.trim() };
                     const pPrefs = { loveLang: document.getElementById('pref-partner-love').value.trim(), coffee: document.getElementById('pref-partner-coffee').value.trim(), comfort: document.getElementById('pref-partner-comfort').value.trim() };
                     App.State.save('userPrefs', uPrefs); App.State.save('partnerPrefs', pPrefs);
@@ -1102,6 +1310,7 @@
                     tagsHTML += `</div>`; 
 
                     const formattedDateValue = `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                    const hasExistingNote = App.State.journalNotes[dateKey];
 
                     panel.innerHTML = `<div class="space-y-4">
                         <div class="flex justify-between items-center border-b border-stone-100 pb-2">
@@ -1149,12 +1358,41 @@
                             ${!isFuture ? `<button onclick="App.Actions.insertWritingPrompt()" class="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-bold transition"><i class="fa-solid fa-wand-magic-sparkles"></i> רעיון כתיבה</button>` : ''}
                         </div>
                         
-                        <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="w-full bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">${isFuture ? 'שמור תכנון' : 'שמור ביומן'}</button>
+                        <div class="flex gap-2">
+                            ${hasExistingNote ? `<button onclick="App.Actions.deleteJournalDay('${dateKey}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 rounded-xl text-sm font-bold transition-all border border-red-100 active:scale-95 shadow-sm" title="מחק רשומה"><i class="fa-regular fa-trash-can"></i></button>` : ''}
+                            <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="flex-1 bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">${isFuture ? 'שמור תכנון' : 'שמור ביומן'}</button>
+                        </div>
                     </div>`; 
                     document.getElementById('journal-input').focus(); 
                 },
 
-                selectJournalTag(dateKey, tagKey) { const tags = {...App.State.journalTags}; if(tags[dateKey] === tagKey) delete tags[dateKey]; else tags[dateKey] = tagKey; App.State.save('journalTags', tags); this.openJournalDay(dateKey, dateKey.split('-')[2]); },
+                selectJournalTag(dateKey, tagKey) { 
+                    // 1. שמירת הערכים הזמניים שהקלטת בטופס כדי שלא יתרסקו ברינדור מחדש
+                    const inputEl = document.getElementById('journal-input');
+                    const locEl = document.getElementById('journal-location');
+                    const moodEl = document.getElementById('journal-mood');
+                    const endEl = document.getElementById('journal-end-date');
+                    
+                    const tempText = inputEl ? inputEl.value : '';
+                    const tempLoc = locEl ? locEl.value : '';
+                    const tempMood = moodEl ? moodEl.value : '';
+                    const tempEnd = endEl ? endEl.value : '';
+
+                    // 2. עדכון התגית בתוך ה-State של האפליקציה
+                    const tags = {...App.State.journalTags}; 
+                    if(tags[dateKey] === tagKey) delete tags[dateKey]; 
+                    else tags[dateKey] = tagKey; 
+                    App.State.save('journalTags', tags); 
+                    
+                    // 3. בנייה מחדש של חלון העריכה
+                    this.openJournalDay(dateKey, dateKey.split('-')[2]); 
+                    
+                    // 4. השתלת הערכים הזמניים חזרה לתוך השדות החדשים
+                    if(document.getElementById('journal-input')) document.getElementById('journal-input').value = tempText;
+                    if(document.getElementById('journal-location')) document.getElementById('journal-location').value = tempLoc;
+                    if(document.getElementById('journal-mood')) document.getElementById('journal-mood').value = tempMood;
+                    if(document.getElementById('journal-end-date')) document.getElementById('journal-end-date').value = tempEnd;
+                },
                 
                 setJournalFilter(filter) { App.State.save('journalFilter', filter); App.Navigation.navigate('journal'); },
 
@@ -1224,6 +1462,30 @@
                     
                     App.Navigation.navigate('journal'); 
                 },
+                deleteJournalDay(dateKey) {
+                    if (!confirm("למחוק לחלוטין את הרשומה והתיוגים של יום זה? 🗑️")) return;
+
+                    const notes = {...App.State.journalNotes}; 
+                    const highlights = {...App.State.journalHighlights}; 
+                    const tags = {...App.State.journalTags};
+                    const locs = {...App.State.journalLocations};
+                    const moods = {...App.State.journalMoods};
+
+                    delete notes[dateKey]; 
+                    delete highlights[dateKey]; 
+                    delete tags[dateKey];
+                    delete locs[dateKey];
+                    delete moods[dateKey];
+
+                    App.State.save('journalNotes', notes); 
+                    App.State.save('journalHighlights', highlights); 
+                    App.State.save('journalTags', tags); 
+                    App.State.save('journalLocations', locs);
+                    App.State.save('journalMoods', moods);
+
+                    App.UI.showToast("הרשומה נמחקה בהצלחה", "info");
+                    App.Navigation.navigate('journal');
+                },
                 setJournalView(mode) { App.State.save('journalViewMode', mode); App.Navigation.navigate('journal'); },
                 changeJournalMonth(delta) {
                     let month = App.State.journalViewMonth + delta;
@@ -1252,6 +1514,19 @@
                     if (!App.State.userMood) return App.UI.showToast("רגע, סמן קודם מה מצב האנרגיה שלך", "info");
                     
                     const todayStr = new Date().toDateString(); 
+                    
+                    // חישוב ועדכון רצף ההתמדה (Intimacy Streak)
+                    let streak = App.State.intimacyStreak || 0;
+                    const lastDate = localStorage.getItem('duet_last_intimacy_date') || '';
+                    if (lastDate && lastDate !== todayStr) {
+                        const last = new Date(lastDate); const today = new Date(todayStr);
+                        const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
+                        if (diffDays === 1) streak++; else if (diffDays > 1) streak = 1;
+                    } else if (!lastDate) {
+                        streak = 1;
+                    }
+                    App.State.save('intimacyStreak', streak);
+
                     App.State.save('savedAnswer', val); 
                     App.State.save('answeredToday', true); 
                     App.State.save('lastIntimacyDate', todayStr); 
@@ -1264,10 +1539,69 @@
                     history.unshift({ date: new Date().toLocaleDateString('he-IL'), question: question, userAnswer: val, partnerAnswer: partner, isFavorite: false }); 
                     App.State.save('intimacyHistory', history); 
                     App.State.addXP(30); 
+                    App.State.save('dailyDeepQCount', (App.State.dailyDeepQCount || 0) + 1);
                     
                     App.Navigation.navigate('intimacy');
                     App.UI.throwPetals();
                     App.UI.showToast(`חיבור נוצר! הגינה קיבלה +30 XP 🌱`, "success"); 
+                },
+
+                nextDeepQuestion() {
+                    App.State.save('answeredToday', false);
+                    App.State.save('savedAnswer', '');
+                    App.State.save('userMood', '');
+                    App.State.save('questionIndex', App.State.questionIndex + 1);
+                    App.Navigation.navigate('intimacy');
+                },
+
+                switchIntimacyMode(mode) {
+                    App.State.save('intimacyMode', mode);
+                    App.Navigation.navigate('intimacy');
+                },
+
+                startThisOrThatGame() {
+                    // הגרלת 10 שאלות אקראיות מתוך בנק 60 האפשרויות
+                    const shuffled = [...App.Data.thisOrThatBank].sort(() => 0.5 - Math.random());
+                    const selectedQuestions = shuffled.slice(0, 10);
+                    
+                    App.State.save('gameQuestions', selectedQuestions);
+                    App.State.save('gameAnswers', {});
+                    App.State.save('intimacyMode', 'game');
+                    App.Navigation.navigate('intimacy');
+                },
+
+                selectGameAnswer(qIdx, choice) {
+                    const answers = {...App.State.gameAnswers};
+                    answers[qIdx] = choice;
+                    App.State.save('gameAnswers', answers);
+                    App.Navigation.navigate('intimacy');
+                },
+
+                submitThisOrThatGame() {
+                    const todayStr = new Date().toDateString();
+                    
+                    // עדכון הרצף גם בסיום משחק מלא
+                    let streak = App.State.intimacyStreak || 0;
+                    const lastDate = localStorage.getItem('duet_last_intimacy_date') || '';
+                    if (lastDate && lastDate !== todayStr) {
+                        const last = new Date(lastDate); const today = new Date(todayStr);
+                        const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
+                        if (diffDays === 1) streak++; else if (diffDays > 1) streak = 1;
+                    } else if (!lastDate) {
+                        streak = 1;
+                    }
+                    App.State.save('intimacyStreak', streak);
+                    App.State.save('lastIntimacyDate', todayStr);
+
+                    App.State.addXP(30);
+                    App.State.save('questionsAnsweredCountToday', (App.State.questionsAnsweredCountToday || 0) + 10);
+                    App.State.save('gameQuestions', []);
+                    App.State.save('gameAnswers', {});
+                    App.State.save('intimacyMode', 'qa');
+                    
+                    App.Navigation.navigate('intimacy');
+                    App.UI.throwPetals();
+                    App.UI.showToast("המשחק הושלם בהצלחה! +30 XP לגינה 🎉", "success");
                 },
                 selectDeck(deckKey) { App.State.save('selectedDeck', deckKey); App.State.save('questionIndex', Math.floor(Math.random() * 3)); App.Navigation.navigate('intimacy'); },
                 toggleFavorite(index) { const history = [...App.State.intimacyHistory]; history[index].isFavorite = !history[index].isFavorite; App.State.save('intimacyHistory', history); App.Navigation.navigate('intimacy'); }
