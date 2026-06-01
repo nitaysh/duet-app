@@ -777,7 +777,18 @@
                     return `
                         <div class="space-y-6">
                             ${streakHTML}
-                            <div class="glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-xl ${deck.color} flex items-center justify-center"><i class="fa-solid ${deck.icon}"></i></div><span class="text-xs font-bold text-stone-400 tracking-widest uppercase">${deck.name}</span></div><h2 class="text-xl font-bold text-stone-800 leading-relaxed">${question}</h2></div>
+                            <div class="glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm">
+                                <div class="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl ${deck.color} flex items-center justify-center shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
+                                        <span class="text-xs font-bold text-stone-500 tracking-widest uppercase">${deck.name}</span>
+                                    </div>
+                                    <button onclick="App.Actions.exitDeck()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl hover:bg-red-100 active:scale-95 transition flex items-center gap-1.5 shadow-sm">
+                                        <i class="fa-solid fa-arrow-right"></i> יציאה
+                                    </button>
+                                </div>
+                                <h2 class="text-xl font-bold text-stone-800 leading-relaxed">${question}</h2>
+                            </div>
                             
                             <div class="glass-panel rounded-[32px] p-6 space-y-4">
                                 ${moodHTML}
@@ -905,8 +916,13 @@
                     const isDone = App.State.offlineTimer === 0 && !isRunning && App.State.offlineQuestion;
 
                     return `
-                        <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white relative">
-                            ${!isDone ? `<button onclick="App.Actions.switchIntimacyMode('qa')" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-white rounded-full text-stone-400 hover:text-red-500 shadow-sm border border-stone-100 transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                    <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white relative">
+                            ${!isDone ? `
+                            <div class="absolute top-5 right-5">
+                                <button onclick="App.Actions.switchIntimacyMode('qa')" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl hover:bg-red-100 active:scale-95 transition flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-arrow-right"></i> יציאה
+                                </button>
+                            </div>` : ''}
                             
                             <i class="fa-solid fa-mug-hot text-5xl text-indigo-300 mb-6 mt-4"></i>
                             <h2 class="text-xl font-bold text-stone-800 mb-3 leading-relaxed px-4">"${App.State.offlineQuestion}"</h2>
@@ -1661,6 +1677,7 @@
                 },
 
                 selectDeck(deckKey) { App.State.save('selectedDeck', deckKey); App.State.save('questionIndex', Math.floor(Math.random() * 3)); App.Navigation.navigate('intimacy'); },
+                exitDeck() { App.State.save('selectedDeck', null); App.Navigation.navigate('intimacy'); },
                 toggleFavorite(index) { const history = [...App.State.intimacyHistory]; history[index].isFavorite = !history[index].isFavorite; App.State.save('intimacyHistory', history); App.Navigation.navigate('intimacy'); }
             },
 
