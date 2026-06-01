@@ -29,35 +29,7 @@
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .reveal-animation {
-    animation: revealEffect 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes revealEffect {
-    0% { filter: blur(16px); opacity: 0.2; transform: scale(0.95); }
-    40% { filter: blur(4px); opacity: 0.8; transform: scale(1.02); }
-    100% { filter: blur(0); opacity: 1; transform: scale(1); }
-}
-
-.petal {
-    position: fixed;
-    z-index: 9999;
-    pointer-events: none;
-    border-radius: 50% 0 50% 50%; /* צורה שמזכירה עלה/עלה כותרת */
-}
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
         
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .category-card:active { transform: scale(0.92); }
         .reveal-animation {
             animation: revealEffect 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -74,6 +46,19 @@
             pointer-events: none;
             border-radius: 50% 0 50% 50%;
         }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .category-card:active { transform: scale(0.92); }
     </style>
 </head>
 <body class="h-screen w-full flex flex-col overflow-hidden select-none relative">
@@ -162,7 +147,7 @@
                 </div>
             </div>
 
-        </div>
+          </div>
       </div>
   </div>
 
@@ -222,7 +207,6 @@
                 journalViewYear: null, journalViewMonth: null,
                 quests: [], questsDate: '',
                 journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all',
-                journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all',
                 userPrefs: { loveLang: '', coffee: '', comfort: '' },
                 partnerPrefs: { loveLang: '', coffee: '', comfort: '' },
                 userMood: localStorage.getItem('duet_user_mood') || '',
@@ -238,6 +222,7 @@
                 gameAnswers: JSON.parse(localStorage.getItem('duet_game_answers')) || {},
                 questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_q_count_today')) || 0,
                 dailyDeepQCount: parseInt(localStorage.getItem('duet_daily_deep_q')) || 0,
+                offlineTimer: 0, offlineInterval: null, offlineQuestion: '',
 
                 init() {
                     const hasOnboarded = localStorage.getItem('duet_onboarding_complete');
@@ -259,7 +244,6 @@
                         if(lockScreen) lockScreen.classList.add('hidden');
                     } else { 
                         splashScreen.classList.add('hidden'); 
-                        
                         if (this.userPin) {
                             appContainer.classList.add('hidden');
                             if(lockScreen) lockScreen.classList.remove('hidden');
@@ -289,11 +273,11 @@
                     this.journalViewMode = localStorage.getItem('duet_journal_view_mode') || 'calendar';
                     this.journalTags = JSON.parse(localStorage.getItem('duet_journal_tags')) || {};
                     this.journalHighlights = JSON.parse(localStorage.getItem('duet_journal_highlights')) || {};
-                this.monthlyWrapUpDone = localStorage.getItem('duet_monthly_wrap_up_done') === 'true';
-                this.journalLocations = JSON.parse(localStorage.getItem('duet_journal_locations')) || {};
-                this.journalMoods = JSON.parse(localStorage.getItem('duet_journal_moods')) || {};
-                this.customTags = JSON.parse(localStorage.getItem('duet_custom_tags')) || { sushi: { name: "סושי", icon: "fa-bowl-rice", color: "text-orange-500 bg-orange-50" }, study: { name: "זמן לימוד", icon: "fa-book-open-reader", color: "text-indigo-500 bg-indigo-50" } };
-                this.journalFilter = 'all';
+                    this.monthlyWrapUpDone = localStorage.getItem('duet_monthly_wrap_up_done') === 'true';
+                    this.journalLocations = JSON.parse(localStorage.getItem('duet_journal_locations')) || {};
+                    this.journalMoods = JSON.parse(localStorage.getItem('duet_journal_moods')) || {};
+                    this.customTags = JSON.parse(localStorage.getItem('duet_custom_tags')) || { sushi: { name: "סושי", icon: "fa-bowl-rice", color: "text-orange-500 bg-orange-50" }, study: { name: "זמן לימוד", icon: "fa-book-open-reader", color: "text-indigo-500 bg-indigo-50" } };
+                    this.journalFilter = localStorage.getItem('duet_journal_filter') || 'all';
 
                     this.journalViewYear = new Date().getFullYear();
                     this.journalViewMonth = new Date().getMonth();
@@ -340,12 +324,8 @@
                 decorations: { 1: "אדמה פורייה 🌱", 2: "ספסל עץ מוצל 🪑", 3: "תאורת פיות 🌟", 4: "מזרקת מים ⛲", 5: "טאבון אבן 🍕", 6: "נדנדת גינה 🪀", 7: "עץ אהבה גדול 🌳" },
                 evolutionNames: { 1: "נבט צעיר", 2: "ערוגה מתפתחת", 3: "בוסתן מלבלב", 4: "גן מפואר" },
                 questsBank: [
-                    "שתו קפה יחד בלי מסכים (10 דק')",
-                    "תנו חיבוק ארוך של 20 שניות",
-                    "שלחו הודעת טקסט מפרגנת באמצע היום",
-                    "תכננו משהו קטן וכיפי לסופ״ש",
-                    "החמיאו אחד לשנייה על משהו ספציפי",
-                    "שימו שיר ששניכם אוהבים ורקדו בסלון"
+                    "שתו קפה יחד בלי מסכים (10 דק')", "תנו חיבוק ארוך של 20 שניות", "שלחו הודעת טקסט מפרגנת באמצע היום",
+                    "תכננו משהו קטן וכיפי לסופ״ש", "החמיאו אחד לשנייה על משהו ספציפי", "שימו שיר ששניכם אוהבים ורקדו בסלון"
                 ],
                 journalTags: {
                     date: { name: "דייט רומנטי", icon: "fa-glass-cheers", color: "text-rose-500 bg-rose-50" },
@@ -732,12 +712,11 @@
                 },
 
                 Intimacy() {
-                  const todayStr = new Date().toDateString();
+                    const todayStr = new Date().toDateString();
                     if (App.State.questionDate !== todayStr) {
                         App.State.save('questionDate', todayStr); App.State.save('selectedDeck', null); App.State.save('answeredToday', false); App.State.save('savedAnswer', ''); App.State.save('userMood', ''); App.State.save('questionsAnsweredCountToday', 0); App.State.save('dailyDeepQCount', 0);
                     }
 
-                    // תצוגת רצף ימים בראש העמוד
                     const streakHTML = `
                         <div class="flex items-center justify-between bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-100 rounded-2xl p-3.5 mb-4 text-orange-800 text-sm font-bold shadow-sm">
                             <span>🔥 רצף ימי חיבור:</span>
@@ -745,10 +724,11 @@
                         </div>
                     `;
 
-                    // בדיקה האם אנחנו במצב משחק "זה או זה"
-                    if (App.State.intimacyMode === 'game') {
-                        return `<div class="space-y-4">${streakHTML}${this.renderThisOrThatGame()}</div>`;
-                    }
+                    // מצב משחק זה או זה
+                    if (App.State.intimacyMode === 'game') return `<div class="space-y-4">${streakHTML}${this.renderThisOrThatGame()}</div>`;
+                    
+                    // מצב דייט על הספה (טיימר)
+                    if (App.State.intimacyMode === 'offline') return `<div class="space-y-4">${streakHTML}${this.renderOfflineMode()}</div>`;
 
                     if (!App.State.selectedDeck) return `<div class="space-y-4">${streakHTML}${this.renderDeckSelector()}</div>`;
                     
@@ -779,7 +759,6 @@
 
                     const partnerMoodDisplay = isUnlocked ? `<div class="absolute top-4 left-4 text-xs font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-lg">🛋️ צריכה שקט</div>` : '';
 
-                    // בניית כרטיסיית מניע שיחה (Catalyst) לאחר חשיפת התשובות
                     const catalystPrompt = App.Data.catalystsBank[App.State.questionIndex % App.Data.catalystsBank.length];
                     const catalystHTML = isUnlocked ? `
                         <div class="bg-gradient-to-br from-indigo-50 to-blue-50/60 border border-blue-100 rounded-[32px] p-5 text-right shadow-sm relative overflow-hidden">
@@ -789,11 +768,10 @@
                         </div>
                     ` : '';
 
-                    // כפתור מעבר לשאלה הבאה (מופיע רק אחרי שהשאלה נפתחה)
                     const nextQHTML = isUnlocked ? (
                         (App.State.dailyDeepQCount || 0) < 5 ? 
-                        `<button onclick="App.Actions.nextDeepQuestion()" class="w-full bg-stone-100 text-stone-600 py-4 rounded-2xl font-bold active:scale-95 transition shadow-sm border border-stone-200 flex justify-center items-center gap-2"><i class="fa-solid fa-rotate-right"></i> שאלה הבאה (${App.State.dailyDeepQCount || 0}/5)</button>` : 
-                        `<div class="w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl font-bold text-center shadow-sm border border-emerald-100">סיימתם 5 שאלות עומק להיום! נתראה מחר 🌱</div>`
+                        `<button onclick="App.Actions.nextDeepQuestion()" class="w-full bg-stone-100 text-stone-600 py-4 rounded-2xl font-bold active:scale-95 transition shadow-sm border border-stone-200 flex justify-center items-center gap-2 mt-4"><i class="fa-solid fa-rotate-right"></i> שאלה הבאה (${App.State.dailyDeepQCount || 0}/5)</button>` : 
+                        `<div class="w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl font-bold text-center shadow-sm border border-emerald-100 mt-4">סיימתם 5 שאלות עומק להיום! נתראה מחר 🌱</div>`
                     ) : '';
 
                     return `
@@ -830,21 +808,20 @@
                 renderDeckSelector() {
                     const hasPlayedToday = (App.State.questionsAnsweredCountToday || 0) >= 10;
 
-                    // יצירת דינמיות לכפתור המשחק בהתאם למונה
                     const gameButtonHTML = hasPlayedToday ? `
-                        <div class="category-card bg-stone-100 border border-stone-200 rounded-[32px] p-5 flex items-center gap-5 opacity-70 pointer-events-none text-stone-400">
+                        <div class="category-card bg-stone-100 border border-stone-200 rounded-[32px] p-5 flex items-center gap-5 opacity-70 pointer-events-none text-stone-400 mb-3">
                             <div class="w-14 h-14 rounded-[22px] bg-stone-200 flex items-center justify-center text-2xl shadow-inner"><i class="fa-solid fa-lock text-stone-400"></i></div>
                             <div>
                                 <h3 class="font-bold text-base text-stone-500">משחק זוגי: זה או זה?</h3>
-                                <p class="text-stone-500 text-xs font-bold mt-0.5">שיחקתם כבר 10 שאלות היום, נתראה מחר! 🔒</p>
+                                <p class="text-stone-500 text-[11px] font-bold mt-0.5">שיחקתם כבר 10 שאלות היום! 🔒</p>
                             </div>
                         </div>
                     ` : `
-                        <div onclick="App.Actions.startThisOrThatGame()" class="category-card bg-gradient-to-br from-amber-500 to-orange-500 rounded-[32px] p-5 flex items-center gap-5 cursor-pointer transition shadow-md hover:brightness-105 text-white">
+                        <div onclick="App.Actions.startThisOrThatGame()" class="category-card bg-gradient-to-br from-amber-500 to-orange-500 rounded-[32px] p-5 flex items-center gap-5 cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3">
                             <div class="w-14 h-14 rounded-[22px] bg-white/20 flex items-center justify-center text-3xl shadow-inner"><i class="fa-solid fa-shuffle"></i></div>
                             <div>
-                                <h3 class="font-extrabold text-lg">משחק זוגי: זה או זה? ⚡</h3>
-                                <p class="text-white/80 text-xs">10 שאלות בחירה מהירות שיבדקו מי מכיר את מי</p>
+                                <h3 class="font-extrabold text-lg">זה או זה? ⚡</h3>
+                                <p class="text-white/90 text-xs">משחק מהיר לבדוק מי מכיר את מי</p>
                             </div>
                         </div>
                     `;
@@ -853,12 +830,19 @@
                         <div class="space-y-4">
                             <div class="text-center py-2">
                                 <h2 class="text-2xl font-bold text-stone-800">בואו נצלול עמוק...</h2>
-                                <p class="text-stone-500 text-sm">בחרו חפיסת שאלות להיום או עברו למשחק מהיר</p>
+                                <p class="text-stone-500 text-sm">בחרו פעילות או חפיסת שאלות להיום</p>
                             </div>
 
-                            ${gameButtonHTML}
+                            <div class="grid grid-cols-2 gap-3 mb-2">
+                                ${gameButtonHTML}
+                                <div onclick="App.Actions.startOfflineMode()" class="category-card bg-gradient-to-br from-indigo-500 to-purple-500 rounded-[32px] p-5 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3">
+                                    <i class="fa-solid fa-mug-hot text-3xl mb-2"></i>
+                                    <h3 class="font-extrabold text-sm">דייט על הספה</h3>
+                                    <p class="text-white/80 text-[10px] mt-1">טיימר 5 דקות לשיחה בלי מסכים</p>
+                                </div>
+                            </div>
 
-                            <div class="grid grid-cols-1 gap-3 pt-2">
+                            <div class="grid grid-cols-1 gap-3">
                                 ${Object.entries(App.Data.decks).map(([key, deck]) => `
                                     <div onclick="App.Actions.selectDeck('${key}')" class="category-card glass-panel rounded-[32px] p-5 flex items-center gap-5 border border-white cursor-pointer hover:bg-white transition shadow-sm">
                                         <div class="w-14 h-14 rounded-[22px] ${deck.color} flex items-center justify-center text-2xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
@@ -912,8 +896,32 @@
                     `;
                 },
 
-                renderDeckSelector() {
-                    return `<div class="space-y-6"><div class="text-center py-4"><h2 class="text-2xl font-bold text-stone-800">בואו נצלול עמוק...</h2><p class="text-stone-500">בחרו חפיסה להיום</p></div><div class="grid grid-cols-1 gap-4">${Object.entries(App.Data.decks).map(([key, deck]) => `<div onclick="App.Actions.selectDeck('${key}')" class="category-card glass-panel rounded-[32px] p-6 flex items-center gap-5 border border-white cursor-pointer hover:bg-white transition shadow-sm"><div class="w-16 h-16 rounded-[24px] ${deck.color} flex items-center justify-center text-3xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div><div><h3 class="font-bold text-xl text-stone-800">${deck.name}</h3><p class="text-xs text-stone-400">שאלות על ${deck.name.toLowerCase()}</p></div></div>`).join('')}</div></div>`;
+                renderOfflineMode() {
+                    const mins = Math.floor(App.State.offlineTimer / 60).toString().padStart(2, '0');
+                    const secs = (App.State.offlineTimer % 60).toString().padStart(2, '0');
+                    const isRunning = App.State.offlineInterval !== null;
+                    const isDone = App.State.offlineTimer === 0 && !isRunning && App.State.offlineQuestion;
+
+                    return `
+                        <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white">
+                            <i class="fa-solid fa-mug-hot text-5xl text-indigo-300 mb-6"></i>
+                            <h2 class="text-xl font-bold text-stone-800 mb-3 leading-relaxed px-4">"${App.State.offlineQuestion}"</h2>
+                            
+                            <div class="text-6xl font-extrabold text-indigo-600 tracking-widest my-8 font-mono">${mins}:${secs}</div>
+                            
+                            ${!isDone ? `
+                                <button onclick="App.Actions.toggleOfflineTimer()" class="w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base ${isRunning ? 'bg-orange-100 text-orange-600 border border-orange-200' : 'bg-indigo-600 text-white'}" >
+                                    ${isRunning ? '<i class="fa-solid fa-pause ml-2"></i> השהה שיחה' : '<i class="fa-solid fa-play ml-2"></i> התחל שיחה'}
+                                </button>
+                                <p class="text-xs text-stone-400 mt-6 max-w-[250px] leading-relaxed">שימו את הטלפון בצד, הסתכלו בעיניים ודברו. כשהטיימר יסתיים תקבלו הודעה.</p>
+                            ` : `
+                                <div class="w-full space-y-3">
+                                    <div class="bg-emerald-50 text-emerald-600 border border-emerald-200 p-4 rounded-2xl mb-4 font-bold">איזה כיף שיש לכם זמן איכות! +50 XP</div>
+                                    <button onclick="App.Actions.finishOfflineMode()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold transition shadow-md text-base">חזרה למסך הראשי</button>
+                                </div>
+                            `}
+                        </div>
+                    `;
                 },
 
                 Profile() {
@@ -1587,9 +1595,8 @@
                         const last = new Date(lastDate); const today = new Date(todayStr);
                         const diffDays = Math.ceil(Math.abs(today - last) / (1000 * 60 * 60 * 24));
                         if (diffDays === 1) streak++; else if (diffDays > 1) streak = 1;
-                    } else if (!lastDate) {
-                        streak = 1;
-                    }
+                    } else if (!lastDate) { streak = 1; }
+                    
                     App.State.save('intimacyStreak', streak);
                     App.State.save('lastIntimacyDate', todayStr);
 
@@ -1603,6 +1610,46 @@
                     App.UI.throwPetals();
                     App.UI.showToast("המשחק הושלם בהצלחה! +30 XP לגינה 🎉", "success");
                 },
+
+                startOfflineMode() {
+                    // הגרלת שאלת עומק אקראית מתוך החפיסות הרגילות
+                    const allDecks = Object.values(App.Data.decks);
+                    const randomDeck = allDecks[Math.floor(Math.random() * allDecks.length)];
+                    const randomQuestion = randomDeck.questions[Math.floor(Math.random() * randomDeck.questions.length)];
+                    
+                    App.State.offlineQuestion = randomQuestion;
+                    App.State.offlineTimer = 300; // 5 דקות = 300 שניות
+                    App.State.save('intimacyMode', 'offline');
+                    App.Navigation.navigate('intimacy');
+                },
+
+                toggleOfflineTimer() {
+                    if (App.State.offlineInterval) {
+                        clearInterval(App.State.offlineInterval);
+                        App.State.offlineInterval = null;
+                        App.Navigation.navigate('intimacy');
+                    } else {
+                        App.State.offlineInterval = setInterval(() => {
+                            if (App.State.offlineTimer > 0) {
+                                App.State.offlineTimer--;
+                                App.Navigation.navigate('intimacy'); // עדכון תצוגה
+                            } else {
+                                clearInterval(App.State.offlineInterval);
+                                App.State.offlineInterval = null;
+                                App.UI.throwPetals();
+                                App.Navigation.navigate('intimacy');
+                            }
+                        }, 1000);
+                        App.Navigation.navigate('intimacy');
+                    }
+                },
+
+                finishOfflineMode() {
+                    App.State.addXP(50);
+                    App.State.save('intimacyMode', 'qa');
+                    App.Navigation.navigate('intimacy');
+                },
+
                 selectDeck(deckKey) { App.State.save('selectedDeck', deckKey); App.State.save('questionIndex', Math.floor(Math.random() * 3)); App.Navigation.navigate('intimacy'); },
                 toggleFavorite(index) { const history = [...App.State.intimacyHistory]; history[index].isFavorite = !history[index].isFavorite; App.State.save('intimacyHistory', history); App.Navigation.navigate('intimacy'); }
             },
