@@ -877,12 +877,14 @@
 
                     return `
                         <div class="space-y-4">
-                            <div class="flex justify-between items-center bg-white p-3 rounded-2xl border shadow-sm">
+                          <div class="flex justify-between items-center bg-white p-3 rounded-2xl border shadow-sm">
                                 <div class="text-right">
                                     <h3 class="font-extrabold text-stone-800 text-sm">משחק זה או זה</h3>
                                     <p class="text-[10px] font-bold text-orange-400">עניתם על ${totalAnswered}/10 שאלות</p>
                                 </div>
-                                <button onclick="App.Actions.switchIntimacyMode('qa')" class="text-xs font-bold bg-stone-100 text-stone-600 py-1.5 px-3 rounded-xl hover:bg-stone-200">צא מהמשחק</button>
+                                <button onclick="App.Actions.switchIntimacyMode('qa')" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl hover:bg-red-100 active:scale-95 transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-arrow-right"></i> יציאה
+                                </button>
                             </div>
                             
                             <div class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
@@ -903,8 +905,10 @@
                     const isDone = App.State.offlineTimer === 0 && !isRunning && App.State.offlineQuestion;
 
                     return `
-                        <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white">
-                            <i class="fa-solid fa-mug-hot text-5xl text-indigo-300 mb-6"></i>
+                        <div class="glass-panel rounded-[32px] p-8 text-center shadow-lg border-2 border-indigo-100 flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-b from-indigo-50/50 to-white relative">
+                            ${!isDone ? `<button onclick="App.Actions.switchIntimacyMode('qa')" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-white rounded-full text-stone-400 hover:text-red-500 shadow-sm border border-stone-100 transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                            
+                            <i class="fa-solid fa-mug-hot text-5xl text-indigo-300 mb-6 mt-4"></i>
                             <h2 class="text-xl font-bold text-stone-800 mb-3 leading-relaxed px-4">"${App.State.offlineQuestion}"</h2>
                             
                             <div class="text-6xl font-extrabold text-indigo-600 tracking-widest my-8 font-mono">${mins}:${secs}</div>
@@ -1563,6 +1567,12 @@
                 },
 
                 switchIntimacyMode(mode) {
+                    // ביטול הטיימר במקרה שיוצאים מ"דייט על הספה" באמצע
+                    if (App.State.offlineInterval) {
+                        clearInterval(App.State.offlineInterval);
+                        App.State.offlineInterval = null;
+                        App.State.offlineTimer = 0;
+                    }
                     App.State.save('intimacyMode', mode);
                     App.Navigation.navigate('intimacy');
                 },
