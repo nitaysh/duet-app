@@ -29,6 +29,22 @@
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .reveal-animation {
+    animation: revealEffect 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes revealEffect {
+    0% { filter: blur(16px); opacity: 0.2; transform: scale(0.95); }
+    40% { filter: blur(4px); opacity: 0.8; transform: scale(1.02); }
+    100% { filter: blur(0); opacity: 1; transform: scale(1); }
+}
+
+.petal {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 50% 0 50% 50%; /* צורה שמזכירה עלה/עלה כותרת */
+}
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.75);
@@ -42,6 +58,22 @@
 
         .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .category-card:active { transform: scale(0.92); }
+        .reveal-animation {
+            animation: revealEffect 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes revealEffect {
+            0% { filter: blur(16px); opacity: 0.2; transform: scale(0.95); }
+            40% { filter: blur(4px); opacity: 0.8; transform: scale(1.02); }
+            100% { filter: blur(0); opacity: 1; transform: scale(1); }
+        }
+
+        .petal {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            border-radius: 50% 0 50% 50%;
+        }
     </style>
 </head>
 <body class="h-screen w-full flex flex-col overflow-hidden select-none relative">
@@ -188,8 +220,18 @@
                 userName: '', partnerName: '', userEmail: '', userPin: '', anniversaryDate: '', syncCode: '',
                 journalViewMode: 'calendar', journalTags: {}, journalHighlights: {}, monthlyWrapUpDone: false,
                 journalViewYear: null, journalViewMonth: null,
+                quests: [], questsDate: '',
+                journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all',
+                journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all',
                 userPrefs: { loveLang: '', coffee: '', comfort: '' },
                 partnerPrefs: { loveLang: '', coffee: '', comfort: '' },
+                userMood: localStorage.getItem('duet_user_mood') || '',
+                partnerMood: 'chill',
+                userAvatar: localStorage.getItem('duet_user_avatar') || '👩‍🚀',
+                partnerAvatar: localStorage.getItem('duet_partner_avatar') || '👨‍🚀',
+                userBirthday: localStorage.getItem('duet_user_birthday') || '',
+                partnerBirthday: localStorage.getItem('duet_partner_birthday') || '',
+                appTheme: localStorage.getItem('duet_app_theme') || 'sage',
 
                 init() {
                     const hasOnboarded = localStorage.getItem('duet_onboarding_complete');
@@ -241,7 +283,11 @@
                     this.journalViewMode = localStorage.getItem('duet_journal_view_mode') || 'calendar';
                     this.journalTags = JSON.parse(localStorage.getItem('duet_journal_tags')) || {};
                     this.journalHighlights = JSON.parse(localStorage.getItem('duet_journal_highlights')) || {};
-                    this.monthlyWrapUpDone = localStorage.getItem('duet_monthly_wrap_up_done') === 'true';
+                this.monthlyWrapUpDone = localStorage.getItem('duet_monthly_wrap_up_done') === 'true';
+                this.journalLocations = JSON.parse(localStorage.getItem('duet_journal_locations')) || {};
+                this.journalMoods = JSON.parse(localStorage.getItem('duet_journal_moods')) || {};
+                this.customTags = JSON.parse(localStorage.getItem('duet_custom_tags')) || { sushi: { name: "סושי", icon: "fa-bowl-rice", color: "text-orange-500 bg-orange-50" }, study: { name: "זמן לימוד", icon: "fa-book-open-reader", color: "text-indigo-500 bg-indigo-50" } };
+                this.journalFilter = 'all';
 
                     this.journalViewYear = new Date().getFullYear();
                     this.journalViewMonth = new Date().getMonth();
@@ -250,6 +296,7 @@
                     this.partnerPrefs = JSON.parse(localStorage.getItem('duet_partner_prefs')) || { loveLang: '', coffee: '', comfort: '' };
 
                     App.UI.updateGlobalCounters();
+                    if(App.Data.themes[this.appTheme]) document.body.style.background = App.Data.themes[this.appTheme].bg;
                 },
 
                 save(key, value) {
@@ -277,8 +324,23 @@
             },
 
             Data: {
+                avatarsList: ['👩‍🚀','👨‍🚀','🦊','🐼','🦁','🐯','🐨','🐶','🐱','🐭','🐹','🐰','🐻','🐻‍❄️','🦝','🐷','🐮','🐸','🐵','🦉','🦄','🐝','🦋','🐢','🐙','🦖'],
+                themes: {
+                    sage: { name: 'מרווה טבעית', bg: 'linear-gradient(135deg, #fbfaf8 0%, #f3f5f0 100%)', dot: 'bg-emerald-200' },
+                    desert: { name: 'שקיעה מדברית', bg: 'linear-gradient(135deg, #fffcf9 0%, #fdf0e6 100%)', dot: 'bg-orange-200' },
+                    ocean: { name: 'בריזה ימית', bg: 'linear-gradient(135deg, #f5f9ff 0%, #e6f0fa 100%)', dot: 'bg-blue-200' },
+                    blossom: { name: 'פריחת דובדבן', bg: 'linear-gradient(135deg, #fff5f8 0%, #fcecf0 100%)', dot: 'bg-rose-200' }
+                },
                 decorations: { 1: "אדמה פורייה 🌱", 2: "ספסל עץ מוצל 🪑", 3: "תאורת פיות 🌟", 4: "מזרקת מים ⛲", 5: "טאבון אבן 🍕", 6: "נדנדת גינה 🪀", 7: "עץ אהבה גדול 🌳" },
                 evolutionNames: { 1: "נבט צעיר", 2: "ערוגה מתפתחת", 3: "בוסתן מלבלב", 4: "גן מפואר" },
+                questsBank: [
+                    "שתו קפה יחד בלי מסכים (10 דק')",
+                    "תנו חיבוק ארוך של 20 שניות",
+                    "שלחו הודעת טקסט מפרגנת באמצע היום",
+                    "תכננו משהו קטן וכיפי לסופ״ש",
+                    "החמיאו אחד לשנייה על משהו ספציפי",
+                    "שימו שיר ששניכם אוהבים ורקדו בסלון"
+                ],
                 journalTags: {
                     date: { name: "דייט רומנטי", icon: "fa-glass-cheers", color: "text-rose-500 bg-rose-50" },
                     trip: { name: "טיול וחופשה", icon: "fa-plane", color: "text-blue-500 bg-blue-50" },
@@ -339,37 +401,76 @@
             },
 
             Components: {
-                Garden() {
-                    const evolution = App.Data.evolutionNames[App.State.gardenLevel] || "גן אהבה נצחי";
-                    let itemsShelfHTML = '';
-                    for (let l = 1; l <= App.State.gardenLevel; l++) {
-                        if (App.Data.decorations[l]) itemsShelfHTML += `<div class="bg-stone-50/60 border border-stone-200/50 rounded-xl py-2 px-3 text-xs font-bold text-stone-700 shadow-sm">${App.Data.decorations[l]}</div>`;
+              Garden() {
+                    const todayStr = new Date().toDateString();
+                    if (App.State.questsDate !== todayStr) {
+                        const shuffled = [...App.Data.questsBank].sort(() => 0.5 - Math.random());
+                        App.State.save('quests', [{ text: shuffled[0], completed: false }, { text: shuffled[1], completed: false }]);
+                        App.State.save('questsDate', todayStr);
                     }
 
-                    let bucketListHTML = '';
-                    if (App.State.bucketList.length === 0) {
-                        bucketListHTML = `
-                            <div class="text-center py-6 bg-white/40 border border-stone-100 rounded-2xl border-dashed">
-                                <i class="fa-solid fa-box-open text-4xl text-stone-300 mb-3"></i>
-                                <p class="text-sm font-bold text-stone-500 mb-1">הרשימה ריקה!</p>
-                                <p class="text-xs text-stone-400 px-4">בחרו מתוך בנק הרעיונות למטה או הוסיפו חלום משלכם.</p>
+                    const evolution = App.Data.evolutionNames[App.State.gardenLevel] || "גן אהבה נצחי";
+                    
+                    const h = new Date().getHours();
+                    let skyClass = "from-emerald-50 to-teal-50";
+                    let timeIcon = "☀️";
+                    if (h >= 6 && h < 17) { skyClass = "from-sky-200 to-blue-50"; timeIcon = "☀️"; }
+                    else if (h >= 17 && h < 20) { skyClass = "from-orange-200 to-rose-100"; timeIcon = "🌅"; }
+                    else { skyClass = "from-indigo-900 to-slate-800 border-indigo-700 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"; timeIcon = "🌙"; }
+
+                    const positions = ['absolute -bottom-1 -left-2 text-2xl', 'absolute top-4 -right-4 text-3xl', 'absolute -top-3 left-4 text-xl', 'absolute bottom-4 -right-5 text-3xl', 'absolute -bottom-4 left-1/2 -translate-x-1/2 text-3xl', 'absolute top-6 -left-6 text-3xl', 'absolute -top-6 right-2 text-4xl'];
+                    
+                    let visualSceneHTML = '';
+                    for (let l = 1; l <= App.State.gardenLevel; l++) {
+                        if (App.Data.decorations[l]) {
+                            const emojiOnly = App.Data.decorations[l].split(' ').pop(); 
+                            visualSceneHTML += `<span class="${positions[l-1]} drop-shadow-md animate-page-entry transition-all duration-700 hover:scale-110" style="animation-delay: ${l*0.1}s">${emojiOnly}</span>`;
+                        }
+                    }
+
+                    let questsHTML = '<div class="space-y-2">';
+                    App.State.quests.forEach((q, idx) => {
+                        questsHTML += `
+                            <div class="flex items-center justify-between p-3 bg-white/60 border ${q.completed ? 'border-emerald-200 bg-emerald-50/50' : 'border-stone-100'} rounded-2xl shadow-sm">
+                                <span class="text-sm font-bold ${q.completed ? 'text-emerald-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2">${q.text}</span>
+                                <button onclick="App.Actions.completeQuest(${idx})" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white pointer-events-none' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0">
+                                    <i class="fa-solid fa-check text-xs"></i>
+                                </button>
                             </div>`;
+                    });
+                    questsHTML += '</div>';
+
+                    const activeWishes = App.State.bucketList.filter(i => !i.completed);
+                    const completedWishes = App.State.bucketList.filter(i => i.completed);
+
+                    let activeListHTML = '';
+                    if (activeWishes.length === 0) {
+                        activeListHTML = `<div class="text-center py-5 bg-white/40 border border-stone-100 rounded-2xl border-dashed"><p class="text-xs text-stone-400 font-bold px-4">אין חלומות פעילים. בחרו מהבנק למטה!</p></div>`;
                     } else {
-                        App.State.bucketList.forEach(item => {
-                            bucketListHTML += `
+                        activeWishes.forEach(item => {
+                            activeListHTML += `
                                 <div class="flex items-center justify-between p-3.5 bg-white/60 border border-stone-100 rounded-2xl shadow-sm">
                                     <div class="flex flex-col flex-1 pr-2">
-                                        <span class="text-base font-bold ${item.completed ? 'line-through text-stone-400' : 'text-stone-800'}">${item.text}</span>
+                                        <span class="text-base font-bold text-stone-800">${item.text}</span>
                                         <span class="text-[10px] font-bold text-orange-400 uppercase mt-0.5 tracking-wider">${item.category || 'חזון'} • +50 XP</span>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button onclick="App.Actions.deleteBucketItem(${item.id})" class="text-stone-300 hover:text-red-400 px-2 transition"><i class="fa-regular fa-trash-can text-sm"></i></button>
-                                        <button onclick="App.Actions.toggleBucketItem(${item.id})" class="w-9 h-9 ${item.completed ? 'bg-emerald-500 text-white' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm">
+                                        <button onclick="App.Actions.toggleBucketItem(${item.id})" class="w-9 h-9 bg-stone-100 text-stone-400 hover:bg-emerald-50 rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm">
                                             <i class="fa-solid fa-check text-sm"></i>
                                         </button>
                                     </div>
                                 </div>`;
                         });
+                    }
+
+                    let wallOfFameHTML = '';
+                    if (completedWishes.length > 0) {
+                        wallOfFameHTML = `<div class="mt-5 space-y-3 px-1"><h3 class="text-sm font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-trophy ml-1"></i> היכל התהילה</h3><div class="grid grid-cols-2 gap-2">`;
+                        completedWishes.forEach(item => {
+                            wallOfFameHTML += `<div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-3 rounded-2xl text-center shadow-sm relative overflow-hidden"><i class="fa-solid fa-star text-amber-200 text-3xl absolute -right-2 -top-2 opacity-30"></i><span class="text-xs font-bold text-stone-700 block relative z-10">${item.text}</span></div>`;
+                        });
+                        wallOfFameHTML += `</div></div>`;
                     }
 
                     let bankHTML = '';
@@ -386,37 +487,42 @@
                                 </div>`;
                         }
                     });
+                    if (bankHTML === '') bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
 
-                    if (bankHTML === '') {
-                        bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
-                    }
+                    const mainPlant = App.State.gardenLevel >= 4 ? '🏡' : App.State.gardenLevel >= 3 ? '🌳' : App.State.gardenLevel >= 2 ? '🌿' : '🌱';
 
                     return `
                         <div class="space-y-6">
-                            <div class="glass-panel rounded-[32px] p-6 text-center shadow-sm border border-white">
-                                <div class="w-36 h-36 mx-auto flex items-center justify-center bg-gradient-to-b from-emerald-50 to-teal-50 rounded-full border border-emerald-100/30 shadow-inner mb-4 relative">
-                                    <span class="text-7xl">${App.State.gardenLevel >= 4 ? '🏡' : App.State.gardenLevel >= 3 ? '🌳' : App.State.gardenLevel >= 2 ? '🌿' : '🌱'}</span>
+                            <div class="glass-panel rounded-[32px] p-6 text-center shadow-sm border border-white relative overflow-hidden">
+                                <div class="absolute top-4 left-4 text-lg opacity-80">${timeIcon}</div>
+                                <div class="w-36 h-36 mx-auto mt-2 flex items-center justify-center bg-gradient-to-b ${skyClass} rounded-full border border-stone-200/30 mb-6 relative transition-colors duration-1000">
+                                    ${visualSceneHTML}
+                                    <span class="text-7xl relative z-10 animate-pulse" style="animation-duration: 3s;">${mainPlant}</span>
                                 </div>
-                                <h2 class="text-2xl font-bold text-stone-800">${evolution} (שלב ${App.State.gardenLevel})</h2>
-                                <div class="w-full bg-stone-100 h-3 rounded-full mt-4 overflow-hidden"><div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full transition-all duration-700" style="width: ${App.State.gardenXP}%"></div></div>
+                                <h2 class="text-2xl font-bold text-stone-800 mb-1">${evolution} (שלב ${App.State.gardenLevel})</h2>
+                                <div class="w-full bg-stone-100 h-3 rounded-full mt-3 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full transition-all duration-700" style="width: ${App.State.gardenXP}%"></div>
+                                </div>
                                 <div class="flex justify-between text-[10px] text-stone-400 font-bold mt-1.5 px-1"><span>${App.State.gardenXP} / 100 XP</span><span>לשלב הבא</span></div>
                             </div>
 
-                            <div class="glass-panel rounded-[32px] p-5 space-y-3">
-                                <h3 class="text-xs font-bold text-stone-400 uppercase tracking-widest px-1"><i class="fa-solid fa-couch ml-1 text-purple-400"></i> ארון עיצובי הגן</h3>
-                                <div class="grid grid-cols-2 gap-2">${itemsShelfHTML}</div>
-                            </div>
-
                             <div class="space-y-3 px-1">
-                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                    <span><i class="fa-solid fa-wand-magic-sparkles ml-1 text-amber-400"></i> רשימת חלומות משותפת</span>
-                                    <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100">+ הוסף חלום</button>
-                                </h3>
-                                <div class="space-y-2">${bucketListHTML}</div>
+                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clipboard-check ml-1 text-emerald-400"></i> משימות יומיות לגינה</h3>
+                                ${questsHTML}
                             </div>
 
                             <div class="space-y-3 px-1 pt-2">
-                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות של Duet ✨</h3>
+                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
+                                    <span><i class="fa-solid fa-wand-magic-sparkles ml-1 text-amber-400"></i> חלומות משותפים</span>
+                                    <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 shadow-sm">+ הוסף חלום</button>
+                                </h3>
+                                <div class="space-y-2">${activeListHTML}</div>
+                            </div>
+
+                            ${wallOfFameHTML}
+
+                            <div class="space-y-3 px-1 pt-2">
+                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
                                 <div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 pt-1 px-1">
                                     ${bankHTML}
                                 </div>
@@ -431,7 +537,24 @@
                     const mode = App.State.journalViewMode;
                     let toggleHeaderHTML = `<div class="flex justify-center mb-4"><div class="bg-stone-100 p-1 rounded-xl inline-flex shadow-inner"><button onclick="App.Actions.setJournalView('calendar')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'calendar' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">לוח שנה</button><button onclick="App.Actions.setJournalView('feed')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'feed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">פיד זיכרונות</button></div></div>`;
 
-                    if (mode === 'feed') return `<div class="space-y-4">${toggleHeaderHTML}${countdownHTML}${wrapUpHTML}${this.renderJournalFeed()}</div>`;
+                    if (mode === 'feed') {
+                        const allTags = {...App.Data.journalTags, ...App.State.customTags};
+                        let filtersHTML = `<div class="flex gap-2 overflow-x-auto no-scrollbar pb-3 pt-1 mb-2"><button onclick="App.Actions.setJournalFilter('all')" class="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition border ${App.State.journalFilter === 'all' ? 'bg-stone-800 text-white border-stone-800' : 'bg-white text-stone-500 border-stone-200'}">הכל</button><button onclick="App.Actions.setJournalFilter('highlight')" class="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition border ${App.State.journalFilter === 'highlight' ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-stone-500 border-stone-200'}">✨ ימי זהב</button>`;
+                        Object.entries(allTags).forEach(([key, value]) => {
+                            const isSel = App.State.journalFilter === key;
+                            filtersHTML += `<button onclick="App.Actions.setJournalFilter('${key}')" class="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition border ${isSel ? value.color.replace(' bg-', ' border-').replace('50', '300') + ' ' + value.color.split(' ')[1] : 'bg-white text-stone-500 border-stone-200'}"><i class="fa-solid ${value.icon} ml-1"></i>${value.name}</button>`;
+                        });
+                        filtersHTML += `</div>`;
+                        
+                        let timehopHTML = '';
+                        const now = new Date();
+                        const lastYearKey = `${now.getFullYear()-1}-${now.getMonth()+1}-${now.getDate()}`;
+                        if (App.State.journalNotes[lastYearKey]) {
+                            timehopHTML = `<div class="bg-gradient-to-r from-orange-500 to-amber-500 p-1 rounded-2xl mb-4 shadow-sm animate-pulse" style="animation-duration: 3s;"><div class="bg-white/95 rounded-[14px] p-4 text-center relative overflow-hidden"><i class="fa-solid fa-clock-rotate-left text-orange-200 text-5xl absolute -left-2 -top-2 opacity-50"></i><h4 class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-1">ביום הזה ממש, לפני שנה</h4><p class="text-stone-700 font-medium text-sm">"${App.State.journalNotes[lastYearKey]}"</p></div></div>`;
+                        }
+
+                        return `<div class="space-y-4">${toggleHeaderHTML}${timehopHTML}${countdownHTML}${wrapUpHTML}${filtersHTML}${this.renderJournalFeed()}</div>`;
+                    }
 
                     const viewYear = App.State.journalViewYear;
                     const viewMonth = App.State.journalViewMonth;
@@ -442,6 +565,8 @@
                     const firstDay = new Date(viewYear, viewMonth, 1).getDay();
                     const totalDays = new Date(viewYear, viewMonth + 1, 0).getDate();
                     let daysHTML = '';
+                    const allTags = {...App.Data.journalTags, ...App.State.customTags};
+
                     for (let i = 0; i < firstDay; i++) daysHTML += `<div class="aspect-square opacity-0"></div>`;
                     for (let day = 1; day <= totalDays; day++) {
                         const dateKey = `${viewYear}-${viewMonth + 1}-${day}`;
@@ -449,7 +574,7 @@
                         const hasNote = App.State.journalNotes[dateKey];
                         const isHighlight = App.State.journalHighlights[dateKey];
                         const tagKey = App.State.journalTags[dateKey];
-                        const tagData = App.Data.journalTags[tagKey];
+                        const tagData = allTags[tagKey];
 
                         const cellDate = new Date(viewYear, viewMonth, day);
                         const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
@@ -489,14 +614,44 @@
                 },
 
                 renderJournalFeed() {
-                    const sortedKeys = Object.keys(App.State.journalNotes).sort((a,b) => new Date(b) - new Date(a));
-                    if(sortedKeys.length === 0) return `<div class="text-center py-10 bg-white/40 border border-stone-100 border-dashed rounded-3xl"><i class="fa-solid fa-folder-open text-4xl text-stone-300 mb-2"></i><p class="text-sm font-bold text-stone-500">הפיד עדיין ריק</p><p class="text-xs text-stone-400">תעדו זיכרונות בלוח השנה כדי לראות אותם כאן.</p></div>`;
+                    let sortedKeys = Object.keys(App.State.journalNotes).sort((a,b) => new Date(b) - new Date(a));
+                    
+                    if (App.State.journalFilter !== 'all') {
+                        if (App.State.journalFilter === 'highlight') {
+                            sortedKeys = sortedKeys.filter(k => App.State.journalHighlights[k]);
+                        } else {
+                            sortedKeys = sortedKeys.filter(k => App.State.journalTags[k] === App.State.journalFilter);
+                        }
+                    }
+
+                    if(sortedKeys.length === 0) return `<div class="text-center py-10 bg-white/40 border border-stone-100 border-dashed rounded-3xl"><i class="fa-solid fa-folder-open text-4xl text-stone-300 mb-2"></i><p class="text-sm font-bold text-stone-500">אין פה זיכרונות עדיין</p><p class="text-xs text-stone-400">תעדו בלוח השנה או שנו את הסינון למעלה.</p></div>`;
+                    
+                    const allTags = {...App.Data.journalTags, ...App.State.customTags};
                     let feedHTML = '<div class="space-y-3.5">';
+                    
                     sortedKeys.forEach(key => {
-                        const note = App.State.journalNotes[key]; const isHighlight = App.State.journalHighlights[key]; const tagData = App.Data.journalTags[App.State.journalTags[key]];
+                        const note = App.State.journalNotes[key]; 
+                        const isHighlight = App.State.journalHighlights[key]; 
+                        const tagData = allTags[App.State.journalTags[key]];
+                        const location = App.State.journalLocations[key];
+                        const mood = App.State.journalMoods[key];
+                        
                         const parts = key.split('-'); const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
                         const isFuture = new Date(parts[0], parts[1]-1, parts[2]) > new Date().setHours(0,0,0,0);
-                        feedHTML += `<div class="p-5 rounded-2xl border transition-all ${isHighlight ? 'bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm' : isFuture ? 'bg-blue-50/40 border-blue-100 border-dashed' : 'bg-white border-stone-100'}"><div class="flex justify-between items-center text-xs mb-2"><span class="text-stone-400 font-bold">${formattedDate} ${isFuture ? '• 🚀 תכנון עתידי' : ''}</span><div class="flex items-center gap-1.5">${isHighlight ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-100/60 px-2 py-0.5 rounded-md"><i class="fa-solid fa-star"></i> יום זהב</span>' : ''}${tagData ? `<span class="text-[10px] font-bold ${tagData.color.split(' ')[0]} ${tagData.color.split(' ')[1]} px-2 py-0.5 rounded-md"><i class="fa-solid ${tagData.icon} ml-1"></i>${tagData.name}</span>` : ''}</div></div><p class="text-stone-800 font-medium text-sm leading-relaxed">${note}</p></div>`;
+                        
+                        feedHTML += `<div class="p-5 rounded-2xl border transition-all ${isHighlight ? 'bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm' : isFuture ? 'bg-blue-50/40 border-blue-100 border-dashed' : 'bg-white border-stone-100'}">
+                            <div class="flex justify-between items-center text-xs mb-3">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="text-stone-400 font-bold">${formattedDate} ${isFuture ? '• 🚀 עתידי' : ''} ${mood ? `<span class="mr-1 text-sm">${mood}</span>` : ''}</span>
+                                    ${location ? `<span class="text-[10px] text-stone-500"><i class="fa-solid fa-location-dot text-orange-400 ml-0.5"></i> ${location}</span>` : ''}
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    ${isHighlight ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-100/60 px-2 py-0.5 rounded-md"><i class="fa-solid fa-star"></i> יום זהב</span>' : ''}
+                                    ${tagData ? `<span class="text-[10px] font-bold ${tagData.color.split(' ')[0]} ${tagData.color.split(' ')[1]} px-2 py-0.5 rounded-md"><i class="fa-solid ${tagData.icon} ml-1"></i>${tagData.name}</span>` : ''}
+                                </div>
+                            </div>
+                            <p class="text-stone-800 font-medium text-sm leading-relaxed">${note}</p>
+                        </div>`;
                     });
                     feedHTML += '</div>'; return feedHTML;
                 },
@@ -504,7 +659,7 @@
                 Intimacy() {
                     const todayStr = new Date().toDateString();
                     if (App.State.questionDate !== todayStr) {
-                        App.State.save('questionDate', todayStr); App.State.save('selectedDeck', null); App.State.save('answeredToday', false); App.State.save('savedAnswer', '');
+                        App.State.save('questionDate', todayStr); App.State.save('selectedDeck', null); App.State.save('answeredToday', false); App.State.save('savedAnswer', ''); App.State.save('userMood', '');
                     }
                     if (!App.State.selectedDeck) return this.renderDeckSelector();
                     const deck = App.Data.decks[App.State.selectedDeck];
@@ -521,11 +676,42 @@
 
                     const whatsappText = encodeURIComponent(`היי! עניתי על שאלת היום שלנו ב-Duet... עכשיו תורך כדי שהתשובה תיפתח! ❤️`);
 
+                    const moodHTML = !isUnlocked ? `
+                        <div class="mb-4">
+                            <label class="text-[11px] font-bold text-stone-400 block mb-2 uppercase tracking-wider">עם איזה כוח הגעת לשאלה?</label>
+                            <div class="flex gap-2">
+                                <button onclick="App.Actions.setMood('low')" class="flex-1 py-2 rounded-xl border transition ${App.State.userMood === 'low' ? 'bg-stone-100 border-stone-300 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}"><span class="text-lg block mb-1">🔋</span>מרוקן</button>
+                                <button onclick="App.Actions.setMood('chill')" class="flex-1 py-2 rounded-xl border transition ${App.State.userMood === 'chill' ? 'bg-blue-50 border-blue-200 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}"><span class="text-lg block mb-1">🛋️</span>צריך שקט</button>
+                                <button onclick="App.Actions.setMood('high')" class="flex-1 py-2 rounded-xl border transition ${App.State.userMood === 'high' ? 'bg-orange-50 border-orange-200 shadow-sm scale-105' : 'bg-white border-stone-100 text-stone-400'}"><span class="text-lg block mb-1">✨</span>באנרגיות</button>
+                            </div>
+                        </div>
+                    ` : '';
+
+                    const partnerMoodDisplay = isUnlocked ? `<div class="absolute top-4 left-4 text-xs font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-lg">🛋️ צריכה שקט</div>` : '';
+
                     return `
                         <div class="space-y-6">
                             <div class="glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-xl ${deck.color} flex items-center justify-center"><i class="fa-solid ${deck.icon}"></i></div><span class="text-xs font-bold text-stone-400 tracking-widest uppercase">${deck.name}</span></div><h2 class="text-xl font-bold text-stone-800 leading-relaxed">${question}</h2></div>
-                            <div class="glass-panel rounded-[32px] p-6 space-y-4"><textarea id="answer-box" ${isUnlocked ? 'disabled' : ''} class="w-full h-32 p-4 bg-stone-50 rounded-2xl border focus:border-orange-400 transition no-scrollbar" placeholder="התשובה שלי...">${App.State.savedAnswer}</textarea>${!isUnlocked ? `<button onclick="App.Actions.saveIntimacyAnswer()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold active:scale-95 transition shadow-md">שמור וחשוף את ${App.State.partnerName}</button>` : ''}</div>
-                            <div class="glass-panel rounded-[32px] p-6 relative min-h-[120px] flex flex-col items-center justify-center"><h3 class="text-xs font-bold text-stone-400 absolute top-4 right-4">התשובה של ${App.State.partnerName}</h3><div class="transition-all duration-1000 mt-6 w-full ${!isUnlocked ? 'blur-lg opacity-20 scale-95' : ''}"><p class="text-center italic text-stone-600">${App.Data.mockPartnerAnswers[App.State.questionIndex % 3]}</p></div>${!isUnlocked ? `<div class="absolute inset-0 flex flex-col items-center justify-center mt-6"><i class="fa-solid fa-lock text-stone-300 text-xl mb-1"></i></div>` : ''}${isUnlocked ? `<a href="https://wa.me/?text=${whatsappText}" target="_blank" class="w-full text-center mt-4 text-xs font-bold text-green-600 bg-green-50 py-2.5 rounded-xl border border-green-100 active:scale-95 transition"><i class="fa-brands fa-whatsapp mr-1 text-sm"></i> שלח נדנוד בוואטסאפ ל${App.State.partnerName}</a>` : ''}</div>
+                            
+                            <div class="glass-panel rounded-[32px] p-6 space-y-4">
+                                ${moodHTML}
+                                <textarea id="answer-box" ${isUnlocked ? 'disabled' : ''} class="w-full h-32 p-4 bg-stone-50 rounded-2xl border focus:border-orange-400 transition no-scrollbar" placeholder="התשובה שלי...">${App.State.savedAnswer}</textarea>
+                                ${!isUnlocked ? `<button onclick="App.Actions.saveIntimacyAnswer()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold active:scale-95 transition shadow-md">שמור וחשוף את ${App.State.partnerName}</button>` : ''}
+                            </div>
+                            
+                            <div class="glass-panel rounded-[32px] p-6 relative min-h-[120px] flex flex-col items-center justify-center overflow-hidden">
+                                <h3 class="text-xs font-bold text-stone-400 absolute top-4 right-4">התשובה של ${App.State.partnerName}</h3>
+                                ${partnerMoodDisplay}
+                                
+                                <div id="partner-answer-container" class="mt-8 w-full ${!isUnlocked ? 'blur-lg opacity-20 scale-95 pointer-events-none' : 'reveal-animation'}">
+                                    <p class="text-center italic text-stone-600 font-medium">${App.Data.mockPartnerAnswers[App.State.questionIndex % 3]}</p>
+                                </div>
+                                
+                                ${!isUnlocked ? `<div class="absolute inset-0 flex flex-col items-center justify-center mt-6"><div class="w-12 h-12 bg-white/80 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm"><i class="fa-solid fa-lock text-stone-400 text-xl"></i></div></div>` : ''}
+                                
+                                ${isUnlocked ? `<a href="https://wa.me/?text=${whatsappText}" target="_blank" class="w-full text-center mt-6 text-xs font-bold text-green-600 bg-green-50 py-2.5 rounded-xl border border-green-100 active:scale-95 transition"><i class="fa-brands fa-whatsapp mr-1 text-sm"></i> שלח נדנוד בוואטסאפ ל${App.State.partnerName}</a>` : ''}
+                            </div>
+                            
                             <div class="px-2"><h3 class="text-sm font-bold text-stone-400 mb-4 uppercase tracking-widest"><i class="fa-solid fa-box-archive ml-1"></i> קפסולת זמן</h3><div class="space-y-2">${historyHTML}</div></div>
                         </div>`;
                 },
@@ -535,83 +721,110 @@
                 },
 
                 Profile() {
-                    let anniversaryDisplay = '';
-                    let daysToNext = '';
+                    const calcNext = (dateStr) => {
+                        if(!dateStr) return '';
+                        const d = new Date(dateStr); const today = new Date();
+                        let next = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+                        if (next < today && (next.getMonth() !== today.getMonth() || next.getDate() !== today.getDate())) next.setFullYear(today.getFullYear() + 1);
+                        const diff = Math.ceil((next - today) / (1000 * 60 * 60 * 24));
+                        return diff === 0 ? 'היום! 🎉' : `בעוד ${diff} ימים 🎂`;
+                    };
+
+                    let anniversaryDisplay = ''; let daysToNext = '';
                     if (App.State.anniversaryDate) {
-                        const pastDate = new Date(App.State.anniversaryDate);
-                        const today = new Date();
+                        const pastDate = new Date(App.State.anniversaryDate); const today = new Date();
                         if (today >= pastDate) {
-                            let years = today.getFullYear() - pastDate.getFullYear();
-                            let months = today.getMonth() - pastDate.getMonth();
-                            let days = today.getDate() - pastDate.getDate();
-                            
+                            let years = today.getFullYear() - pastDate.getFullYear(); let months = today.getMonth() - pastDate.getMonth(); let days = today.getDate() - pastDate.getDate();
                             if (days < 0) { months--; const tempDate = new Date(today.getFullYear(), today.getMonth(), 0); days += tempDate.getDate(); }
                             if (months < 0) { years--; months += 12; }
-
                             let textParts = [];
-                            if (years > 0) textParts.push(`${years} שנים`);
-                            if (months > 0) textParts.push(`${months} חודשים`);
-                            if (days > 0 || textParts.length === 0) textParts.push(`${days} ימים`);
+                            if (years > 0) textParts.push(`${years} שנים`); if (months > 0) textParts.push(`${months} חודשים`); if (days > 0 || textParts.length === 0) textParts.push(`${days} ימים`);
                             anniversaryDisplay = `<div class="text-sm text-stone-700 font-bold mt-3">יחד כבר: <span class="text-orange-500">${textParts.join(', ')}</span> ❤️</div>`;
-
-                            let nextAnn = new Date(pastDate);
-                            nextAnn.setFullYear(today.getFullYear());
-                            if (nextAnn < today && (nextAnn.getMonth() !== today.getMonth() || nextAnn.getDate() !== today.getDate())) {
-                                nextAnn.setFullYear(today.getFullYear() + 1);
-                            }
+                            let nextAnn = new Date(pastDate); nextAnn.setFullYear(today.getFullYear());
+                            if (nextAnn < today && (nextAnn.getMonth() !== today.getMonth() || nextAnn.getDate() !== today.getDate())) nextAnn.setFullYear(today.getFullYear() + 1);
                             const diffDaysToNext = Math.ceil((nextAnn - today) / (1000 * 60 * 60 * 24));
                             if (diffDaysToNext === 0) daysToNext = `<div class="text-xs text-rose-500 font-bold mt-1 animate-pulse">מזל טוב! היום חוגגים! 🎉</div>`;
                             else daysToNext = `<div class="text-xs text-stone-400 font-medium mt-1">עוד ${diffDaysToNext} ימים לחגיגות! 🥂</div>`;
                         }
                     }
 
-                    const isGardenBadgeUnlocked = App.State.gardenLevel >= 3;
-                    const isIntimacyBadgeUnlocked = App.State.intimacyHistory.length >= 3;
-                    const completedBucketItems = App.State.bucketList.filter(i => i.completed).length;
-                    const isBucketBadgeUnlocked = completedBucketItems >= 1;
-
+                    // חישוב סטטיסטיקות "Wrapped"
+                    const moods = Object.values(App.State.journalMoods);
+                    const topMood = moods.length ? moods.sort((a,b) => moods.filter(v => v===a).length - moods.filter(v => v===b).length).pop() : 'טרם נאסף';
+                    const highlights = Object.keys(App.State.journalHighlights).filter(k => App.State.journalHighlights[k]).sort((a,b) => new Date(b) - new Date(a));
+                    const lastHighlight = highlights.length ? highlights[0].split('-').reverse().join('/') : 'עדיין אין';
                     const totalMemories = Object.keys(App.State.journalNotes).length;
+                    const completedBucketItems = App.State.bucketList.filter(i => i.completed).length;
+
+                    // בניית כפתורי Themes
+                    let themesHTML = `<div class="flex justify-center gap-3 mt-4 pt-4 border-t border-stone-100">`;
+                    Object.entries(App.Data.themes).forEach(([key, val]) => {
+                        const isSel = App.State.appTheme === key;
+                        themesHTML += `<button onclick="App.Actions.setAppTheme('${key}')" class="w-8 h-8 rounded-full ${val.dot} border-2 ${isSel ? 'border-stone-800 scale-110' : 'border-white'} shadow-sm transition active:scale-95" title="${val.name}"></button>`;
+                    });
+                    themesHTML += `</div>`;
 
                     return `
                         <div class="space-y-6 pb-20">
                             <div class="glass-panel rounded-[32px] p-6 text-center border border-white shadow-sm relative">
                                 <button onclick="App.Actions.saveProfileDetails()" class="absolute top-6 left-6 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-xs font-bold shadow-sm active:scale-95 transition">שמור שינויים</button>
+                                
                                 <div class="flex justify-center items-center gap-2 mb-4">
-                                    <div class="w-16 h-16 bg-gradient-to-tr from-stone-100 to-stone-200 rounded-full flex items-center justify-center border shadow-sm"><i class="fa-solid fa-user-astronaut text-2xl text-stone-500"></i></div>
+                                    <div onclick="App.Actions.showAvatarModal('user')" class="w-16 h-16 bg-white rounded-full flex items-center justify-center border shadow-sm text-3xl cursor-pointer hover:scale-105 transition">${App.State.userAvatar}</div>
                                     <i class="fa-solid fa-heart text-orange-400 text-sm animate-pulse"></i>
-                                    <div class="w-16 h-16 bg-gradient-to-tr from-orange-50 to-orange-100 rounded-full flex items-center justify-center border shadow-sm"><i class="fa-solid fa-user-astronaut text-2xl text-orange-400"></i></div>
+                                    <div onclick="App.Actions.showAvatarModal('partner')" class="w-16 h-16 bg-white rounded-full flex items-center justify-center border shadow-sm text-3xl cursor-pointer hover:scale-105 transition">${App.State.partnerAvatar}</div>
                                 </div>
+                                
                                 <div class="flex justify-center items-center gap-3 mt-4">
-                                    <input type="text" id="prof-user-name" value="${App.State.userName || ''}" class="w-24 text-center bg-stone-50 border border-stone-200 rounded-xl py-2 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none">
+                                    <input type="text" id="prof-user-name" value="${App.State.userName || ''}" class="w-24 text-center bg-white border border-stone-200 rounded-xl py-2 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none">
                                     <span class="text-stone-400 font-bold">&</span>
-                                    <input type="text" id="prof-partner-name" value="${App.State.partnerName || ''}" class="w-24 text-center bg-stone-50 border border-stone-200 rounded-xl py-2 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none">
+                                    <input type="text" id="prof-partner-name" value="${App.State.partnerName || ''}" class="w-24 text-center bg-white border border-stone-200 rounded-xl py-2 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none">
                                 </div>
                                 <div class="mt-3 flex flex-col items-center">
-                                    <input type="email" id="prof-user-email" value="${App.State.userEmail || ''}" dir="ltr" placeholder="כתובת אימייל" class="w-full max-w-[200px] text-center bg-stone-50 border border-stone-200 rounded-xl py-1.5 px-3 text-xs font-bold text-stone-500 focus:border-orange-400 focus:outline-none placeholder:text-stone-300">
+                                    <input type="email" id="prof-user-email" value="${App.State.userEmail || ''}" dir="ltr" placeholder="כתובת אימייל" class="w-full max-w-[200px] text-center bg-white border border-stone-200 rounded-xl py-1.5 px-3 text-xs font-bold text-stone-500 focus:border-orange-400 focus:outline-none">
                                 </div>
-                                <div class="mt-5 pt-4 border-t border-stone-100 flex flex-col items-center">
+                                
+                                <div class="mt-5 pt-4 border-t border-stone-100 flex justify-between gap-2 text-right">
+                                    <div class="flex-1 bg-stone-50 p-2 rounded-xl border border-stone-100">
+                                        <label class="text-[9px] font-bold text-stone-400 block mb-1">יום הולדת שלי</label>
+                                        <input type="date" id="prof-user-bday" value="${App.State.userBirthday}" class="w-full bg-transparent text-xs font-bold text-stone-700 outline-none">
+                                        <div class="text-[9px] text-rose-400 font-bold mt-1">${calcNext(App.State.userBirthday)}</div>
+                                    </div>
+                                    <div class="flex-1 bg-stone-50 p-2 rounded-xl border border-stone-100">
+                                        <label class="text-[9px] font-bold text-stone-400 block mb-1">יום הולדת של ${App.State.partnerName}</label>
+                                        <input type="date" id="prof-partner-bday" value="${App.State.partnerBirthday}" class="w-full bg-transparent text-xs font-bold text-stone-700 outline-none">
+                                        <div class="text-[9px] text-rose-400 font-bold mt-1">${calcNext(App.State.partnerBirthday)}</div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 pt-3 flex flex-col items-center">
                                     <p class="text-xs text-stone-400 font-bold mb-2">תאריך תחילת קשר / נישואין</p>
-                                    <input type="date" id="prof-anniversary" value="${App.State.anniversaryDate || ''}" class="bg-transparent text-stone-600 text-sm font-bold border-b border-stone-200 pb-1 focus:outline-none focus:border-orange-400 text-center w-full max-w-[150px]">
+                                    <input type="date" id="prof-anniversary" value="${App.State.anniversaryDate || ''}" class="bg-white px-3 border border-stone-200 rounded-lg text-stone-600 text-sm font-bold py-1.5 focus:outline-none focus:border-orange-400 text-center w-full max-w-[150px]">
                                     ${anniversaryDisplay}
                                     ${daysToNext}
                                 </div>
+                                ${themesHTML}
                             </div>
 
-                            <div class="grid grid-cols-3 gap-3 px-1">
-                                <div class="glass-panel rounded-[24px] p-3 text-center shadow-sm flex flex-col items-center justify-center">
-                                    <span class="text-xl mb-1">🌱</span>
-                                    <span class="text-lg font-bold text-stone-800">${App.State.gardenLevel}</span>
-                                    <span class="text-[10px] text-stone-400 font-bold">רמת הגינה</span>
-                                </div>
-                                <div class="glass-panel rounded-[24px] p-3 text-center shadow-sm flex flex-col items-center justify-center">
-                                    <span class="text-xl mb-1">📝</span>
-                                    <span class="text-lg font-bold text-stone-800">${totalMemories}</span>
-                                    <span class="text-[10px] text-stone-400 font-bold">זיכרונות יחד</span>
-                                </div>
-                                <div class="glass-panel rounded-[24px] p-3 text-center shadow-sm flex flex-col items-center justify-center">
-                                    <span class="text-xl mb-1">⭐</span>
-                                    <span class="text-lg font-bold text-stone-800">${completedBucketItems}</span>
-                                    <span class="text-[10px] text-stone-400 font-bold">חלומות שהוגשמו</span>
+                            <div class="glass-panel rounded-[32px] p-6 space-y-3">
+                                <h3 class="text-sm font-bold text-stone-700 uppercase tracking-wider mb-2"><i class="fa-solid fa-chart-pie text-purple-400 ml-1"></i> Duet Wrapped</h3>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="bg-purple-50/50 border border-purple-100 rounded-2xl p-3 text-center">
+                                        <div class="text-2xl mb-1">${topMood}</div>
+                                        <div class="text-[10px] font-bold text-purple-600">האווירה הבולטת</div>
+                                    </div>
+                                    <div class="bg-amber-50/50 border border-amber-100 rounded-2xl p-3 text-center">
+                                        <div class="text-sm font-extrabold text-amber-600 mb-1 mt-1">${lastHighlight}</div>
+                                        <div class="text-[10px] font-bold text-amber-600">יום הזהב האחרון</div>
+                                    </div>
+                                    <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3 text-center">
+                                        <div class="text-xl font-bold text-emerald-600 mb-1">${totalMemories}</div>
+                                        <div class="text-[10px] font-bold text-emerald-600">זיכרונות יחד</div>
+                                    </div>
+                                    <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-3 text-center">
+                                        <div class="text-xl font-bold text-blue-600 mb-1">${completedBucketItems}</div>
+                                        <div class="text-[10px] font-bold text-blue-600">חלומות שהוגשמו</div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -620,38 +833,17 @@
                                 <div class="space-y-4 border-b border-stone-100 pb-4">
                                     <h4 class="text-xs font-bold text-orange-500">ההעדפות של ${App.State.userName || 'אני'}</h4>
                                     <div class="grid grid-cols-1 gap-2">
-                                        <input type="text" id="pref-user-love" placeholder="שפת האהבה שלי (למשל: מגע, מילים)..." value="${App.State.userPrefs?.loveLang || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-orange-400 focus:outline-none">
-                                        <input type="text" id="pref-user-coffee" placeholder="ההזמנה הקבועה בבית קפה..." value="${App.State.userPrefs?.coffee || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-orange-400 focus:outline-none">
-                                        <input type="text" id="pref-user-comfort" placeholder="מה מנחם אותי ביום קשה..." value="${App.State.userPrefs?.comfort || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-orange-400 focus:outline-none">
+                                        <input type="text" id="pref-user-love" placeholder="שפת האהבה שלי (למשל: מגע, מילים)..." value="${App.State.userPrefs?.loveLang || ''}" class="w-full bg-white border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-orange-400 focus:outline-none">
+                                        <input type="text" id="pref-user-coffee" placeholder="ההזמנה הקבועה בבית קפה..." value="${App.State.userPrefs?.coffee || ''}" class="w-full bg-white border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-orange-400 focus:outline-none">
+                                        <input type="text" id="pref-user-comfort" placeholder="מה מנחם אותי ביום קשה..." value="${App.State.userPrefs?.comfort || ''}" class="w-full bg-white border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-orange-400 focus:outline-none">
                                     </div>
                                 </div>
                                 <div class="space-y-4 pt-1">
                                     <h4 class="text-xs font-bold text-emerald-600">ההעדפות של ${App.State.partnerName || 'השותפ/ה'}</h4>
                                     <div class="grid grid-cols-1 gap-2">
-                                        <input type="text" id="pref-partner-love" placeholder="שפת האהבה שלו/שלה..." value="${App.State.partnerPrefs?.loveLang || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-emerald-400 focus:outline-none">
-                                        <input type="text" id="pref-partner-coffee" placeholder="איזה קפה להזמין עבורו/עבורה?..." value="${App.State.partnerPrefs?.coffee || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-emerald-400 focus:outline-none">
-                                        <input type="text" id="pref-partner-comfort" placeholder="הדבר שהכי עוזר ביום לחוץ..." value="${App.State.partnerPrefs?.comfort || ''}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-emerald-400 focus:outline-none">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3 px-1">
-                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-medal ml-1 text-amber-400"></i> ארון הגביעים</h3>
-                                <div class="grid grid-cols-3 gap-3">
-                                    <div class="glass-panel rounded-[24px] p-4 text-center border border-white flex flex-col items-center justify-center transition-all ${isGardenBadgeUnlocked ? 'bg-gradient-to-b from-emerald-50 to-white border-emerald-100 shadow-sm' : 'opacity-60 grayscale'}">
-                                        <i class="fa-solid fa-seedling text-2xl mb-2 ${isGardenBadgeUnlocked ? 'text-emerald-500' : 'text-stone-400'}"></i>
-                                        <h4 class="text-xs font-bold text-stone-800 leading-tight">גננים<br>מתמידים</h4>
-                                        <p class="text-[9px] text-stone-400 mt-1">${isGardenBadgeUnlocked ? 'נפתח!' : 'הגיעו לשלב 3'}</p>
-                                    </div>
-                                    <div class="glass-panel rounded-[24px] p-4 text-center border border-white flex flex-col items-center justify-center transition-all ${isIntimacyBadgeUnlocked ? 'bg-gradient-to-b from-purple-50 to-white border-purple-100 shadow-sm' : 'opacity-60 grayscale'}">
-                                        <i class="fa-solid fa-comments text-2xl mb-2 ${isIntimacyBadgeUnlocked ? 'text-purple-500' : 'text-stone-400'}"></i>
-                                        <h4 class="text-xs font-bold text-stone-800 leading-tight">שיחות<br>עומק</h4>
-                                        <p class="text-[9px] text-stone-400 mt-1">${isIntimacyBadgeUnlocked ? 'נפתח!' : '3 שאלות עומק'}</p>
-                                    </div>
-                                    <div class="glass-panel rounded-[24px] p-4 text-center border border-white flex flex-col items-center justify-center transition-all ${isBucketBadgeUnlocked ? 'bg-gradient-to-b from-amber-50 to-white border-amber-100 shadow-sm' : 'opacity-60 grayscale'}">
-                                        <i class="fa-solid fa-star text-2xl mb-2 ${isBucketBadgeUnlocked ? 'text-amber-500' : 'text-stone-400'}"></i>
-                                        <h4 class="text-xs font-bold text-stone-800 leading-tight">מגשימי<br>חלומות</h4>
-                                        <p class="text-[9px] text-stone-400 mt-1">${isBucketBadgeUnlocked ? 'נפתח!' : 'הגשימו 1 חלום'}</p>
+                                        <input type="text" id="pref-partner-love" placeholder="שפת האהבה שלו/שלה..." value="${App.State.partnerPrefs?.loveLang || ''}" class="w-full bg-white border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-emerald-400 focus:outline-none">
+                                        <input type="text" id="pref-partner-coffee" placeholder="איזה קפה להזמין עבורו/עבורה?..." value="${App.State.partnerPrefs?.coffee || ''}" class="w-full bg-white border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-emerald-400 focus:outline-none">
+                                        <input type="text" id="pref-partner-comfort" placeholder="הדבר שהכי עוזר ביום לחוץ..." value="${App.State.partnerPrefs?.comfort || ''}" class="w-full bg-white border border-stone-200 rounded-xl py-2 px-3 text-xs text-stone-700 focus:border-emerald-400 focus:outline-none">
                                     </div>
                                 </div>
                             </div>
@@ -660,29 +852,22 @@
                                 <h3 class="text-sm font-bold text-stone-700 uppercase tracking-wider"><i class="fa-solid fa-link text-blue-400 ml-1"></i> סנכרון מכשירים</h3>
                                 <p class="text-xs text-stone-500">זהו קוד המכשיר שלך. שתף אותו כדי לחבר מכשיר נוסף:</p>
                                 <div class="flex items-center gap-2 mt-2">
-                                    <div class="flex-1 bg-stone-100 border border-stone-200 rounded-xl py-3 text-center font-mono font-bold text-stone-700 tracking-widest text-lg select-all">
+                                    <div class="flex-1 bg-white border border-stone-200 rounded-xl py-3 text-center font-mono font-bold text-stone-700 tracking-widest text-lg select-all">
                                         ${App.State.syncCode}
                                     </div>
                                     <button onclick="navigator.clipboard.writeText('${App.State.syncCode}'); App.UI.showToast('קוד הועתק!', 'success');" class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center border border-blue-100 active:scale-95 transition shadow-sm">
                                         <i class="fa-regular fa-copy text-lg"></i>
                                     </button>
                                 </div>
-                                <div class="mt-4 pt-4 border-t border-stone-100">
-                                    <p class="text-xs text-stone-500 mb-2">יש לך קוד ממכשיר אחר? הזן אותו כאן:</p>
-                                    <div class="flex items-center gap-2">
-                                        <input type="text" id="partner-sync-input" placeholder="לדוגמה: DUET-ABCDE" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:border-blue-400 focus:outline-none uppercase">
-                                        <button onclick="App.Actions.connectDevice()" class="bg-blue-500 text-white px-4 py-3 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition">
-                                            חבר
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
 
-                            <div class="glass-panel rounded-[32px] p-6 border-red-100 border-2 bg-red-50/30 text-center">
-                                <h3 class="text-sm font-bold text-red-600 mb-2">אזור סכנה</h3>
-                                <p class="text-[11px] text-red-400 mb-4">פעולה זו תמחק את כל המידע באפליקציה לצמיתות.</p>
-                                <button onclick="App.Actions.clearAllData()" class="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition shadow-md active:scale-95 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-trash-can"></i> איפוס נתוני אפליקציה מוחלט
+                            <div class="glass-panel rounded-[32px] p-6 border-stone-200 border-2 bg-stone-50/50 text-center space-y-3">
+                                <h3 class="text-sm font-bold text-stone-700 mb-2">ניהול נתונים</h3>
+                                <button onclick="App.Actions.exportData()" class="w-full bg-white border border-stone-200 text-stone-700 py-3 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-download"></i> הורד קובץ גיבוי נתונים
+                                </button>
+                                <button onclick="App.Actions.clearAllData()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center justify-center gap-2 border border-red-200">
+                                    <i class="fa-solid fa-trash-can"></i> מחיקת אפליקציה מוחלטת
                                 </button>
                             </div>
                         </div>`;
@@ -807,16 +992,49 @@
                     const pName = document.getElementById('prof-partner-name').value.trim();
                     const email = document.getElementById('prof-user-email') ? document.getElementById('prof-user-email').value.trim() : '';
                     const aDate = document.getElementById('prof-anniversary').value;
+                    const uBday = document.getElementById('prof-user-bday').value;
+                    const pBday = document.getElementById('prof-partner-bday').value;
                     
                     if(uName) App.State.save('userName', uName); 
                     if(pName) App.State.save('partnerName', pName);
                     App.State.save('userEmail', email);
                     App.State.save('anniversaryDate', aDate);
+                    App.State.save('userBirthday', uBday);
+                    App.State.save('partnerBirthday', pBday);
                     
                     const uPrefs = { loveLang: document.getElementById('pref-user-love').value.trim(), coffee: document.getElementById('pref-user-coffee').value.trim(), comfort: document.getElementById('pref-user-comfort').value.trim() };
                     const pPrefs = { loveLang: document.getElementById('pref-partner-love').value.trim(), coffee: document.getElementById('pref-partner-coffee').value.trim(), comfort: document.getElementById('pref-partner-comfort').value.trim() };
                     App.State.save('userPrefs', uPrefs); App.State.save('partnerPrefs', pPrefs);
                     App.UI.showToast("הפרופיל הזוגי עודכן ונשמר בהצלחה! 💖", "success"); App.Navigation.navigate('profile');
+                },
+
+                showAvatarModal(who) {
+                    const avatarsHTML = App.Data.avatarsList.map(a => `<button onclick="App.Actions.selectAvatar('${who}', '${a}')" class="text-4xl hover:scale-110 transition active:scale-95 p-2 bg-stone-50 rounded-2xl border border-stone-100">${a}</button>`).join('');
+                    App.UI.showModal(`<div class="text-center"><h3 class="text-lg font-bold text-stone-800 mb-4">בחירת אווטר אישי</h3><div class="grid grid-cols-4 gap-3 max-h-[300px] overflow-y-auto no-scrollbar p-1">${avatarsHTML}</div><button onclick="App.UI.closeModal()" class="mt-5 w-full bg-stone-100 text-stone-600 py-3 rounded-xl font-bold">ביטול</button></div>`);
+                },
+
+                selectAvatar(who, avatar) {
+                    if (who === 'user') App.State.save('userAvatar', avatar);
+                    if (who === 'partner') App.State.save('partnerAvatar', avatar);
+                    App.UI.closeModal();
+                    App.Navigation.navigate('profile');
+                },
+
+                setAppTheme(themeKey) {
+                    App.State.save('appTheme', themeKey);
+                    document.body.style.background = App.Data.themes[themeKey].bg;
+                    App.Navigation.navigate('profile');
+                },
+
+                exportData() {
+                    const data = JSON.stringify(localStorage);
+                    const blob = new Blob([data], {type: 'application/json'});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; 
+                    a.download = `Duet_Backup_${new Date().toLocaleDateString('he-IL').replace(/\//g,'-')}.json`;
+                    a.click();
+                    App.UI.showToast("קובץ הגיבוי הורד בהצלחה לחצי השני! 💾", "success");
                 },
 
                 clearAllData() {
@@ -841,6 +1059,17 @@
                 },
 
                 waterPlant() { const today = new Date().toDateString(); if (App.State.lastWateredDate === today) return App.UI.showToast("הגינה כבר הושקתה היום!", "info"); App.State.save('lastWateredDate', today); App.State.addXP(15); App.UI.showToast("השקיתם בהצלחה 🌱 +15 XP", "success"); App.Navigation.navigate('garden'); },
+                
+                completeQuest(idx) {
+                    let q = [...App.State.quests];
+                    if(!q[idx].completed) {
+                        q[idx].completed = true;
+                        App.State.save('quests', q);
+                        App.State.addXP(10);
+                        App.UI.showToast("משימה יומית הושלמה! +10 XP 🌟", "success");
+                        App.Navigation.navigate('garden');
+                    }
+                },
                 addFromBank(idx) { const wish = App.Data.wishesBank[idx]; let list = [...App.State.bucketList]; if (!list.some(item => item.text === wish.text)) { list.push({ id: Date.now(), text: wish.text, category: wish.category, completed: false }); App.State.save('bucketList', list); App.UI.showToast("הרעיון נוסף בהצלחה לרשימת החלומות שלכם! ✨", "success"); App.Navigation.navigate('garden'); } },
                 toggleBucketItem(id) { let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if (list[idx].completed) { list[idx].completed = false; App.State.subtractXP(50); App.UI.showToast("החלום חזר לרשימה (-50 XP)", "info"); } else { list[idx].completed = true; App.State.addXP(50); App.UI.showToast("מזל טוב! החלום הוגשם 🎉 +50 XP", "success"); } App.State.save('bucketList', list); App.Navigation.navigate('garden'); } },
                 deleteBucketItem(id) { if(!confirm("למחוק את החלום מהרשימה?")) return; let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if(list[idx].completed) App.State.subtractXP(50); list.splice(idx, 1); App.State.save('bucketList', list); App.UI.showToast("החלום נמחק", "info"); App.Navigation.navigate('garden'); } },
@@ -861,10 +1090,14 @@
                     const currentTag = App.State.journalTags[dateKey] || ''; 
                     const isHighlight = App.State.journalHighlights[dateKey] || false; 
                     
-                    let tagsHTML = `<div class="grid grid-cols-5 gap-1.5 mt-1">`; 
-                    Object.entries(App.Data.journalTags).forEach(([key, value]) => { 
+                    const savedLocation = App.State.journalLocations[dateKey] || '';
+                    const savedMood = App.State.journalMoods[dateKey] || '';
+                    const allTags = {...App.Data.journalTags, ...App.State.customTags};
+
+                    let tagsHTML = `<div class="grid grid-cols-4 gap-1.5 mt-1">`; 
+                    Object.entries(allTags).forEach(([key, value]) => { 
                         const isSelected = currentTag === key; 
-                        tagsHTML += `<button onclick="App.Actions.selectJournalTag('${dateKey}', '${key}')" class="p-2 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-orange-500 bg-orange-50/50 font-bold' : 'bg-white border-stone-100'}"><i class="fa-solid ${value.icon} text-xs ${value.color.split(' ')[0]}"></i><span class="text-[9px] text-stone-600">${value.name.split(' ')[0]}</span></button>`; 
+                        tagsHTML += `<button onclick="App.Actions.selectJournalTag('${dateKey}', '${key}')" class="p-2 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-orange-500 bg-orange-50/50 font-bold shadow-inner' : 'bg-white border-stone-100'}"><i class="fa-solid ${value.icon} text-xs ${value.color.split(' ')[0]}"></i><span class="text-[9px] text-stone-600 truncate w-full px-1">${value.name}</span></button>`; 
                     }); 
                     tagsHTML += `</div>`; 
 
@@ -875,18 +1108,30 @@
                             <h3 class="font-bold text-stone-800 text-sm">${isFuture ? '🚀 תכנון אירוע עתידי' : '📝 זיכרון משותף'} ליום ${day}</h3>
                             <button onclick="document.getElementById('selected-day-panel').classList.add('hidden'); document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105'));" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark"></i></button>
                         </div>
-                        ${!isFuture ? `<button onclick="App.Actions.insertWritingPrompt()" class="text-[11px] text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 font-bold active:scale-95 transition"><i class="fa-solid fa-wand-magic-sparkles"></i> תן לי רעיון כתיבה</button>` : ''}
                         
-                        <div class="flex items-center gap-3 bg-stone-50 p-2 rounded-xl border border-stone-100">
-                            <div class="flex-1">
+                        <div class="flex gap-2">
+                            <div class="flex-1 bg-stone-50 p-2 rounded-xl border border-stone-100">
                                 <label class="text-[10px] font-bold text-stone-400 block mb-1">מתאריך:</label>
-                                <input type="date" disabled value="${formattedDateValue}" class="w-full bg-transparent text-xs text-stone-500 font-bold outline-none">
+                                <input type="date" disabled value="${formattedDateValue}" class="w-full bg-transparent text-[11px] text-stone-500 font-bold outline-none">
                             </div>
-                            <i class="fa-solid fa-arrow-left text-stone-300 text-xs"></i>
-                            <div class="flex-1">
-                                <label class="text-[10px] font-bold text-orange-400 block mb-1">עד תאריך (לאירוע מתמשך):</label>
-                                <input type="date" id="journal-end-date" min="${formattedDateValue}" class="w-full bg-white border border-orange-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-orange-400 font-bold text-stone-700 shadow-sm">
+                            <div class="flex-1 bg-white p-2 rounded-xl border border-orange-200 shadow-sm">
+                                <label class="text-[10px] font-bold text-orange-400 block mb-1">עד תאריך (מתמשך):</label>
+                                <input type="date" id="journal-end-date" min="${formattedDateValue}" class="w-full bg-transparent text-[11px] outline-none font-bold text-stone-700">
                             </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <div class="flex-1 relative">
+                                <i class="fa-solid fa-location-dot absolute right-3 top-2.5 text-stone-300 text-xs"></i>
+                                <input type="text" id="journal-location" value="${savedLocation}" placeholder="חריש, דליית אל-כרמל, בניאס..." class="w-full bg-white border border-stone-200 rounded-xl py-2 pr-8 pl-2 text-xs font-bold text-stone-700 focus:border-orange-400 outline-none">
+                            </div>
+                            <select id="journal-mood" class="bg-white border border-stone-200 rounded-xl py-2 px-2 text-xs font-bold text-stone-700 focus:border-orange-400 outline-none w-1/3">
+                                <option value="" ${savedMood===''?'selected':''}>אווירה?</option>
+                                <option value="🥰" ${savedMood==='🥰'?'selected':''}>🥰 מאוהבים</option>
+                                <option value="😌" ${savedMood==='😌'?'selected':''}>😌 רגועים</option>
+                                <option value="🤪" ${savedMood==='🤪'?'selected':''}>🤪 מצחיק</option>
+                                <option value="😴" ${savedMood==='😴'?'selected':''}>😴 עייפים</option>
+                            </select>
                         </div>
 
                         <textarea id="journal-input" class="w-full h-24 p-3 bg-stone-50 border rounded-2xl text-sm no-scrollbar focus:outline-none focus:border-orange-400" placeholder="${isFuture ? 'מה אתם מתכננים לעשות יחד בימים אלו?' : 'שתפו כאן רגע, תחושה, או זיכרון מהיום...'}">${App.State.journalNotes[dateKey] || ''}</textarea>
@@ -896,26 +1141,37 @@
                             ${tagsHTML}
                         </div>
                         
-                        <div class="flex items-center gap-2 pt-1">
-                            <input type="checkbox" id="journal-highlight-check" ${isHighlight ? 'checked' : ''} class="w-4 h-4 rounded text-orange-500 border-stone-300">
-                            <label for="journal-highlight-check" class="text-xs font-bold text-stone-700 select-none">סמן כ'יום זהב' מיוחד ✨</label>
+                        <div class="flex items-center justify-between pt-1">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="journal-highlight-check" ${isHighlight ? 'checked' : ''} class="w-4 h-4 rounded text-orange-500 border-stone-300">
+                                <label for="journal-highlight-check" class="text-xs font-bold text-stone-700 select-none">סמן כ'יום זהב' ✨</label>
+                            </div>
+                            ${!isFuture ? `<button onclick="App.Actions.insertWritingPrompt()" class="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-bold transition"><i class="fa-solid fa-wand-magic-sparkles"></i> רעיון כתיבה</button>` : ''}
                         </div>
                         
                         <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="w-full bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">${isFuture ? 'שמור תכנון' : 'שמור ביומן'}</button>
                     </div>`; 
                     document.getElementById('journal-input').focus(); 
                 },
+
                 selectJournalTag(dateKey, tagKey) { const tags = {...App.State.journalTags}; if(tags[dateKey] === tagKey) delete tags[dateKey]; else tags[dateKey] = tagKey; App.State.save('journalTags', tags); this.openJournalDay(dateKey, dateKey.split('-')[2]); },
+                
+                setJournalFilter(filter) { App.State.save('journalFilter', filter); App.Navigation.navigate('journal'); },
+
                 saveJournalEntryExtended(dateKey) { 
                     const val = document.getElementById('journal-input').value.trim(); 
                     const checkHighlight = document.getElementById('journal-highlight-check').checked; 
                     const currentTag = App.State.journalTags[dateKey];
                     const endDateInput = document.getElementById('journal-end-date').value;
+                    const locationVal = document.getElementById('journal-location').value.trim();
+                    const moodVal = document.getElementById('journal-mood').value;
                     const todayStr = new Date().toDateString(); 
 
                     const notes = {...App.State.journalNotes}; 
                     const highlights = {...App.State.journalHighlights}; 
                     const tags = {...App.State.journalTags};
+                    const locs = {...App.State.journalLocations};
+                    const moods = {...App.State.journalMoods};
 
                     let datesToUpdate = [dateKey];
                     
@@ -940,6 +1196,8 @@
                             notes[dKey] = val; 
                             highlights[dKey] = checkHighlight; 
                             if (currentTag) tags[dKey] = currentTag;
+                            if (locationVal) locs[dKey] = locationVal; else delete locs[dKey];
+                            if (moodVal) moods[dKey] = moodVal; else delete moods[dKey];
                         });
                         
                         if(App.State.lastJournalDate !== todayStr) { 
@@ -952,6 +1210,8 @@
                             delete notes[dKey]; 
                             delete highlights[dKey]; 
                             delete tags[dKey];
+                            delete locs[dKey];
+                            delete moods[dKey];
                         });
                         App.UI.showToast("הרשומה הוסרה", "info"); 
                     } 
@@ -959,7 +1219,8 @@
                     App.State.save('journalNotes', notes); 
                     App.State.save('journalHighlights', highlights); 
                     App.State.save('journalTags', tags); 
-                    localStorage.setItem('duet_journal_tags', JSON.stringify(tags));
+                    App.State.save('journalLocations', locs);
+                    App.State.save('journalMoods', moods);
                     
                     App.Navigation.navigate('journal'); 
                 },
@@ -980,12 +1241,68 @@
                 },
                 openMonthlyWrapUp() { App.UI.showModal(`<div class="space-y-4 text-right"><h3 class="text-xl font-bold text-stone-800 text-center">סיכום חודש זוגי 🌟</h3><p class="text-xs text-stone-500 text-center leading-relaxed">קחו 2 דקות להביט לאחור ולחגוג את השותפות שלכם.</p><div class="space-y-3 pt-2"><div><label class="text-xs font-bold text-stone-400">1. מה היה רגע השיא שלכם החודש?</label><input type="text" id="wrap-q1" class="w-full bg-stone-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-purple-400 mt-1"></div><div><label class="text-xs font-bold text-stone-400">2. על מה את/ה רוצה להגיד תודה?</label><input type="text" id="wrap-q2" class="w-full bg-stone-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-purple-400 mt-1"></div></div><button onclick="App.Actions.submitMonthlyWrapUp()" class="w-full bg-purple-600 text-white py-3 rounded-xl font-bold text-sm active:scale-95 transition mt-2 shadow-md">שלח סיכום וקבל +50 XP</button></div>`); },
                 submitMonthlyWrapUp() { const q1 = document.getElementById('wrap-q1').value.trim(); const q2 = document.getElementById('wrap-q2').value.trim(); if(!q1 || !q2) return App.UI.showToast("בבקשה ענו על השאלות...", "info"); App.State.save('monthlyWrapUpDone', true); App.State.addXP(50); App.UI.closeModal(); App.UI.showToast("סיכום חודשי נשמר! הגינה קיבלה +50 XP 🎉", "success"); App.Navigation.navigate('journal'); },
-                saveIntimacyAnswer() { const val = document.getElementById('answer-box').value.trim(); if (!val) return App.UI.showToast("כתבו משהו...", "info"); const todayStr = new Date().toDateString(); App.State.save('savedAnswer', val); App.State.save('answeredToday', true); App.State.save('lastIntimacyDate', todayStr); const deck = App.Data.decks[App.State.selectedDeck]; const question = deck.questions[App.State.questionIndex % deck.questions.length]; const partner = App.Data.mockPartnerAnswers[App.State.questionIndex % 3]; const history = [...App.State.intimacyHistory]; history.unshift({ date: new Date().toLocaleDateString('he-IL'), question: question, userAnswer: val, partnerAnswer: partner, isFavorite: false }); App.State.save('intimacyHistory', history); App.State.addXP(30); App.UI.showToast(`נשמר! הגינה קיבלה +30 XP ❤️`, "success"); App.Navigation.navigate('intimacy'); },
+                setMood(mood) {
+                    App.State.save('userMood', mood);
+                    App.Navigation.navigate('intimacy');
+                },
+
+                saveIntimacyAnswer() { 
+                    const val = document.getElementById('answer-box').value.trim(); 
+                    if (!val) return App.UI.showToast("כתבו משהו...", "info"); 
+                    if (!App.State.userMood) return App.UI.showToast("רגע, סמן קודם מה מצב האנרגיה שלך", "info");
+                    
+                    const todayStr = new Date().toDateString(); 
+                    App.State.save('savedAnswer', val); 
+                    App.State.save('answeredToday', true); 
+                    App.State.save('lastIntimacyDate', todayStr); 
+                    
+                    const deck = App.Data.decks[App.State.selectedDeck]; 
+                    const question = deck.questions[App.State.questionIndex % deck.questions.length]; 
+                    const partner = App.Data.mockPartnerAnswers[App.State.questionIndex % 3]; 
+                    const history = [...App.State.intimacyHistory]; 
+                    
+                    history.unshift({ date: new Date().toLocaleDateString('he-IL'), question: question, userAnswer: val, partnerAnswer: partner, isFavorite: false }); 
+                    App.State.save('intimacyHistory', history); 
+                    App.State.addXP(30); 
+                    
+                    App.Navigation.navigate('intimacy');
+                    App.UI.throwPetals();
+                    App.UI.showToast(`חיבור נוצר! הגינה קיבלה +30 XP 🌱`, "success"); 
+                },
                 selectDeck(deckKey) { App.State.save('selectedDeck', deckKey); App.State.save('questionIndex', Math.floor(Math.random() * 3)); App.Navigation.navigate('intimacy'); },
                 toggleFavorite(index) { const history = [...App.State.intimacyHistory]; history[index].isFavorite = !history[index].isFavorite; App.State.save('intimacyHistory', history); App.Navigation.navigate('intimacy'); }
             },
 
             UI: {
+              throwPetals() {
+                    const colors = ['bg-emerald-300', 'bg-orange-300', 'bg-teal-200', 'bg-yellow-200'];
+                    for(let i = 0; i < 35; i++) {
+                        const petal = document.createElement('div');
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        petal.className = `petal ${color}`;
+                        
+                        const size = Math.random() * 8 + 6;
+                        petal.style.width = `${size}px`;
+                        petal.style.height = `${size}px`;
+                        
+                        petal.style.left = `${Math.random() * 100}vw`;
+                        petal.style.top = `-20px`;
+                        
+                        const duration = 2 + Math.random() * 3;
+                        petal.style.transition = `top ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform ${duration}s linear, opacity ${duration}s ease-in`;
+                        petal.style.transform = `rotate(${Math.random() * 360}deg)`;
+                        
+                        document.body.appendChild(petal);
+                        
+                        setTimeout(() => {
+                            petal.style.top = '100vh';
+                            petal.style.transform = `rotate(${Math.random() * 720}deg)`;
+                            petal.style.opacity = '0';
+                        }, 50);
+                        
+                        setTimeout(() => petal.remove(), duration * 1000 + 100);
+                    }
+                },
                 updateGlobalCounters() { const el = document.getElementById('global-level-display'); if(el) el.innerText = App.State.gardenLevel; },
                 showToast(msg, type) { const t = document.createElement('div'); t.className = `p-4 rounded-2xl glass-panel shadow-lg border text-sm font-bold animate-page-entry z-50 ${type === 'success' ? 'border-emerald-200 text-emerald-800' : 'border-blue-200 text-blue-800'}`; t.innerText = msg; document.getElementById('toast-container').appendChild(t); setTimeout(() => t.remove(), 3500); },
                 showModal(html) { const m = document.getElementById('custom-modal'); document.getElementById('modal-body').innerHTML = html; m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); },
