@@ -8,7 +8,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
+        .paper-lines { background-image: linear-gradient(#e5e7eb 1px, transparent 1px); background-size: 100% 28px; }
+        .paper-grid { background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+        .paper-craft { background-color: #e6dcc8; border: 1px solid #d4c5b0; }
+        .font-hand { font-family: 'Amatic SC', cursive; font-size: 1.6rem; letter-spacing: 1px; }
+        .polaroid { background: white; padding: 12px 12px 40px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transform: rotate(-2deg); border: 1px solid #eee; }
+        .washi-tape { position: absolute; top: -12px; left: 50%; transform: translateX(-50%) rotate(-3deg); width: 100px; height: 30px; background-color: rgba(255, 182, 193, 0.6); box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 10; }
         @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap');
         
         :root {
@@ -225,10 +235,11 @@
                 activeTab: 'garden', gardenLevel: 1, gardenXP: 0,
                 lastWateredDate: '', lastIntimacyDate: '', lastJournalDate: '',
                 questionDate: '', selectedDeck: null, questionIndex: 0, savedAnswer: '', answeredToday: false,
-                journalNotes: {}, intimacyHistory: [], bucketList: [],
+                journalNotes: {}, journalPartnerNotes: {}, journalPhotos: {}, journalStyles: {},
+                intimacyHistory: [], bucketList: [],
                 userName: '', partnerName: '', userEmail: '', userPin: '', anniversaryDate: '', syncCode: '',
                 journalViewMode: 'calendar', journalTags: {}, journalHighlights: {}, monthlyWrapUpDone: false,
-                journalViewYear: null, journalViewMonth: null,
+                journalViewYear: null, journalViewMonth: null, mapInstance: null,
                 quests: [], questsDate: '',
                 journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all',
                 userPrefs: { loveLang: '', coffee: '', comfort: '' },
@@ -295,6 +306,9 @@
                     this.answeredToday = localStorage.getItem('duet_answered_today') === 'true';
                     
                     this.journalNotes = JSON.parse(localStorage.getItem('duet_journal_notes')) || {};
+                    this.journalPartnerNotes = JSON.parse(localStorage.getItem('duet_journal_partner_notes')) || {};
+                    this.journalPhotos = JSON.parse(localStorage.getItem('duet_journal_photos')) || {};
+                    this.journalStyles = JSON.parse(localStorage.getItem('duet_journal_styles')) || {};
                     this.intimacyHistory = JSON.parse(localStorage.getItem('duet_intimacy_history')) || [];
                     this.bucketList = JSON.parse(localStorage.getItem('duet_bucket_list')) || [];
                     
@@ -626,7 +640,13 @@
                     let countdownHTML = countdownEvent ? `<div class="bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-blue-100/60 rounded-2xl p-4 text-blue-800 text-center text-sm font-bold animate-pulse shadow-sm">🚀 מתקרב ובא: <span class="underline">${countdownEvent.text}</span> בעוד <span class="text-base text-blue-600 font-extrabold">${countdownEvent.daysLeft}</span> ימים! (${countdownEvent.dateStr})</div>` : '';
                     let wrapUpHTML = !App.State.monthlyWrapUpDone ? `<div class="bg-gradient-to-r from-purple-500/10 to-lavender-500/10 border border-purple-200 rounded-2xl p-4 flex justify-between items-center shadow-sm"><div class="text-right"><h4 class="text-sm font-bold text-purple-950">הגיע הזמן לסיכום החודש! 🌟</h4><p class="text-[11px] text-purple-700 font-medium">הביטו לאחור, חגגו ניצחונות וקבלו 50 XP.</p></div><button onclick="App.Actions.openMonthlyWrapUp()" class="bg-purple-600 text-white text-xs font-bold py-2 px-3 rounded-xl shadow active:scale-95 transition">נתחיל</button></div>` : '';
                     const mode = App.State.journalViewMode;
-                    let toggleHeaderHTML = `<div class="flex justify-center mb-4"><div class="bg-stone-100 p-1 rounded-xl inline-flex shadow-inner"><button onclick="App.Actions.setJournalView('calendar')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'calendar' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">לוח שנה</button><button onclick="App.Actions.setJournalView('feed')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'feed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">פיד זיכרונות</button></div></div>`;
+                    
+                    let toggleHeaderHTML = `<div class="flex justify-center mb-4"><div class="bg-stone-100 p-1 rounded-xl inline-flex shadow-inner"><button onclick="App.Actions.setJournalView('calendar')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'calendar' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">לוח שנה</button><button onclick="App.Actions.setJournalView('feed')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'feed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">פיד חוויות</button><button onclick="App.Actions.setJournalView('map')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'map' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">מפה</button></div></div>`;
+
+                    if (mode === 'map') {
+                        setTimeout(() => App.UI.renderMap(), 100);
+                        return `<div class="space-y-4">${toggleHeaderHTML}<div id="map-root" class="w-full h-[65vh] rounded-[32px] shadow-sm border-4 border-white z-10"></div><p class="text-center text-xs text-stone-400 font-bold">המפה מציגה את כל המקומות שתייגתם ביומן 📍</p></div>`;
+                    }
 
                     if (mode === 'feed') {
                         const allTags = {...App.Data.journalTags, ...App.State.customTags};
@@ -636,15 +656,7 @@
                             filtersHTML += `<button onclick="App.Actions.setJournalFilter('${key}')" class="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition border ${isSel ? value.color.replace(' bg-', ' border-').replace('50', '300') + ' ' + value.color.split(' ')[1] : 'bg-white text-stone-500 border-stone-200'}"><i class="fa-solid ${value.icon} ml-1"></i>${value.name}</button>`;
                         });
                         filtersHTML += `</div>`;
-                        
-                        let timehopHTML = '';
-                        const now = new Date();
-                        const lastYearKey = `${now.getFullYear()-1}-${now.getMonth()+1}-${now.getDate()}`;
-                        if (App.State.journalNotes[lastYearKey]) {
-                            timehopHTML = `<div class="bg-gradient-to-r from-orange-500 to-amber-500 p-1 rounded-2xl mb-4 shadow-sm animate-pulse" style="animation-duration: 3s;"><div class="bg-white/95 rounded-[14px] p-4 text-center relative overflow-hidden"><i class="fa-solid fa-clock-rotate-left text-orange-200 text-5xl absolute -left-2 -top-2 opacity-50"></i><h4 class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-1">ביום הזה ממש, לפני שנה</h4><p class="text-stone-700 font-medium text-sm">"${App.State.journalNotes[lastYearKey]}"</p></div></div>`;
-                        }
-
-                        return `<div class="space-y-4">${toggleHeaderHTML}${timehopHTML}${countdownHTML}${wrapUpHTML}${filtersHTML}${this.renderJournalFeed()}</div>`;
+                        return `<div class="space-y-4">${toggleHeaderHTML}${countdownHTML}${wrapUpHTML}${filtersHTML}${this.renderJournalFeed()}</div>`;
                     }
 
                     const viewYear = App.State.journalViewYear;
@@ -662,7 +674,7 @@
                     for (let day = 1; day <= totalDays; day++) {
                         const dateKey = `${viewYear}-${viewMonth + 1}-${day}`;
                         const isToday = day === now.getDate() && viewMonth === now.getMonth() && viewYear === now.getFullYear();
-                        const hasNote = App.State.journalNotes[dateKey];
+                        const hasNote = App.State.journalNotes[dateKey] || App.State.journalPhotos[dateKey];
                         const isHighlight = App.State.journalHighlights[dateKey];
                         const tagKey = App.State.journalTags[dateKey];
                         const tagData = allTags[tagKey];
@@ -705,7 +717,8 @@
                 },
 
                 renderJournalFeed() {
-                    let sortedKeys = Object.keys(App.State.journalNotes).sort((a,b) => new Date(b) - new Date(a));
+                    let allKeys = new Set([...Object.keys(App.State.journalNotes), ...Object.keys(App.State.journalPhotos)]);
+                    let sortedKeys = Array.from(allKeys).sort((a,b) => new Date(b) - new Date(a));
                     
                     if (App.State.journalFilter !== 'all') {
                         if (App.State.journalFilter === 'highlight') {
@@ -718,30 +731,44 @@
                     if(sortedKeys.length === 0) return `<div class="text-center py-10 bg-white/40 border border-stone-100 border-dashed rounded-3xl"><i class="fa-solid fa-folder-open text-4xl text-stone-300 mb-2"></i><p class="text-sm font-bold text-stone-500">אין פה זיכרונות עדיין</p><p class="text-xs text-stone-400">תעדו בלוח השנה או שנו את הסינון למעלה.</p></div>`;
                     
                     const allTags = {...App.Data.journalTags, ...App.State.customTags};
-                    let feedHTML = '<div class="space-y-3.5">';
+                    let feedHTML = '<div class="space-y-6 pt-2">';
                     
                     sortedKeys.forEach(key => {
-                        const note = App.State.journalNotes[key]; 
+                        const note = App.State.journalNotes[key] || ''; 
+                        const partnerNote = App.State.journalPartnerNotes[key] || '';
+                        const photo = App.State.journalPhotos[key] || '';
+                        const style = App.State.journalStyles[key] || 'clean';
+                        
                         const isHighlight = App.State.journalHighlights[key]; 
                         const tagData = allTags[App.State.journalTags[key]];
                         const location = App.State.journalLocations[key];
                         const mood = App.State.journalMoods[key];
                         
                         const parts = key.split('-'); const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                        const isFuture = new Date(parts[0], parts[1]-1, parts[2]) > new Date().setHours(0,0,0,0);
                         
-                        feedHTML += `<div class="p-5 rounded-2xl border transition-all ${isHighlight ? 'bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm' : isFuture ? 'bg-blue-50/40 border-blue-100 border-dashed' : 'bg-white border-stone-100'}">
-                            <div class="flex justify-between items-center text-xs mb-3">
+                        let paperClass = 'bg-white border-stone-100';
+                        if (style === 'lines') paperClass = 'bg-white paper-lines border-stone-200';
+                        if (style === 'grid') paperClass = 'bg-white paper-grid border-stone-200';
+                        if (style === 'craft') paperClass = 'paper-craft text-stone-800';
+                        
+                        const photoHTML = photo ? `<div class="polaroid mx-auto mb-4 mt-2 max-w-[80%]"><img src="${photo}" class="rounded w-full"><div class="font-hand text-center mt-3 text-2xl text-stone-800">${location || formattedDate}</div></div>` : '';
+                        const partnerHTML = partnerNote ? `<div class="mt-4 pt-4 border-t border-stone-300/40 relative"><span class="absolute -top-3 right-4 bg-orange-100 text-orange-600 px-2 rounded-full text-[10px] font-bold">הזווית של ${App.State.partnerName}</span><p class="font-hand text-2xl leading-relaxed text-stone-700">${partnerNote}</p></div>` : '';
+
+                        feedHTML += `<div class="p-6 rounded-[28px] border transition-all relative shadow-sm ${paperClass}">
+                            ${isHighlight ? '<div class="washi-tape"></div>' : ''}
+                            <div class="flex justify-between items-center text-xs mb-4">
                                 <div class="flex flex-col gap-0.5">
-                                    <span class="text-stone-400 font-bold">${formattedDate} ${isFuture ? '• 🚀 עתידי' : ''} ${mood ? `<span class="mr-1 text-sm">${mood}</span>` : ''}</span>
+                                    <span class="text-stone-400 font-bold">${formattedDate} ${mood ? `<span class="mr-1 text-sm">${mood}</span>` : ''}</span>
                                     ${location ? `<span class="text-[10px] text-stone-500"><i class="fa-solid fa-location-dot text-orange-400 ml-0.5"></i> ${location}</span>` : ''}
                                 </div>
                                 <div class="flex items-center gap-1.5">
-                                    ${isHighlight ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-100/60 px-2 py-0.5 rounded-md"><i class="fa-solid fa-star"></i> יום זהב</span>' : ''}
+                                    ${isHighlight ? '<span class="text-[10px] font-bold text-amber-600 bg-amber-100/80 px-2 py-0.5 rounded-md"><i class="fa-solid fa-star"></i> יום זהב</span>' : ''}
                                     ${tagData ? `<span class="text-[10px] font-bold ${tagData.color.split(' ')[0]} ${tagData.color.split(' ')[1]} px-2 py-0.5 rounded-md"><i class="fa-solid ${tagData.icon} ml-1"></i>${tagData.name}</span>` : ''}
                                 </div>
                             </div>
-                            <p class="text-stone-800 font-medium text-sm leading-relaxed">${note}</p>
+                            ${photoHTML}
+                            ${note ? `<p class="${style !== 'clean' ? 'font-hand text-2xl leading-relaxed' : 'text-sm font-medium leading-relaxed'} text-stone-800">${note}</p>` : ''}
+                            ${partnerHTML}
                         </div>`;
                     });
                     feedHTML += '</div>'; return feedHTML;
@@ -1404,176 +1431,45 @@
                 promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.Navigation.navigate('garden'); } },
                 insertWritingPrompt() { const prompts = App.Data.writingPrompts; const random = prompts[Math.floor(Math.random() * prompts.length)]; const el = document.getElementById('journal-input'); if(el) { el.value = random; el.focus(); } },
                 
-                openJournalDay(dateKey, day) { 
-                    document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105'));
-                    const activeCell = document.getElementById(`day-cell-${dateKey}`);
-                    if(activeCell) activeCell.classList.add('border-orange-500', 'border-2', 'shadow-md', 'scale-105');
-
-                    const panel = document.getElementById('selected-day-panel'); 
-                    panel.classList.remove('hidden'); 
-                    const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0); 
-                    const parts = dateKey.split('-'); 
-                    const isFuture = new Date(parts[0], parts[1]-1, parts[2]) > todayMidnight; 
-                    const currentTag = App.State.journalTags[dateKey] || ''; 
-                    const isHighlight = App.State.journalHighlights[dateKey] || false; 
+                renderMap() {
+                    if(App.State.mapInstance) { App.State.mapInstance.remove(); }
+                    const mapEl = document.getElementById('map-root');
+                    if(!mapEl) return;
                     
-                    const savedLocation = App.State.journalLocations[dateKey] || '';
-                    const savedMood = App.State.journalMoods[dateKey] || '';
-                    const allTags = {...App.Data.journalTags, ...App.State.customTags};
+                    // יצירת המפה עם מיקוד על ישראל
+                    const map = L.map('map-root').setView([31.5, 34.8], 7);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                    }).addTo(map);
+                    App.State.mapInstance = map;
 
-                    let tagsHTML = `<div class="grid grid-cols-4 gap-1.5 mt-1">`; 
-                    Object.entries(allTags).forEach(([key, value]) => { 
-                        const isSelected = currentTag === key; 
-                        tagsHTML += `<button onclick="App.Actions.selectJournalTag('${dateKey}', '${key}')" class="p-2 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-orange-500 bg-orange-50/50 font-bold shadow-inner' : 'bg-white border-stone-100'}"><i class="fa-solid ${value.icon} text-xs ${value.color.split(' ')[0]}"></i><span class="text-[9px] text-stone-600 truncate w-full px-1">${value.name}</span></button>`; 
-                    }); 
-                    tagsHTML += `</div>`; 
-
-                    const formattedDateValue = `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
-                    const hasExistingNote = App.State.journalNotes[dateKey];
-
-                    panel.innerHTML = `<div class="space-y-4">
-                        <div class="flex justify-between items-center border-b border-stone-100 pb-2">
-                            <h3 class="font-bold text-stone-800 text-sm">${isFuture ? '🚀 תכנון אירוע עתידי' : '📝 זיכרון משותף'} ליום ${day}</h3>
-                            <button onclick="document.getElementById('selected-day-panel').classList.add('hidden'); document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105'));" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <div class="flex-1 bg-stone-50 p-2 rounded-xl border border-stone-100">
-                                <label class="text-[10px] font-bold text-stone-400 block mb-1">מתאריך:</label>
-                                <input type="date" disabled value="${formattedDateValue}" class="w-full bg-transparent text-[11px] text-stone-500 font-bold outline-none">
-                            </div>
-                            <div class="flex-1 bg-white p-2 rounded-xl border border-orange-200 shadow-sm">
-                                <label class="text-[10px] font-bold text-orange-400 block mb-1">עד תאריך (מתמשך):</label>
-                                <input type="date" id="journal-end-date" min="${formattedDateValue}" class="w-full bg-transparent text-[11px] outline-none font-bold text-stone-700">
-                            </div>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <div class="flex-1 relative">
-                                <i class="fa-solid fa-location-dot absolute right-3 top-2.5 text-stone-300 text-xs"></i>
-                                <input type="text" id="journal-location" value="${savedLocation}" placeholder="חריש, דליית אל-כרמל, בניאס..." class="w-full bg-white border border-stone-200 rounded-xl py-2 pr-8 pl-2 text-xs font-bold text-stone-700 focus:border-orange-400 outline-none">
-                            </div>
-                            <select id="journal-mood" class="bg-white border border-stone-200 rounded-xl py-2 px-2 text-xs font-bold text-stone-700 focus:border-orange-400 outline-none w-1/3">
-                                <option value="" ${savedMood===''?'selected':''}>אווירה?</option>
-                                <option value="🥰" ${savedMood==='🥰'?'selected':''}>🥰 מאוהבים</option>
-                                <option value="😌" ${savedMood==='😌'?'selected':''}>😌 רגועים</option>
-                                <option value="🤪" ${savedMood==='🤪'?'selected':''}>🤪 מצחיק</option>
-                                <option value="😴" ${savedMood==='😴'?'selected':''}>😴 עייפים</option>
-                            </select>
-                        </div>
-
-                        <textarea id="journal-input" class="w-full h-24 p-3 bg-stone-50 border rounded-2xl text-sm no-scrollbar focus:outline-none focus:border-orange-400" placeholder="${isFuture ? 'מה אתם מתכננים לעשות יחד בימים אלו?' : 'שתפו כאן רגע, תחושה, או זיכרון מהיום...'}">${App.State.journalNotes[dateKey] || ''}</textarea>
-                        
-                        <div class="space-y-1">
-                            <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">תיוג קטגוריה</label>
-                            ${tagsHTML}
-                        </div>
-                        
-                        <div class="flex items-center justify-between pt-1">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="journal-highlight-check" ${isHighlight ? 'checked' : ''} class="w-4 h-4 rounded text-orange-500 border-stone-300">
-                                <label for="journal-highlight-check" class="text-xs font-bold text-stone-700 select-none">סמן כ'יום זהב' ✨</label>
-                            </div>
-                            ${!isFuture ? `<button onclick="App.Actions.insertWritingPrompt()" class="text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded-lg font-bold transition"><i class="fa-solid fa-wand-magic-sparkles"></i> רעיון כתיבה</button>` : ''}
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            ${hasExistingNote ? `<button onclick="App.Actions.deleteJournalDay('${dateKey}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 rounded-xl text-sm font-bold transition-all border border-red-100 active:scale-95 shadow-sm" title="מחק רשומה"><i class="fa-regular fa-trash-can"></i></button>` : ''}
-                            <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="flex-1 bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">${isFuture ? 'שמור תכנון' : 'שמור ביומן'}</button>
-                        </div>
-                    </div>`; 
-                    document.getElementById('journal-input').focus(); 
-                },
-
-                selectJournalTag(dateKey, tagKey) { 
-                    const inputEl = document.getElementById('journal-input');
-                    const locEl = document.getElementById('journal-location');
-                    const moodEl = document.getElementById('journal-mood');
-                    const endEl = document.getElementById('journal-end-date');
-                    
-                    const tempText = inputEl ? inputEl.value : '';
-                    const tempLoc = locEl ? locEl.value : '';
-                    const tempMood = moodEl ? moodEl.value : '';
-                    const tempEnd = endEl ? endEl.value : '';
-
-                    const tags = {...App.State.journalTags}; 
-                    if(tags[dateKey] === tagKey) delete tags[dateKey]; 
-                    else tags[dateKey] = tagKey; 
-                    App.State.save('journalTags', tags); 
-                    
-                    this.openJournalDay(dateKey, dateKey.split('-')[2]); 
-                    
-                    if(document.getElementById('journal-input')) document.getElementById('journal-input').value = tempText;
-                    if(document.getElementById('journal-location')) document.getElementById('journal-location').value = tempLoc;
-                    if(document.getElementById('journal-mood')) document.getElementById('journal-mood').value = tempMood;
-                    if(document.getElementById('journal-end-date')) document.getElementById('journal-end-date').value = tempEnd;
-                },
-                
-                setJournalFilter(filter) { App.State.save('journalFilter', filter); App.Navigation.navigate('journal'); },
-
-                saveJournalEntryExtended(dateKey) { 
-                    const val = document.getElementById('journal-input').value.trim(); 
-                    const checkHighlight = document.getElementById('journal-highlight-check').checked; 
-                    const currentTag = App.State.journalTags[dateKey];
-                    const endDateInput = document.getElementById('journal-end-date').value;
-                    const locationVal = document.getElementById('journal-location').value.trim();
-                    const moodVal = document.getElementById('journal-mood').value;
-                    const todayStr = new Date().toDateString(); 
-
-                    const notes = {...App.State.journalNotes}; 
-                    const highlights = {...App.State.journalHighlights}; 
-                    const tags = {...App.State.journalTags};
-                    const locs = {...App.State.journalLocations};
-                    const moods = {...App.State.journalMoods};
-
-                    let datesToUpdate = [dateKey];
-                    
-                    if (endDateInput) {
-                        const startParts = dateKey.split('-');
-                        const startDate = new Date(startParts[0], startParts[1]-1, startParts[2]);
-                        const endDate = new Date(endDateInput);
-                        
-                        if (endDate > startDate) {
-                            let currDate = new Date(startDate);
-                            datesToUpdate = [];
-                            while (currDate <= endDate) {
-                                const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
-                                datesToUpdate.push(dKey);
-                                currDate.setDate(currDate.getDate() + 1);
-                            }
+                    // הוספת נעצים לפי המיקומים שתייגתם! (משתמש בשירות חינמי לאיתור קואורדינטות)
+                    const locs = App.State.journalLocations;
+                    for (const [dateKey, locName] of Object.entries(locs)) {
+                        if (locName) {
+                            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locName)}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data && data.length > 0) {
+                                    const note = App.State.journalNotes[dateKey] || '';
+                                    const iconHtml = `<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg"><i class="fa-solid fa-heart"></i></div>`;
+                                    const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
+                                    
+                                    L.marker([data[0].lat, data[0].lon], {icon: customIcon}).addTo(map)
+                                        .bindPopup(`<div class="text-right" dir="rtl"><b class="text-stone-800">${locName}</b><br><span class="font-hand text-xl text-stone-600">${note.substring(0,30)}...</span></div>`);
+                                }
+                            }).catch(err => console.log(err));
                         }
                     }
-
-                    if (val) { 
-                        datesToUpdate.forEach(dKey => {
-                            notes[dKey] = val; 
-                            highlights[dKey] = checkHighlight; 
-                            if (currentTag) tags[dKey] = currentTag;
-                            if (locationVal) locs[dKey] = locationVal; else delete locs[dKey];
-                            if (moodVal) moods[dKey] = moodVal; else delete moods[dKey];
-                        });
-                        
-                        if(App.State.lastJournalDate !== todayStr) { 
-                            App.State.save('lastJournalDate', todayStr); 
-                            App.State.addXP(20); 
-                        } 
-                        App.UI.showToast(datesToUpdate.length > 1 ? "אירוע מתמשך נשמר בהצלחה! 📝" : "היומן עודכן בהצלחה! +20 XP 📝", "success"); 
-                    } else { 
-                        datesToUpdate.forEach(dKey => {
-                            delete notes[dKey]; delete highlights[dKey]; delete tags[dKey]; delete locs[dKey]; delete moods[dKey];
-                        });
-                        App.UI.showToast("הרשומה הוסרה", "info"); 
-                    } 
-                    
-                    App.State.save('journalNotes', notes); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
-                    App.Navigation.navigate('journal'); 
                 },
+                
                 deleteJournalDay(dateKey) {
-                    if (!confirm("למחוק לחלוטין את הרשומה והתיוגים של יום זה? 🗑️")) return;
+                    if (!confirm("למחוק לחלוטין את הרשומה, התמונה והתיוגים של יום זה? 🗑️")) return;
 
-                    const notes = {...App.State.journalNotes}; const highlights = {...App.State.journalHighlights}; const tags = {...App.State.journalTags}; const locs = {...App.State.journalLocations}; const moods = {...App.State.journalMoods};
-                    delete notes[dateKey]; delete highlights[dateKey]; delete tags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
-                    App.State.save('journalNotes', notes); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
+                    const notes = {...App.State.journalNotes}; const pNotes = {...App.State.journalPartnerNotes}; const photos = {...App.State.journalPhotos}; const styles = {...App.State.journalStyles}; const highlights = {...App.State.journalHighlights}; const tags = {...App.State.journalTags}; const locs = {...App.State.journalLocations}; const moods = {...App.State.journalMoods};
+                    delete notes[dateKey]; delete pNotes[dateKey]; delete photos[dateKey]; delete styles[dateKey]; delete highlights[dateKey]; delete tags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
+                    
+                    App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
 
                     App.UI.showToast("הרשומה נמחקה בהצלחה", "info");
                     App.Navigation.navigate('journal');
