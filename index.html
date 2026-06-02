@@ -197,7 +197,7 @@
 
     <script>
         const App = {
-            State: {
+          State: {
                 activeTab: 'garden', gardenLevel: 1, gardenXP: 0,
                 lastWateredDate: '', lastIntimacyDate: '', lastJournalDate: '',
                 questionDate: '', selectedDeck: null, questionIndex: 0, savedAnswer: '', answeredToday: false,
@@ -220,8 +220,8 @@
                 intimacyMode: localStorage.getItem('duet_intimacy_mode') || 'qa', 
                 gameQuestions: JSON.parse(localStorage.getItem('duet_game_questions')) || [],
                 gameAnswers: JSON.parse(localStorage.getItem('duet_game_answers')) || {},
-                questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_q_count_today')) || 0,
-                dailyDeepQCount: parseInt(localStorage.getItem('duet_daily_deep_q')) || 0,
+                questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_questions_answered_count_today')) || parseInt(localStorage.getItem('duet_q_count_today')) || 0,
+                dailyDeepQCount: parseInt(localStorage.getItem('duet_daily_deep_q_count')) || parseInt(localStorage.getItem('duet_daily_deep_q')) || 0,
                 offlineTimer: 0, offlineInterval: null, offlineQuestion: '',
 
                 init() {
@@ -254,21 +254,25 @@
                         }
                     }
 
+                    // תיקון קריאת הנתונים כדי שיקראו מהמפתחות המדויקים שהשמירה יוצרת!
                     this.gardenLevel = parseInt(localStorage.getItem('duet_garden_level')) || 1;
-                    this.gardenXP = parseInt(localStorage.getItem('duet_garden_xp')) || 0;
-                    this.lastWateredDate = localStorage.getItem('duet_last_watered') || '';
+                    this.gardenXP = parseInt(localStorage.getItem('duet_garden_x_p')) || parseInt(localStorage.getItem('duet_garden_xp')) || 0;
+                    this.lastWateredDate = localStorage.getItem('duet_last_watered_date') || localStorage.getItem('duet_last_watered') || '';
                     this.lastIntimacyDate = localStorage.getItem('duet_last_intimacy_date') || '';
                     this.lastJournalDate = localStorage.getItem('duet_last_journal_date') || '';
                     
-                    this.questionDate = localStorage.getItem('duet_q_date') || '';
+                    this.questionDate = localStorage.getItem('duet_question_date') || localStorage.getItem('duet_q_date') || '';
                     this.selectedDeck = localStorage.getItem('duet_selected_deck') || null;
-                    this.questionIndex = parseInt(localStorage.getItem('duet_q_index')) || 0;
+                    this.questionIndex = parseInt(localStorage.getItem('duet_question_index')) || parseInt(localStorage.getItem('duet_q_index')) || 0;
                     this.savedAnswer = localStorage.getItem('duet_saved_answer') || '';
                     this.answeredToday = localStorage.getItem('duet_answered_today') === 'true';
                     
                     this.journalNotes = JSON.parse(localStorage.getItem('duet_journal_notes')) || {};
                     this.intimacyHistory = JSON.parse(localStorage.getItem('duet_intimacy_history')) || [];
                     this.bucketList = JSON.parse(localStorage.getItem('duet_bucket_list')) || [];
+                    
+                    this.quests = JSON.parse(localStorage.getItem('duet_quests')) || [];
+                    this.questsDate = localStorage.getItem('duet_quests_date') || '';
                     
                     this.journalViewMode = localStorage.getItem('duet_journal_view_mode') || 'calendar';
                     this.journalTags = JSON.parse(localStorage.getItem('duet_journal_tags')) || {};
