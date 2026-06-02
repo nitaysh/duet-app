@@ -491,10 +491,15 @@
                     App.State.quests.forEach((q, idx) => {
                         questsHTML += `
                             <div class="flex items-center justify-between p-3 bg-white/60 border ${q.completed ? 'border-emerald-200 bg-emerald-50/50' : 'border-stone-100'} rounded-2xl shadow-sm">
-                                <span class="text-sm font-bold ${q.completed ? 'text-emerald-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2">${q.text}</span>
-                                <button onclick="App.Actions.completeQuest(${idx})" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white pointer-events-none' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0">
-                                    <i class="fa-solid fa-check text-xs"></i>
-                                </button>
+                                <span class="text-sm font-bold ${q.completed ? 'text-emerald-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2 transition-all">${q.text}</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button onclick="App.Actions.replaceQuest(${idx})" class="w-8 h-8 bg-white border border-stone-100 text-stone-300 hover:text-red-400 hover:bg-red-50 hover:border-red-100 rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" title="מחק והבא משימה חדשה">
+                                        <i class="fa-regular fa-trash-can text-xs"></i>
+                                    </button>
+                                    <button onclick="App.Actions.toggleQuest(${idx})" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white shadow-inner' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0" title="${q.completed ? 'בטל סימון' : 'סמן כבוצע'}">
+                                        <i class="fa-solid fa-check text-xs"></i>
+                                    </button>
+                                </div>
                             </div>`;
                     });
                     questsHTML += '</div>';
@@ -1303,15 +1308,42 @@
 
                 waterPlant() { const today = new Date().toDateString(); if (App.State.lastWateredDate === today) return App.UI.showToast("הגינה כבר הושקתה היום!", "info"); App.State.save('lastWateredDate', today); App.State.addXP(15); App.UI.showToast("השקיתם בהצלחה 🌱 +15 XP", "success"); App.Navigation.navigate('garden'); },
                 
-                completeQuest(idx) {
+                toggleQuest(idx) {
                     let q = [...App.State.quests];
-                    if(!q[idx].completed) {
+                    if(q[idx].completed) {
+                        q[idx].completed = false;
+                        App.State.save('quests', q);
+                        App.State.subtractXP(10);
+                        App.UI.showToast("סימון משימה בוטל (-10 XP)", "info");
+                    } else {
                         q[idx].completed = true;
                         App.State.save('quests', q);
                         App.State.addXP(10);
                         App.UI.showToast("משימה יומית הושלמה! +10 XP 🌟", "success");
-                        App.Navigation.navigate('garden');
                     }
+                    App.Navigation.navigate('garden');
+                },
+
+                replaceQuest(idx) {
+                    let q = [...App.State.quests];
+                    
+                    // אם המשימה שמחקנו הייתה מסומנת, נוריד בחזרה את ה-XP שלה
+                    if (q[idx].completed) {
+                        App.State.subtractXP(10);
+                    }
+                    
+                    // חיפוש משימות בבנק שעדיין לא מופיעות לנו כרגע מול העיניים
+                    const available = App.Data.questsBank.filter(bankQ => !q.some(existingQ => existingQ.text === bankQ));
+                    
+                    if (available.length > 0) {
+                        const newQ = available[Math.floor(Math.random() * available.length)];
+                        q[idx] = { text: newQ, completed: false };
+                        App.State.save('quests', q);
+                        App.UI.showToast("המשימה נמחקה והוחלפה בחדשה 🔄", "success");
+                    } else {
+                        App.UI.showToast("אין עוד משימות שונות בבנק!", "info");
+                    }
+                    App.Navigation.navigate('garden');
                 },
                 addFromBank(idx) { const wish = App.Data.wishesBank[idx]; let list = [...App.State.bucketList]; if (!list.some(item => item.text === wish.text)) { list.push({ id: Date.now(), text: wish.text, category: wish.category, completed: false }); App.State.save('bucketList', list); App.UI.showToast("הרעיון נוסף בהצלחה לרשימת החלומות שלכם! ✨", "success"); App.Navigation.navigate('garden'); } },
                 toggleBucketItem(id) { let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if (list[idx].completed) { list[idx].completed = false; App.State.subtractXP(50); App.UI.showToast("החלום חזר לרשימה (-50 XP)", "info"); } else { list[idx].completed = true; App.State.addXP(50); App.UI.showToast("מזל טוב! החלום הוגשם 🎉 +50 XP", "success"); } App.State.save('bucketList', list); App.Navigation.navigate('garden'); } },
