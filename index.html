@@ -766,7 +766,8 @@
                     // מצב דייט על הספה (טיימר)
                     if (App.State.intimacyMode === 'offline') return `<div class="space-y-4">${streakHTML}${this.renderOfflineMode()}</div>`;
 
-                    if (!App.State.selectedDeck) return `<div class="space-y-4">${streakHTML}${this.renderDeckSelector()}</div>`;
+                    // תיקון קריטי: מוודא שהאפליקציה לא קורסת בגלל המילה null בזיכרון
+                    if (!App.State.selectedDeck || App.State.selectedDeck === 'null') return `<div class="space-y-4">${streakHTML}${this.renderDeckSelector()}</div>`;
                     
                     const deck = App.Data.decks[App.State.selectedDeck];
                     const question = deck.questions[App.State.questionIndex % deck.questions.length];
