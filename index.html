@@ -235,7 +235,8 @@
                 activeTab: 'garden', gardenLevel: 1, gardenXP: 0,
                 lastWateredDate: '', lastIntimacyDate: '', lastJournalDate: '',
                 questionDate: '', selectedDeck: null, questionIndex: 0, savedAnswer: '', answeredToday: false,
-                journalNotes: {}, journalPartnerNotes: {}, journalPhotos: {}, journalStyles: {},
+                // אלו המשתנים החדשים שחובה להוסיף כדי שהיומן המשודרג יעבוד
+                journalNotes: {}, journalPartnerNotes: {}, journalPhotos: {}, journalStyles: {}, 
                 intimacyHistory: [], bucketList: [],
                 userName: '', partnerName: '', userEmail: '', userPin: '', anniversaryDate: '', syncCode: '',
                 journalViewMode: 'calendar', journalTags: {}, journalHighlights: {}, monthlyWrapUpDone: false,
@@ -258,7 +259,7 @@
                 questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_questions_answered_count_today')) || parseInt(localStorage.getItem('duet_q_count_today')) || 0,
                 dailyDeepQCount: parseInt(localStorage.getItem('duet_daily_deep_q_count')) || parseInt(localStorage.getItem('duet_daily_deep_q')) || 0,
                 offlineTimer: 0, offlineInterval: null, offlineQuestion: '',
-                tempPin: '', // משתנה למקלדת המובנית שלנו
+                tempPin: '', 
 
                 init() {
                     const hasOnboarded = localStorage.getItem('duet_onboarding_complete');
@@ -284,7 +285,7 @@
                             appContainer.classList.add('hidden');
                             if(lockScreen) {
                                 lockScreen.classList.remove('hidden');
-                                App.UI.setupLockScreen(); // מפעיל את העיצוב החכם!
+                                setTimeout(() => App.UI.setupLockScreen(), 100);
                             }
                         } else {
                             appContainer.classList.remove('hidden'); 
@@ -292,7 +293,6 @@
                         }
                     }
 
-                    // תיקון קריאת הנתונים כדי שיקראו מהמפתחות המדויקים שהשמירה יוצרת!
                     this.gardenLevel = parseInt(localStorage.getItem('duet_garden_level')) || 1;
                     this.gardenXP = parseInt(localStorage.getItem('duet_garden_x_p')) || parseInt(localStorage.getItem('duet_garden_xp')) || 0;
                     this.lastWateredDate = localStorage.getItem('duet_last_watered_date') || localStorage.getItem('duet_last_watered') || '';
@@ -309,6 +309,7 @@
                     this.journalPartnerNotes = JSON.parse(localStorage.getItem('duet_journal_partner_notes')) || {};
                     this.journalPhotos = JSON.parse(localStorage.getItem('duet_journal_photos')) || {};
                     this.journalStyles = JSON.parse(localStorage.getItem('duet_journal_styles')) || {};
+
                     this.intimacyHistory = JSON.parse(localStorage.getItem('duet_intimacy_history')) || [];
                     this.bucketList = JSON.parse(localStorage.getItem('duet_bucket_list')) || [];
                     
@@ -1195,14 +1196,19 @@
 
                 joinWithSyncCode() {
                     const code = document.getElementById('ob-sync-code-splash').value.trim().toUpperCase();
+                    const pin = document.getElementById('ob-join-pin-splash').value.trim();
+
                     if(!code || !code.startsWith('DUET-')) {
                         return App.UI.showToast("נא להזין קוד סנכרון תקין המתחיל ב-DUET", "info");
+                    }
+                    if (pin && pin.length !== 4) {
+                        return App.UI.showToast("הקוד הסודי חייב להכיל בדיוק 4 ספרות", "info");
                     }
                     
                     App.State.save('partnerSyncCode', code);
                     App.State.save('userName', 'אני'); 
                     App.State.save('partnerName', 'השותפ/ה');
-                    App.State.save('userPin', '0000');
+                    App.State.save('userPin', pin);
                     
                     localStorage.setItem('duet_onboarding_complete', 'true');
                     document.getElementById('splash-screen').classList.add('hidden');
@@ -1406,15 +1412,8 @@
 
                 replaceQuest(idx) {
                     let q = [...App.State.quests];
-                    
-                    // אם המשימה שמחקנו הייתה מסומנת, נוריד בחזרה את ה-XP שלה
-                    if (q[idx].completed) {
-                        App.State.subtractXP(10);
-                    }
-                    
-                    // חיפוש משימות בבנק שעדיין לא מופיעות לנו כרגע מול העיניים
+                    if (q[idx].completed) { App.State.subtractXP(10); }
                     const available = App.Data.questsBank.filter(bankQ => !q.some(existingQ => existingQ.text === bankQ));
-                    
                     if (available.length > 0) {
                         const newQ = available[Math.floor(Math.random() * available.length)];
                         q[idx] = { text: newQ, completed: false };
@@ -1425,42 +1424,182 @@
                     }
                     App.Navigation.navigate('garden');
                 },
+
                 addFromBank(idx) { const wish = App.Data.wishesBank[idx]; let list = [...App.State.bucketList]; if (!list.some(item => item.text === wish.text)) { list.push({ id: Date.now(), text: wish.text, category: wish.category, completed: false }); App.State.save('bucketList', list); App.UI.showToast("הרעיון נוסף בהצלחה לרשימת החלומות שלכם! ✨", "success"); App.Navigation.navigate('garden'); } },
                 toggleBucketItem(id) { let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if (list[idx].completed) { list[idx].completed = false; App.State.subtractXP(50); App.UI.showToast("החלום חזר לרשימה (-50 XP)", "info"); } else { list[idx].completed = true; App.State.addXP(50); App.UI.showToast("מזל טוב! החלום הוגשם 🎉 +50 XP", "success"); } App.State.save('bucketList', list); App.Navigation.navigate('garden'); } },
                 deleteBucketItem(id) { if(!confirm("למחוק את החלום מהרשימה?")) return; let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if(list[idx].completed) App.State.subtractXP(50); list.splice(idx, 1); App.State.save('bucketList', list); App.UI.showToast("החלום נמחק", "info"); App.Navigation.navigate('garden'); } },
                 promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.Navigation.navigate('garden'); } },
                 insertWritingPrompt() { const prompts = App.Data.writingPrompts; const random = prompts[Math.floor(Math.random() * prompts.length)]; const el = document.getElementById('journal-input'); if(el) { el.value = random; el.focus(); } },
-                
-                renderMap() {
-                    if(App.State.mapInstance) { App.State.mapInstance.remove(); }
-                    const mapEl = document.getElementById('map-root');
-                    if(!mapEl) return;
-                    
-                    // יצירת המפה עם מיקוד על ישראל
-                    const map = L.map('map-root').setView([31.5, 34.8], 7);
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-                    }).addTo(map);
-                    App.State.mapInstance = map;
 
-                    // הוספת נעצים לפי המיקומים שתייגתם! (משתמש בשירות חינמי לאיתור קואורדינטות)
-                    const locs = App.State.journalLocations;
-                    for (const [dateKey, locName] of Object.entries(locs)) {
-                        if (locName) {
-                            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locName)}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                if(data && data.length > 0) {
-                                    const note = App.State.journalNotes[dateKey] || '';
-                                    const iconHtml = `<div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white border-2 border-white shadow-lg"><i class="fa-solid fa-heart"></i></div>`;
-                                    const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [32, 32], iconAnchor: [16, 32] });
-                                    
-                                    L.marker([data[0].lat, data[0].lon], {icon: customIcon}).addTo(map)
-                                        .bindPopup(`<div class="text-right" dir="rtl"><b class="text-stone-800">${locName}</b><br><span class="font-hand text-xl text-stone-600">${note.substring(0,30)}...</span></div>`);
-                                }
-                            }).catch(err => console.log(err));
-                        }
+                // פונקציות יומן משודרגות ומאובטחות!
+                handlePhotoUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const b64 = e.target.result;
+                            document.getElementById('journal-photo-preview').src = b64;
+                            document.getElementById('photo-preview-container').classList.remove('hidden');
+                            document.getElementById('journal-photo-base64').value = b64;
+                        };
+                        reader.readAsDataURL(file);
                     }
+                },
+
+                removePhoto() {
+                    document.getElementById('photo-preview-container').classList.add('hidden');
+                    document.getElementById('journal-photo-base64').value = '';
+                    document.getElementById('journal-photo-preview').src = '';
+                },
+
+                openJournalDay(dateKey, day) { 
+                    document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105'));
+                    const activeCell = document.getElementById(`day-cell-${dateKey}`);
+                    if(activeCell) activeCell.classList.add('border-orange-500', 'border-2', 'shadow-md', 'scale-105');
+
+                    const panel = document.getElementById('selected-day-panel'); 
+                    panel.classList.remove('hidden'); 
+                    
+                    const currentTag = (App.State.journalTags || {})[dateKey] || ''; 
+                    const isHighlight = (App.State.journalHighlights || {})[dateKey] || false; 
+                    const savedLocation = (App.State.journalLocations || {})[dateKey] || '';
+                    const savedMood = (App.State.journalMoods || {})[dateKey] || '';
+                    const savedStyle = (App.State.journalStyles || {})[dateKey] || 'clean';
+                    const savedPhoto = (App.State.journalPhotos || {})[dateKey] || '';
+                    const allTags = {...App.Data.journalTags, ...App.State.customTags};
+
+                    let tagsHTML = `<div class="grid grid-cols-4 gap-1.5 mt-1">`; 
+                    Object.entries(allTags).forEach(([key, value]) => { 
+                        const isSelected = currentTag === key; 
+                        tagsHTML += `<button onclick="App.Actions.selectJournalTag('${dateKey}', '${key}')" class="p-2 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 ${isSelected ? 'border-orange-500 bg-orange-50/50 font-bold shadow-inner' : 'bg-white border-stone-100'}"><i class="fa-solid ${value.icon} text-xs ${value.color.split(' ')[0]}"></i><span class="text-[9px] text-stone-600 truncate w-full px-1">${value.name}</span></button>`; 
+                    }); 
+                    tagsHTML += `</div>`; 
+
+                    const formattedDateValue = dateKey.split('-').map(p=>p.padStart(2,'0')).join('-');
+                    const hasExistingNote = (App.State.journalNotes || {})[dateKey];
+
+                    panel.innerHTML = `<div class="space-y-4">
+                        <div class="flex justify-between items-center border-b border-stone-100 pb-2">
+                            <h3 class="font-bold text-stone-800 text-sm">📝 יומן מסע ליום ${day}</h3>
+                            <button onclick="document.getElementById('selected-day-panel').classList.add('hidden'); document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('border-orange-500', 'border-2', 'shadow-md', 'scale-105'));" class="text-stone-400 hover:text-stone-600"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <div class="flex-1 relative">
+                                <i class="fa-solid fa-location-dot absolute right-3 top-2.5 text-stone-300 text-xs"></i>
+                                <input type="text" id="journal-location" value="${savedLocation}" placeholder="חריש, זכרון, צפון..." class="w-full bg-white border border-stone-200 rounded-xl py-2 pr-8 pl-2 text-xs font-bold text-stone-700 focus:border-orange-400 outline-none">
+                            </div>
+                            <select id="journal-mood" class="bg-white border border-stone-200 rounded-xl py-2 px-2 text-xs font-bold text-stone-700 focus:border-orange-400 outline-none w-1/3">
+                                <option value="" ${savedMood===''?'selected':''}>אווירה?</option>
+                                <option value="🥰" ${savedMood==='🥰'?'selected':''}>🥰 מאוהבים</option>
+                                <option value="😌" ${savedMood==='😌'?'selected':''}>😌 רגועים</option>
+                                <option value="🤪" ${savedMood==='🤪'?'selected':''}>🤪 מצחיק</option>
+                                <option value="😴" ${savedMood==='😴'?'selected':''}>😴 עייפים</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <select id="journal-paper-style" class="flex-1 bg-stone-50 border border-stone-200 rounded-xl py-2 px-2 text-xs font-bold text-stone-700 focus:outline-none">
+                                <option value="clean" ${savedStyle==='clean'?'selected':''}>נייר רגיל</option>
+                                <option value="lines" ${savedStyle==='lines'?'selected':''}>שורות</option>
+                                <option value="grid" ${savedStyle==='grid'?'selected':''}>משבצות</option>
+                                <option value="craft" ${savedStyle==='craft'?'selected':''}>קראפט</option>
+                            </select>
+                            <label class="flex-1 bg-stone-800 text-white rounded-xl py-2 flex items-center justify-center text-xs font-bold cursor-pointer active:scale-95 transition">
+                                <i class="fa-solid fa-camera mr-2"></i> צרף פולארויד
+                                <input type="file" class="hidden" accept="image/*" onchange="App.Actions.handlePhotoUpload(event)">
+                            </label>
+                        </div>
+
+                        <div id="photo-preview-container" class="${savedPhoto ? '' : 'hidden'} relative polaroid w-3/4 mx-auto mt-2">
+                            <img id="journal-photo-preview" src="${savedPhoto}" class="w-full rounded">
+                            <input type="hidden" id="journal-photo-base64" value="${savedPhoto}">
+                            <button onclick="App.Actions.removePhoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 shadow text-xs"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+
+                        <div class="bg-stone-50 p-1 rounded-2xl flex gap-1 mb-1">
+                            <button onclick="document.getElementById('journal-input').classList.remove('hidden'); document.getElementById('journal-partner-input').classList.add('hidden'); this.classList.add('bg-white','shadow-sm','text-stone-800'); this.nextElementSibling.classList.remove('bg-white','shadow-sm','text-stone-800'); this.nextElementSibling.classList.add('text-stone-400');" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-white shadow-sm text-stone-800 transition">הזווית של ${App.State.userName || 'אני'}</button>
+                            <button onclick="document.getElementById('journal-partner-input').classList.remove('hidden'); document.getElementById('journal-input').classList.add('hidden'); this.classList.add('bg-white','shadow-sm','text-stone-800'); this.previousElementSibling.classList.remove('bg-white','shadow-sm','text-stone-800'); this.previousElementSibling.classList.add('text-stone-400');" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-stone-400 transition">הזווית של ${App.State.partnerName || 'השותפ/ה'}</button>
+                        </div>
+
+                        <textarea id="journal-input" class="w-full h-24 p-3 bg-white border border-stone-200 rounded-2xl text-sm no-scrollbar focus:outline-none focus:border-orange-400 transition" placeholder="מה תרצה לכתוב על היום הזה?">${(App.State.journalNotes || {})[dateKey] || ''}</textarea>
+                        <textarea id="journal-partner-input" class="w-full h-24 p-3 bg-white border border-stone-200 rounded-2xl text-sm no-scrollbar focus:outline-none focus:border-orange-400 transition hidden" placeholder="הטלפון השני יוכל לערוך את זה כשנסנכרן לענן... בינתיים אפשר לכתוב יחד!">${(App.State.journalPartnerNotes || {})[dateKey] || ''}</textarea>
+                        
+                        <div class="space-y-1 mt-2">
+                            <label class="text-[11px] font-bold text-stone-400 uppercase tracking-wider">תיוג קטגוריה</label>
+                            ${tagsHTML}
+                        </div>
+                        
+                        <div class="flex items-center justify-between pt-1">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="journal-highlight-check" ${isHighlight ? 'checked' : ''} class="w-4 h-4 rounded text-orange-500 border-stone-300">
+                                <label for="journal-highlight-check" class="text-xs font-bold text-stone-700 select-none">סמן כ'יום זהב' (וואשי טייפ) ✨</label>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2 pt-2 border-t border-stone-100">
+                            ${(hasExistingNote || savedPhoto) ? `<button onclick="App.Actions.deleteJournalDay('${dateKey}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 rounded-xl text-sm font-bold transition-all border border-red-100 active:scale-95 shadow-sm" title="מחק רשומה"><i class="fa-regular fa-trash-can"></i></button>` : ''}
+                            <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="flex-1 bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">שמור ביומן</button>
+                        </div>
+                    </div>`; 
+                },
+
+                selectJournalTag(dateKey, tagKey) { 
+                    const tags = {...(App.State.journalTags || {})}; 
+                    if(tags[dateKey] === tagKey) delete tags[dateKey]; 
+                    else tags[dateKey] = tagKey; 
+                    App.State.save('journalTags', tags); 
+                    
+                    document.querySelectorAll('#selected-day-panel button').forEach(b => {
+                        if(b.innerText.includes(App.Data.journalTags[tagKey]?.name || App.State.customTags[tagKey]?.name)) {
+                            b.classList.toggle('border-orange-500'); b.classList.toggle('bg-orange-50/50');
+                        } else {
+                            b.classList.remove('border-orange-500', 'bg-orange-50/50');
+                        }
+                    });
+                },
+
+                saveJournalEntryExtended(dateKey) { 
+                    const val = document.getElementById('journal-input').value.trim(); 
+                    const partnerVal = document.getElementById('journal-partner-input').value.trim();
+                    const photoVal = document.getElementById('journal-photo-base64').value;
+                    const styleVal = document.getElementById('journal-paper-style').value;
+                    
+                    const checkHighlight = document.getElementById('journal-highlight-check').checked; 
+                    const locationVal = document.getElementById('journal-location').value.trim();
+                    const moodVal = document.getElementById('journal-mood').value;
+                    const todayStr = new Date().toDateString(); 
+
+                    const notes = {...(App.State.journalNotes || {})}; 
+                    const pNotes = {...(App.State.journalPartnerNotes || {})};
+                    const photos = {...(App.State.journalPhotos || {})};
+                    const styles = {...(App.State.journalStyles || {})};
+                    const highlights = {...(App.State.journalHighlights || {})}; 
+                    const locs = {...(App.State.journalLocations || {})};
+                    const moods = {...(App.State.journalMoods || {})};
+
+                    if (val || partnerVal || photoVal) { 
+                        if(val) notes[dateKey] = val; else delete notes[dateKey];
+                        if(partnerVal) pNotes[dateKey] = partnerVal; else delete pNotes[dateKey];
+                        if(photoVal) photos[dateKey] = photoVal; else delete photos[dateKey];
+                        styles[dateKey] = styleVal;
+                        
+                        highlights[dateKey] = checkHighlight; 
+                        if (locationVal) locs[dateKey] = locationVal; else delete locs[dateKey];
+                        if (moodVal) moods[dateKey] = moodVal; else delete moods[dateKey];
+                        
+                        if(App.State.lastJournalDate !== todayStr) { 
+                            App.State.save('lastJournalDate', todayStr); 
+                            App.State.addXP(20); 
+                        } 
+                        App.UI.showToast("היומן עודכן בהצלחה! +20 XP 📝", "success"); 
+                    } else { 
+                        delete notes[dateKey]; delete pNotes[dateKey]; delete photos[dateKey]; delete styles[dateKey]; delete highlights[dateKey]; delete App.State.journalTags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
+                        App.UI.showToast("הרשומה הוסרה", "info"); 
+                    } 
+                    
+                    App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
+                    App.Navigation.navigate('journal'); 
                 },
                 
                 deleteJournalDay(dateKey) {
@@ -1474,6 +1613,7 @@
                     App.UI.showToast("הרשומה נמחקה בהצלחה", "info");
                     App.Navigation.navigate('journal');
                 },
+
                 setJournalView(mode) { App.State.save('journalViewMode', mode); App.Navigation.navigate('journal'); },
                 changeJournalMonth(delta) {
                     let month = App.State.journalViewMonth + delta; let year = App.State.journalViewYear;
@@ -1581,26 +1721,11 @@
                 },
 
                 toggleOfflineTimer() {
-                    const btn = document.getElementById('offline-timer-btn');
-                    const icon = document.getElementById('offline-timer-icon');
-                    const text = document.getElementById('offline-timer-text');
-
                     if (App.State.offlineInterval) {
                         clearInterval(App.State.offlineInterval);
                         App.State.offlineInterval = null;
-                        
-                        if (btn && icon && text) {
-                            btn.className = "w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base bg-indigo-600 text-white";
-                            icon.className = "fa-solid fa-play ml-2";
-                            text.innerText = "המשך";
-                        }
+                        App.Navigation.navigate('intimacy'); 
                     } else {
-                        if (btn && icon && text) {
-                            btn.className = "w-full max-w-[200px] py-4 rounded-2xl font-bold transition shadow-md text-base bg-orange-100 text-orange-600 border border-orange-200";
-                            icon.className = "fa-solid fa-pause ml-2";
-                            text.innerText = "עצור";
-                        }
-
                         App.State.offlineInterval = setInterval(() => {
                             if (App.State.offlineTimer > 0) {
                                 App.State.offlineTimer--;
@@ -1620,6 +1745,8 @@
                                 }
                             }
                         }, 1000);
+                        
+                        App.Navigation.navigate('intimacy'); 
                     }
                 },
 
