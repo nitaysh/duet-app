@@ -242,7 +242,7 @@
                 journalViewMode: 'calendar', journalTags: {}, journalHighlights: {}, monthlyWrapUpDone: false,
                 journalViewYear: null, journalViewMonth: null, mapInstance: null,
                 quests: [], questsDate: '',
-                journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all',
+                journalLocations: {}, journalMoods: {}, customTags: {}, journalFilter: 'all', cachedCoords: {},
                 userPrefs: { loveLang: '', coffee: '', comfort: '' },
                 partnerPrefs: { loveLang: '', coffee: '', comfort: '' },
                 userMood: localStorage.getItem('duet_user_mood') || '',
@@ -321,7 +321,8 @@
                     this.journalHighlights = JSON.parse(localStorage.getItem('duet_journal_highlights')) || {};
                     this.monthlyWrapUpDone = localStorage.getItem('duet_monthly_wrap_up_done') === 'true';
                     this.journalLocations = JSON.parse(localStorage.getItem('duet_journal_locations')) || {};
-                    this.journalMoods = JSON.parse(localStorage.getItem('duet_journal_moods')) || {};
+                    this.cachedCoords = JSON.parse(localStorage.getItem('duet_cached_coords')) || {};
+                    this.journalMoods = JSON.parse(localStorage.getItem('duet_journal_moods')) || {};
                     this.customTags = JSON.parse(localStorage.getItem('duet_custom_tags')) || { sushi: { name: "סושי", icon: "fa-bowl-rice", color: "text-orange-500 bg-orange-50" }, study: { name: "זמן לימוד", icon: "fa-book-open-reader", color: "text-indigo-500 bg-indigo-50" } };
                     this.journalFilter = localStorage.getItem('duet_journal_filter') || 'all';
 
@@ -1953,10 +1954,73 @@
                 updateGlobalCounters() { const el = document.getElementById('global-level-display'); if(el) el.innerText = App.State.gardenLevel; },
                 showToast(msg, type) { const t = document.createElement('div'); t.className = `p-4 rounded-2xl glass-panel shadow-lg border text-sm font-bold animate-page-entry z-50 ${type === 'success' ? 'border-emerald-200 text-emerald-800' : 'border-blue-200 text-blue-800'}`; t.innerText = msg; document.getElementById('toast-container').appendChild(t); setTimeout(() => t.remove(), 3500); },
                 showModal(html) { const m = document.getElementById('custom-modal'); document.getElementById('modal-body').innerHTML = html; m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); },
-                closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
-            },
+                closeModal() { document.getElementById('custom-modal').classList.add('hidden'); },
 
-            Utils: { 
+                async renderMap() {
+                    const mapRoot = document.getElementById('map-root');
+                    if (!mapRoot) return;
+
+                    // ניקוי מפה קודמת אם קיימת כדי למנוע כפילויות במעבר בין מסכים
+                    if (App.State.mapInstance) {
+                        App.State.mapInstance.remove();
+                    }
+
+                    // יצירת מפה חדשה במרכז ישראל
+                    App.State.mapInstance = L.map('map-root').setView([31.5, 34.8], 7);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(App.State.mapInstance);
+
+                    const bounds = [];
+                    const uniqueLocations = {};
+
+                    // קיבוץ מיקומים למניעת בקשות כפולות לשרת וחיבור התאריכים לאותו פופ-אפ
+                    Object.entries(App.State.journalLocations).forEach(([dateKey, locName]) => {
+                        if (!locName) return;
+                        const parts = dateKey.split('-');
+                        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                        if (!uniqueLocations[locName]) uniqueLocations[locName] = [];
+                        uniqueLocations[locName].push(formattedDate);
+                    });
+
+                    // הוספת סיכות למפה
+                    for (const [locName, dates] of Object.entries(uniqueLocations)) {
+                        let coords = App.State.cachedCoords[locName];
+                        
+                        if (!coords) {
+                            try {
+                                // שימוש ב-API חינמי להמרת טקסט לנקודות ציון
+                                const searchQuery = locName.includes('ישראל') ? locName : `${locName}, ישראל`;
+                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
+                                const data = await res.json();
+                                if (data && data.length > 0) {
+                                    coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                                    App.State.cachedCoords[locName] = coords;
+                                    App.State.save('cachedCoords', App.State.cachedCoords);
+                                }
+                                // השהייה קלה למניעת חסימה מהשרת (לפי חוקי השימוש של Nominatim)
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            } catch (e) {
+                                console.error('Failed to geocode:', locName);
+                            }
+                        }
+
+                        if (coords) {
+                            bounds.push(coords);
+                            const marker = L.marker(coords).addTo(App.State.mapInstance);
+                            const datesStr = dates.join(', ');
+                            marker.bindPopup(`<div class="text-center font-bold text-stone-800"><i class="fa-solid fa-location-dot text-orange-500 mb-1 text-lg"></i><br>${locName}<br><span class="text-[10px] text-stone-500 font-normal">${datesStr}</span></div>`);
+                        }
+                    }
+
+                    // אם יש נקודות במפה, מתמקדים עליהן בצורה יפה
+                    if (bounds.length > 0) {
+                        App.State.mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+                    }
+                }
+            },
+
+            Utils: {
                 camelToSnake(s) { return s.replace(/[A-Z]/g, l => `_${l.toLowerCase()}`); },
                 getClosestCountdown() { const now = new Date(); now.setHours(0,0,0,0); let closest = null; let minDiff = Infinity; Object.keys(App.State.journalNotes).forEach(key => { const parts = key.split('-'); if(parts.length === 3) { const eventDate = new Date(parts[0], parts[1]-1, parts[2]); if(eventDate > now) { const diff = eventDate - now; if(diff < minDiff) { minDiff = diff; closest = { text: App.State.journalNotes[key], daysLeft: Math.ceil(diff / (1000 * 60 * 60 * 24)), dateStr: eventDate.toLocaleDateString('he-IL') }; } } } }); return closest; }
             }
