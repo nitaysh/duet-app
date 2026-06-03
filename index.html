@@ -213,21 +213,21 @@
 
         <main class="flex-1 overflow-y-auto px-4 pt-4 pb-12 no-scrollbar" id="app-viewport"></main>
 
-        <nav class="glass-panel w-full shrink-0 py-4 flex overflow-x-auto no-scrollbar items-center z-40 border-t shadow-[0_-8px_32px_rgba(0,0,0,0.02)] snap-x">
-                    <button onclick="App.Navigation.navigate('garden')" id="btn-nav-garden" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
-                        <i class="fa-solid fa-seedling text-xl"></i><span class="text-[11px] mt-1 font-medium">הגינה</span>
+        <nav class="glass-panel w-full shrink-0 pt-3 pb-8 flex overflow-x-auto no-scrollbar items-start z-40 border-t shadow-[0_-8px_32px_rgba(0,0,0,0.02)] snap-x">
+                    <button onclick="App.Navigation.navigate('garden')" id="btn-nav-garden" class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-seedling text-2xl mb-1"></i><span class="text-[11px] font-medium">הגינה</span>
                     </button>
-                    <button onclick="App.Navigation.navigate('journal')" id="btn-nav-journal" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
-                        <i class="fa-solid fa-book-open text-xl"></i><span class="text-[11px] mt-1 font-medium">היומן</span>
+                    <button onclick="App.Navigation.navigate('journal')" id="btn-nav-journal" class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-book-open text-2xl mb-1"></i><span class="text-[11px] font-medium">היומן</span>
                     </button>
-                    <button onclick="App.Navigation.navigate('board')" id="btn-nav-board" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
-                        <i class="fa-solid fa-note-sticky text-xl"></i><span class="text-[11px] mt-1 font-medium">מקרר</span>
+                    <button onclick="App.Navigation.navigate('board')" id="btn-nav-board" class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-note-sticky text-2xl mb-1"></i><span class="text-[11px] font-medium">מקרר</span>
                     </button>
-                    <button onclick="App.Navigation.navigate('intimacy')" id="btn-nav-intimacy" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
-                        <i class="fa-solid fa-heart text-xl"></i><span class="text-[11px] mt-1 font-medium">אינטימיות</span>
+                    <button onclick="App.Navigation.navigate('intimacy')" id="btn-nav-intimacy" class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-heart text-2xl mb-1"></i><span class="text-[11px] font-medium">אינטימיות</span>
                     </button>
-                    <button onclick="App.Navigation.navigate('profile')" id="btn-nav-profile" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90 px-2">
-                        <i class="fa-solid fa-user-astronaut text-xl"></i><span class="text-[11px] mt-1 font-medium">פרופיל</span>
+                    <button onclick="App.Navigation.navigate('profile')" id="btn-nav-profile" class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-user-astronaut text-2xl mb-1"></i><span class="text-[11px] font-medium">פרופיל</span>
                     </button>
                 </nav>
     </div>
@@ -597,9 +597,9 @@
                     App.Data.wishesBank.forEach((wish, idx) => {
                         const alreadyAdded = App.State.bucketList.some(b => b.text === wish.text);
                         if (!alreadyAdded) {
-                            bankHTML += `
-                                <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white">
-                                    <span class="text-xs font-bold text-stone-700 block line-clamp-2 min-h-[32px]">${wish.text}</span>
+                            bankHTML += `
+                                <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 h-max p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white">
+                                    <span class="text-xs font-bold text-stone-700 block line-clamp-2 min-h-[32px]">${wish.text}</span>
                                     <div class="flex justify-between items-center mt-3">
                                         <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
                                         <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
