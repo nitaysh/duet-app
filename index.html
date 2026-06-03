@@ -639,22 +639,22 @@
                                 <div class="space-y-2">${activeListHTML}</div>
                             </div>
 
+                            <div class="mt-1 mb-2">
+                                <h3 class="text-[11px] font-bold text-stone-400 px-2 mb-2">בנק הרעיונות:</h3>
+                                <div class="flex items-start gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
+                                    ${bankHTML}
+                                </div>
+                            </div>
+
                             ${wallOfFameHTML}
 
-                            <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm space-y-1 mb-4">
-                                <div class="mb-3">
-                                    <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
-                                    <div class="flex items-start gap-3 overflow-x-auto no-scrollbar pb-1 pt-1 px-1">
-                                        ${bankHTML}
-                                    </div>
-                                </div>
-
-                                <div class="space-y-3 px-1">
-                                    <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                        <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> חנות פרסים</span>
-                                        <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף פרס</button>
-                                    </h3>
-                                    <div class="bg-white/80 border border-stone-100 rounded-2xl p-4 shadow-sm">
+                            <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4 mt-2">
+                                <div class="space-y-3 px-1">
+                                    <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
+                                        <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> חנות פרסים</span>
+                                        <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף פרס</button>
+                                    </h3>
+                                    <div class="bg-white/80 border border-stone-100 rounded-2xl p-4 shadow-sm">
                                         <div class="text-xs font-bold text-stone-500 mb-3">יתרה לרכישה: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
                                         <div class="space-y-2">
                                             ${App.State.storeItems.map(item => `
