@@ -213,20 +213,23 @@
 
         <main class="flex-1 overflow-y-auto px-4 pt-4 pb-32 no-scrollbar" id="app-viewport"></main>
 
-        <nav class="glass-panel fixed bottom-0 left-0 right-0 py-4 px-6 flex justify-between items-center z-40 border-t shadow-[0_-8px_32px_rgba(0,0,0,0.02)]">
-            <button onclick="App.Navigation.navigate('garden')" id="btn-nav-garden" class="flex flex-col items-center flex-1 text-stone-400 transition-all duration-300 active:scale-90">
-                <i class="fa-solid fa-seedling text-xl"></i><span class="text-[11px] mt-1 font-medium">הגינה</span>
-            </button>
-            <button onclick="App.Navigation.navigate('journal')" id="btn-nav-journal" class="flex flex-col items-center flex-1 text-stone-400 transition-all duration-300 active:scale-90">
-                <i class="fa-solid fa-book-open text-xl"></i><span class="text-[11px] mt-1 font-medium">היומן</span>
-            </button>
-            <button onclick="App.Navigation.navigate('intimacy')" id="btn-nav-intimacy" class="flex flex-col items-center flex-1 text-stone-400 transition-all duration-300 active:scale-90">
-                <i class="fa-solid fa-heart text-xl"></i><span class="text-[11px] mt-1 font-medium">אינטימיות</span>
-            </button>
-            <button onclick="App.Navigation.navigate('profile')" id="btn-nav-profile" class="flex flex-col items-center flex-1 text-stone-400 transition-all duration-300 active:scale-90">
-                <i class="fa-solid fa-user-astronaut text-xl"></i><span class="text-[11px] mt-1 font-medium">פרופיל</span>
-            </button>
-        </nav>
+        <nav class="glass-panel fixed bottom-0 left-0 right-0 py-4 flex overflow-x-auto no-scrollbar items-center z-40 border-t shadow-[0_-8px_32px_rgba(0,0,0,0.02)] snap-x">
+                    <button onclick="App.Navigation.navigate('garden')" id="btn-nav-garden" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-seedling text-xl"></i><span class="text-[11px] mt-1 font-medium">הגינה</span>
+                    </button>
+                    <button onclick="App.Navigation.navigate('journal')" id="btn-nav-journal" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-book-open text-xl"></i><span class="text-[11px] mt-1 font-medium">היומן</span>
+                    </button>
+                    <button onclick="App.Navigation.navigate('board')" id="btn-nav-board" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-note-sticky text-xl"></i><span class="text-[11px] mt-1 font-medium">מקרר</span>
+                    </button>
+                    <button onclick="App.Navigation.navigate('intimacy')" id="btn-nav-intimacy" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90">
+                        <i class="fa-solid fa-heart text-xl"></i><span class="text-[11px] mt-1 font-medium">אינטימיות</span>
+                    </button>
+                    <button onclick="App.Navigation.navigate('profile')" id="btn-nav-profile" class="flex-shrink-0 w-[25vw] snap-center flex flex-col items-center text-stone-400 transition-all duration-300 active:scale-90 px-2">
+                        <i class="fa-solid fa-user-astronaut text-xl"></i><span class="text-[11px] mt-1 font-medium">פרופיל</span>
+                    </button>
+                </nav>
     </div>
 
     <script>
@@ -259,9 +262,11 @@
                 questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_questions_answered_count_today')) || parseInt(localStorage.getItem('duet_q_count_today')) || 0,
                 dailyDeepQCount: parseInt(localStorage.getItem('duet_daily_deep_q_count')) || parseInt(localStorage.getItem('duet_daily_deep_q')) || 0,
                 offlineTimer: 0, offlineInterval: null, offlineQuestion: '',
-                tempPin: '', 
+                tempPin: '', 
+                storeItems: [],
+                purchasedRewards: [],
 
-                init() {
+                init() {
                     const hasOnboarded = localStorage.getItem('duet_onboarding_complete');
                     const splashScreen = document.getElementById('splash-screen');
                     const appContainer = document.getElementById('app-container');
@@ -330,9 +335,16 @@
                     this.journalViewMonth = new Date().getMonth();
 
                     this.userPrefs = JSON.parse(localStorage.getItem('duet_user_prefs')) || { loveLang: '', coffee: '', comfort: '' };
-                    this.partnerPrefs = JSON.parse(localStorage.getItem('duet_partner_prefs')) || { loveLang: '', coffee: '', comfort: '' };
+                    this.partnerPrefs = JSON.parse(localStorage.getItem('duet_partner_prefs')) || { loveLang: '', coffee: '', comfort: '' };
+                    
+                    this.storeItems = JSON.parse(localStorage.getItem('duet_store_items')) || [
+                        { id: 1, text: "מסאז׳ 15 דקות 💆‍♂️", cost: 150 },
+                        { id: 2, text: "פטור משטיפת כלים 🍽️", cost: 100 },
+                        { id: 3, text: "בחירת הסרט בערב 🎬", cost: 50 }
+                    ];
+                    this.purchasedRewards = JSON.parse(localStorage.getItem('duet_purchased_rewards')) || [];
 
-                    App.UI.updateGlobalCounters();
+                    App.UI.updateGlobalCounters();
                     if(App.Data.themes[this.appTheme]) document.body.style.background = App.Data.themes[this.appTheme].bg;
                 },
 
@@ -492,12 +504,13 @@
                     viewport.innerHTML = ''; 
                     const container = document.createElement('div');
                     container.className = 'animate-page-entry';
-                    switch(tabId) { 
-                        case 'garden': container.innerHTML = App.Components.Garden(); break; 
-                        case 'journal': container.innerHTML = App.Components.Journal(); break; 
-                        case 'intimacy': container.innerHTML = App.Components.Intimacy(); break; 
-                        case 'profile': container.innerHTML = App.Components.Profile(); break; 
-                    }
+                    switch(tabId) { 
+                        case 'garden': container.innerHTML = App.Components.Garden(); break; 
+                        case 'journal': container.innerHTML = App.Components.Journal(); break; 
+                        case 'board': container.innerHTML = App.Components.Board(); break; 
+                        case 'intimacy': container.innerHTML = App.Components.Intimacy(); break; 
+                        case 'profile': container.innerHTML = App.Components.Profile(); break; 
+                    }
                     viewport.appendChild(container);
                 }
             },
@@ -629,13 +642,45 @@
                             ${wallOfFameHTML}
 
                             <div class="space-y-3 px-1 pt-2">
-                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
-                                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 pt-1 px-1">
-                                    ${bankHTML}
-                                </div>
-                            </div>
-                        </div>`;
-                },
+                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
+                                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 pt-1 px-1">
+                                    ${bankHTML}
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 px-1 pt-2 pb-4">
+                                <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
+                                    <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> חנות פרסים וירטואלית</span>
+                                    <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף פרס</button>
+                                </h3>
+                                <div class="bg-white/60 border border-stone-100 rounded-2xl p-4 shadow-sm">
+                                    <div class="text-xs font-bold text-stone-500 mb-3">יתרה לרכישה: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
+                                    <div class="space-y-2">
+                                        ${App.State.storeItems.map(item => `
+                                            <div class="flex items-center justify-between bg-white border border-stone-100 p-2.5 rounded-xl shadow-sm">
+                                                <span class="text-sm font-bold text-stone-700">${item.text}</span>
+                                                <button onclick="App.Actions.buyStoreItem(${item.id})" class="text-xs font-bold ${App.State.gardenXP >= item.cost ? 'bg-purple-500 text-white active:scale-95' : 'bg-stone-200 text-stone-400'} px-3 py-1.5 rounded-lg transition shadow-sm">${item.cost} XP</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    
+                                    ${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
+                                    <div class="mt-4 pt-3 border-t border-stone-100">
+                                        <h4 class="text-[11px] font-bold text-stone-400 mb-2">פרסים שממתינים למימוש:</h4>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${App.State.purchasedRewards.filter(r => !r.used).map(r => `
+                                                <div class="flex items-center gap-1.5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 px-2.5 py-1.5 rounded-lg shadow-sm">
+                                                    <span class="text-[11px] font-bold text-stone-700">${r.text}</span>
+                                                    <button onclick="App.Actions.useReward(${r.id})" class="text-[9px] bg-purple-200 text-purple-700 px-1.5 py-0.5 rounded font-bold hover:bg-purple-300 transition">ממש</button>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                },
 
                 Journal() {
                     const countdownEvent = App.Utils.getClosestCountdown();
@@ -1179,12 +1224,49 @@
                                 <button onclick="App.Actions.clearAllData()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-xl font-bold text-sm transition shadow-sm active:scale-95 flex items-center justify-center gap-2 border border-red-200">
                                     <i class="fa-solid fa-trash-can"></i> מחיקת אפליקציה מוחלטת
                                 </button>
-                            </div>
-                        </div>`;
-                }
-            },
+                              </div>
+                        </div>`;
+                },
 
-            Actions: {
+                Board() {
+                    const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
+                    let notesHTML = '';
+                    if (notes.length === 0) {
+                        notesHTML = `<div class="text-center text-stone-400 font-bold mt-10 w-full col-span-2">המקרר ריק... השאירו פתק ראשון! 📝</div>`;
+                    } else {
+                        notes.forEach(n => {
+                            notesHTML += `
+                                <div class="relative p-4 rounded-2xl shadow-md border ${n.color} mb-4 transform transition-transform hover:scale-105 break-inside-avoid" style="transform: rotate(${n.rot}deg)">
+                                    <div class="w-10 h-3 bg-white/50 absolute -top-1.5 left-1/2 -translate-x-1/2 rotate-2 shadow-sm rounded-sm"></div>
+                                    <p class="font-hand text-2xl leading-tight text-center">${n.text}</p>
+                                    <div class="flex justify-between items-end mt-4 pt-2 border-t border-black/5">
+                                        <span class="text-[10px] font-bold opacity-70">${n.author}</span>
+                                        <button onclick="App.Actions.deleteBoardNote(${n.id})" class="opacity-50 hover:opacity-100"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    return `
+                        <div class="space-y-6 px-1">
+                            <div class="text-center pt-2">
+                                <h2 class="text-3xl font-bold text-stone-800 font-hand tracking-wider">המקרר שלנו</h2>
+                                <p class="text-stone-500 text-sm">השאירו פתק קטן אחד לשנייה</p>
+                            </div>
+                            <div class="glass-panel rounded-[32px] p-5 shadow-sm border border-white flex gap-3">
+                                <input type="text" id="new-board-note" placeholder="לכתוב פתק..." class="flex-1 bg-white border border-stone-200 rounded-xl px-4 py-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-orange-400 shadow-sm">
+                                <button onclick="App.Actions.saveBoardNote()" class="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-5 rounded-xl font-bold active:scale-95 transition shadow-sm"><i class="fa-solid fa-thumbtack"></i></button>
+                            </div>
+                            <div class="columns-2 gap-4 pt-4">
+                                ${notesHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            Actions: {
                 toggleSplashForm(mode) {
                     if(mode === 'join') {
                         document.getElementById('splash-register-form').classList.add('hidden');
@@ -1432,7 +1514,43 @@
                 promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.Navigation.navigate('garden'); } },
                 insertWritingPrompt() { const prompts = App.Data.writingPrompts; const random = prompts[Math.floor(Math.random() * prompts.length)]; const el = document.getElementById('journal-input'); if(el) { el.value = random; el.focus(); } },
 
-                // פונקציות יומן משודרגות ומאובטחות!
+                buyStoreItem(id) {
+                    const item = App.State.storeItems.find(i => i.id === id);
+                    if (!item) return;
+                    if (App.State.gardenXP < item.cost) return App.UI.showToast("אין מספיק XP לרכישה זו", "info");
+                    App.State.subtractXP(item.cost);
+                    let purchased = [...App.State.purchasedRewards];
+                    purchased.push({ id: Date.now(), text: item.text, used: false });
+                    App.State.save('purchasedRewards', purchased);
+                    App.UI.showToast("רכשתם פרס בהצלחה! 🎉", "success");
+                    App.Navigation.navigate('garden');
+                },
+
+                useReward(id) {
+                    let purchased = [...App.State.purchasedRewards];
+                    const idx = purchased.findIndex(i => i.id === id);
+                    if (idx > -1) {
+                        purchased[idx].used = true;
+                        App.State.save('purchasedRewards', purchased);
+                        App.UI.showToast("הפרס נוצל, תהנו! ❤️", "success");
+                        App.Navigation.navigate('garden');
+                    }
+                },
+
+                addNewStoreItem() {
+                    const text = prompt("מה הפרס שתרצו להוסיף לחנות?");
+                    if(!text) return;
+                    const costStr = prompt("כמה XP זה יעלה?");
+                    const cost = parseInt(costStr);
+                    if(isNaN(cost) || cost <= 0) return App.UI.showToast("מחיר לא תקין", "info");
+                    let items = [...App.State.storeItems];
+                    items.push({ id: Date.now(), text: text.trim(), cost: cost });
+                    App.State.save('storeItems', items);
+                    App.UI.showToast("פרס חדש נוסף לחנות! 🎁", "success");
+                    App.Navigation.navigate('garden');
+                },
+
+                // פונקציות יומן משודרגות ומאובטחות!
                 handlePhotoUpload(event) {
                     const file = event.target.files[0];
                     if (file) {
