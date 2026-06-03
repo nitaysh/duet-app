@@ -658,22 +658,36 @@
 
                             ${wallOfFameHTML}
 
-                            <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
+                           <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
                                 <div class="space-y-3 px-1">
                                     <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                        <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> חנות פרסים</span>
-                                        <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף פרס</button>
+                                        <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}</span>
+                                        <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף מתנה</button>
                                     </h3>
                                     <div class="bg-white/80 border border-stone-100 rounded-2xl p-4 shadow-sm">
-                                        <div class="text-xs font-bold text-stone-500 mb-3">יתרה לרכישה: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
-                                        <div class="space-y-2">
-                                            ${App.State.storeItems.map(item => `
-                                                <div class="flex items-center justify-between bg-white border border-stone-100 p-2.5 rounded-xl shadow-sm">
-                                                    <span class="text-sm font-bold text-stone-700">${item.text}</span>
-                                                    <button onclick="App.Actions.buyStoreItem(${item.id})" class="text-xs font-bold ${App.State.gardenXP >= item.cost ? 'bg-purple-500 text-white active:scale-95' : 'bg-stone-200 text-stone-400'} px-3 py-1.5 rounded-lg transition shadow-sm">${item.cost} XP</button>
-                                                </div>
-                                            `).join('')}
-                                        </div>
+                                        <div class="flex justify-between items-center mb-4">
+                                            <div class="text-xs font-bold text-stone-500">היתרה שלך: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
+                                            <button onclick="App.Actions.buyMysteryBox()" class="text-[10px] font-bold bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white px-2.5 py-1.5 rounded-lg shadow-sm hover:scale-105 transition flex items-center gap-1.5"><i class="fa-solid fa-box-open"></i> הפתעה (70 XP)</button>
+                                        </div>
+                                        <div class="space-y-3">
+                                            ${App.State.storeItems.map(item => {
+                                                const isFlashSale = App.State.flashSale && App.State.flashSale.itemId === item.id;
+                                                const finalCost = isFlashSale ? Math.floor(item.cost * App.State.flashSale.discount) : item.cost;
+                                                const canAfford = App.State.gardenXP >= finalCost;
+                                                return `
+                                                <div class="flex items-center justify-between bg-white border border-stone-100 p-3 rounded-xl shadow-sm relative overflow-hidden">
+                                                    ${isFlashSale ? '<div class="absolute -left-5 top-2 bg-red-500 text-white text-[8px] font-extrabold px-6 py-0.5 -rotate-45 shadow-sm">מבצע פתע!</div>' : ''}
+                                                    <div class="flex items-center gap-3 pr-2">
+                                                        <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
+                                                        <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
+                                                    </div>
+                                                    <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition flex flex-col items-center leading-none gap-1">
+                                                        ${isFlashSale ? `<span class="line-through text-[9px] opacity-70">${item.cost}</span>` : ''}
+                                                        <span>${finalCost} XP</span>
+                                                    </button>
+                                                </div>
+                                            `}).join('')}
+                                        </div>
                                         
                                         ${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
                                         <div class="mt-4 pt-3 border-t border-stone-100">
