@@ -593,21 +593,31 @@
                         wallOfFameHTML += `</div></div>`;
                     }
 
-                    let bankHTML = '';
+                    let bankItems = [];
                     App.Data.wishesBank.forEach((wish, idx) => {
                         const alreadyAdded = App.State.bucketList.some(b => b.text === wish.text);
                         if (!alreadyAdded) {
-                            bankHTML += `
-                                <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 h-max p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white">
-                                    <span class="text-xs font-bold text-stone-700 block line-clamp-2 min-h-[32px]">${wish.text}</span>
-                                    <div class="flex justify-between items-center mt-3">
+                            bankItems.push(`
+                                <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 h-full p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between">
+                                    <span class="text-xs font-bold text-stone-700 block line-clamp-2 mb-3">${wish.text}</span>
+                                    <div class="flex justify-between items-center">
                                         <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
                                         <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
                                     </div>
-                                </div>`;
+                                </div>`);
                         }
                     });
-                    if (bankHTML === '') bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
+                    
+                    let bankHTML = '';
+                    if (bankItems.length === 0) {
+                        bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
+                    } else {
+                        const half = Math.ceil(bankItems.length / 2);
+                        bankHTML = `<div class="flex flex-col gap-3 w-max">
+                                        <div class="flex gap-3">${bankItems.slice(0, half).join('')}</div>
+                                        <div class="flex gap-3">${bankItems.slice(half).join('')}</div>
+                                    </div>`;
+                    }
 
                     const mainPlant = App.State.gardenLevel >= 4 ? '🏡' : App.State.gardenLevel >= 3 ? '🌳' : App.State.gardenLevel >= 2 ? '🌿' : '🌱';
 
@@ -641,7 +651,7 @@
 
                             <div class="mb-0" style="margin-top: 8px;">
                                 <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
-                                <div class="flex items-start gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
+                                <div class="overflow-x-auto no-scrollbar pb-2 px-1">
                                     ${bankHTML}
                                 </div>
                             </div>
