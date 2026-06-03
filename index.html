@@ -587,8 +587,19 @@
                     let wallOfFameHTML = '';
                     if (completedWishes.length > 0) {
                       wallOfFameHTML = `<div class="space-y-3 px-1" style="margin-top: 8px;"><h3 class="text-sm font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-trophy ml-1"></i> היכל התהילה</h3><div class="grid grid-cols-2 gap-2">`;
-                        completedWishes.forEach(item => {
-                            wallOfFameHTML += `<div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-3 rounded-2xl text-center shadow-sm relative overflow-hidden"><i class="fa-solid fa-star text-amber-200 text-3xl absolute -right-2 -top-2 opacity-30"></i><span class="text-xs font-bold text-stone-700 block relative z-10">${item.text}</span></div>`;
+                      completedWishes.forEach(item => {
+                            wallOfFameHTML += `<div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-3 rounded-2xl text-center shadow-sm relative overflow-hidden group">
+                                <i class="fa-solid fa-star text-amber-200 text-3xl absolute -right-2 -top-2 opacity-30"></i>
+                                <span class="text-xs font-bold text-stone-700 block relative z-10 px-4">${item.text}</span>
+                                
+                                <button onclick="App.Actions.deleteBucketItem(${item.id})" class="absolute top-1.5 left-1.5 w-6 h-6 bg-white/40 hover:bg-red-50 text-stone-400 hover:text-red-500 rounded-full flex items-center justify-center transition z-20 shadow-sm" title="מחק והחזר לבנק">
+                                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                                </button>
+                                
+                                <button onclick="App.Actions.toggleBucketItem(${item.id})" class="absolute top-1.5 right-1.5 w-6 h-6 bg-white/40 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-full flex items-center justify-center transition z-20 shadow-sm" title="החזר לרשימה הפעילה">
+                                    <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                                </button>
+                            </div>`;
                         });
                         wallOfFameHTML += `</div></div>`;
                     }
