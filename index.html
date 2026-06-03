@@ -1573,116 +1573,75 @@
                     });
                 },
 
-                saveJournalEntryExtended(dateKey) { 
-                    const val = document.getElementById('journal-input').value.trim(); 
-                    const partnerVal = document.getElementById('journal-partner-input').value.trim();
-                    const photoVal = document.getElementById('journal-photo-base64').value;
-                    const styleVal = document.getElementById('journal-paper-style').value;
-                    
-                    const checkHighlight = document.getElementById('journal-highlight-check').checked; 
-                    const currentTag = (App.State.journalTags || {})[dateKey];
-                    const endDateInput = document.getElementById('journal-end-date') ? document.getElementById('journal-end-date').value : '';
-                    const locationVal = document.getElementById('journal-location').value.trim();
-                    const moodVal = document.getElementById('journal-mood').value;
-                    const todayStr = new Date().toDateString(); 
+                saveJournalEntryExtended(dateKey) { 
+                    const val = document.getElementById('journal-input').value.trim(); 
+                    const partnerVal = document.getElementById('journal-partner-input').value.trim();
+                    const photoVal = document.getElementById('journal-photo-base64').value;
+                    const styleVal = document.getElementById('journal-paper-style').value;
+                    
+                    const checkHighlight = document.getElementById('journal-highlight-check').checked; 
+                    const currentTag = (App.State.journalTags || {})[dateKey];
+                    const endDateInput = document.getElementById('journal-end-date') ? document.getElementById('journal-end-date').value : '';
+                    const locationVal = document.getElementById('journal-location').value.trim();
+                    const moodVal = document.getElementById('journal-mood').value;
+                    const todayStr = new Date().toDateString(); 
 
-                    const notes = {...(App.State.journalNotes || {})}; 
-                    const pNotes = {...(App.State.journalPartnerNotes || {})};
-                    const photos = {...(App.State.journalPhotos || {})};
-                    const styles = {...(App.State.journalStyles || {})};
-                    const highlights = {...(App.State.journalHighlights || {})}; 
-                    const locs = {...(App.State.journalLocations || {})};
-                    const moods = {...(App.State.journalMoods || {})};
+                    const notes = {...(App.State.journalNotes || {})}; 
+                    const pNotes = {...(App.State.journalPartnerNotes || {})};
+                    const photos = {...(App.State.journalPhotos || {})};
+                    const styles = {...(App.State.journalStyles || {})};
+                    const highlights = {...(App.State.journalHighlights || {})}; 
+                    const locs = {...(App.State.journalLocations || {})};
+                    const moods = {...(App.State.journalMoods || {})};
+                    const tags = {...(App.State.journalTags || {})};
 
-                    let datesToUpdate = [dateKey];
-                    
-                    if (endDateInput) {
-                        const startParts = dateKey.split('-');
-                        const startDate = new Date(startParts[0], startParts[1]-1, startParts[2]);
-                        const endDate = new Date(endDateInput);
-                        
-                        if (endDate > startDate) {
-                            let currDate = new Date(startDate);
-                            datesToUpdate = [];
-                            while (currDate <= endDate) {
-                                const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
-                                datesToUpdate.push(dKey);
-                                currDate.setDate(currDate.getDate() + 1);
-                            }
-                        }
-                    }
+                    let datesToUpdate = [dateKey];
+                    
+                    if (endDateInput) {
+                        const startParts = dateKey.split('-');
+                        const startDate = new Date(startParts[0], startParts[1]-1, startParts[2]);
+                        const endDate = new Date(endDateInput);
+                        
+                        if (endDate > startDate) {
+                            let currDate = new Date(startDate);
+                            datesToUpdate = [];
+                            while (currDate <= endDate) {
+                                const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
+                                datesToUpdate.push(dKey);
+                                currDate.setDate(currDate.getDate() + 1);
+                            }
+                        }
+                    }
 
-                    if (val || partnerVal || photoVal) { 
-                        datesToUpdate.forEach(dKey => {
-                            if(val) notes[dKey] = val; else delete notes[dKey];
-                            if(partnerVal) pNotes[dKey] = partnerVal; else delete pNotes[dKey];
-                            if(photoVal) photos[dKey] = photoVal; else delete photos[dKey];
-                            styles[dKey] = styleVal;
-                            
-                            highlights[dKey] = checkHighlight; 
-                            if (currentTag) tags[dKey] = currentTag;
-                            if (locationVal) locs[dKey] = locationVal; else delete locs[dKey];
-                            if (moodVal) moods[dKey] = moodVal; else delete moods[dKey];
-                        });
-                        
-                        if(App.State.lastJournalDate !== todayStr) { 
-                            App.State.save('lastJournalDate', todayStr); 
-                            App.State.addXP(20); 
-                        } 
-                        App.UI.showToast(datesToUpdate.length > 1 ? "אירוע מתמשך נשמר בהצלחה! 📝" : "היומן עודכן בהצלחה! +20 XP 📝", "success"); 
-                    } else { 
-                        datesToUpdate.forEach(dKey => {
-                            delete notes[dKey]; delete pNotes[dKey]; delete photos[dKey]; delete styles[dKey]; delete highlights[dKey]; delete tags[dKey]; delete locs[dKey]; delete moods[dKey];
-                        });
-                        App.UI.showToast("הרשומה הוסרה", "info"); 
-                    } 
-                    
-                    App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
-                    App.Navigation.navigate('journal'); 
-                },
-
-                saveJournalEntryExtended(dateKey) { 
-                    const val = document.getElementById('journal-input').value.trim(); 
-                    const partnerVal = document.getElementById('journal-partner-input').value.trim();
-                    const photoVal = document.getElementById('journal-photo-base64').value;
-                    const styleVal = document.getElementById('journal-paper-style').value;
-                    
-                    const checkHighlight = document.getElementById('journal-highlight-check').checked; 
-                    const locationVal = document.getElementById('journal-location').value.trim();
-                    const moodVal = document.getElementById('journal-mood').value;
-                    const todayStr = new Date().toDateString(); 
-
-                    const notes = {...(App.State.journalNotes || {})}; 
-                    const pNotes = {...(App.State.journalPartnerNotes || {})};
-                    const photos = {...(App.State.journalPhotos || {})};
-                    const styles = {...(App.State.journalStyles || {})};
-                    const highlights = {...(App.State.journalHighlights || {})}; 
-                    const locs = {...(App.State.journalLocations || {})};
-                    const moods = {...(App.State.journalMoods || {})};
-
-                    if (val || partnerVal || photoVal) { 
-                        if(val) notes[dateKey] = val; else delete notes[dateKey];
-                        if(partnerVal) pNotes[dateKey] = partnerVal; else delete pNotes[dateKey];
-                        if(photoVal) photos[dateKey] = photoVal; else delete photos[dateKey];
-                        styles[dateKey] = styleVal;
-                        
-                        highlights[dateKey] = checkHighlight; 
-                        if (locationVal) locs[dateKey] = locationVal; else delete locs[dateKey];
-                        if (moodVal) moods[dateKey] = moodVal; else delete moods[dateKey];
-                        
-                        if(App.State.lastJournalDate !== todayStr) { 
-                            App.State.save('lastJournalDate', todayStr); 
-                            App.State.addXP(20); 
-                        } 
-                        App.UI.showToast("היומן עודכן בהצלחה! +20 XP 📝", "success"); 
-                    } else { 
-                        delete notes[dateKey]; delete pNotes[dateKey]; delete photos[dateKey]; delete styles[dateKey]; delete highlights[dateKey]; delete App.State.journalTags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
-                        App.UI.showToast("הרשומה הוסרה", "info"); 
-                    } 
-                    
-                    App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
-                    App.Navigation.navigate('journal'); 
-                },
+                    // עכשיו זה שומר את רצף הימים גם אם בחרת רק מיקום, אווירה או תיוג!
+                    if (val || partnerVal || photoVal || locationVal || moodVal || currentTag || checkHighlight) { 
+                        datesToUpdate.forEach(dKey => {
+                            if(val) notes[dKey] = val; else delete notes[dKey];
+                            if(partnerVal) pNotes[dKey] = partnerVal; else delete pNotes[dKey];
+                            if(photoVal) photos[dKey] = photoVal; else delete photos[dKey];
+                            styles[dKey] = styleVal;
+                            
+                            highlights[dKey] = checkHighlight; 
+                            if (currentTag) tags[dKey] = currentTag;
+                            if (locationVal) locs[dKey] = locationVal; else delete locs[dKey];
+                            if (moodVal) moods[dKey] = moodVal; else delete moods[dKey];
+                        });
+                        
+                        if(App.State.lastJournalDate !== todayStr) { 
+                            App.State.save('lastJournalDate', todayStr); 
+                            App.State.addXP(20); 
+                        } 
+                        App.UI.showToast(datesToUpdate.length > 1 ? "אירוע מתמשך נשמר בהצלחה! 📝" : "היומן עודכן בהצלחה! +20 XP 📝", "success"); 
+                    } else { 
+                        datesToUpdate.forEach(dKey => {
+                            delete notes[dKey]; delete pNotes[dKey]; delete photos[dKey]; delete styles[dKey]; delete highlights[dKey]; delete tags[dKey]; delete locs[dKey]; delete moods[dKey];
+                        });
+                        App.UI.showToast("הרשומה הוסרה", "info"); 
+                    } 
+                    
+                    App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
+                    App.Navigation.navigate('journal'); 
+                },
                 
                 deleteJournalDay(dateKey) {
                     if (!confirm("למחוק לחלוטין את הרשומה, התמונה והתיוגים של יום זה? 🗑️")) return;
