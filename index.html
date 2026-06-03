@@ -586,7 +586,7 @@
 
                     let wallOfFameHTML = '';
                     if (completedWishes.length > 0) {
-                        wallOfFameHTML = `<div class="mt-2 space-y-3 px-1"><h3 class="text-sm font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-trophy ml-1"></i> היכל התהילה</h3><div class="grid grid-cols-2 gap-2">`;
+                      wallOfFameHTML = `<div class="space-y-3 px-1" style="margin-top: 8px;"><h3 class="text-sm font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-trophy ml-1"></i> היכל התהילה</h3><div class="grid grid-cols-2 gap-2">`;
                         completedWishes.forEach(item => {
                             wallOfFameHTML += `<div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-3 rounded-2xl text-center shadow-sm relative overflow-hidden"><i class="fa-solid fa-star text-amber-200 text-3xl absolute -right-2 -top-2 opacity-30"></i><span class="text-xs font-bold text-stone-700 block relative z-10">${item.text}</span></div>`;
                         });
@@ -639,7 +639,7 @@
                                 <div class="space-y-2">${activeListHTML}</div>
                             </div>
 
-                            <div class="mt-1 mb-0">
+                            <div class="mb-0" style="margin-top: 8px;">
                                 <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
                                 <div class="flex items-start gap-2 overflow-x-auto no-scrollbar pb-1 px-1">
                                     ${bankHTML}
@@ -648,7 +648,7 @@
 
                             ${wallOfFameHTML}
 
-                            <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4 mt-0">
+                            <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
                                 <div class="space-y-3 px-1">
                                     <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
                                         <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> חנות פרסים</span>
