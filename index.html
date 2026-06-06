@@ -825,7 +825,10 @@
                     sortedKeys.forEach(key => {
                         const note = App.State.journalNotes[key] || ''; 
                         const partnerNote = App.State.journalPartnerNotes[key] || '';
-                        const photo = App.State.journalPhotos[key] || '';
+                        let photos = App.State.journalPhotos[key] || [];
+                        if (typeof photos === 'string' && photos !== '') photos = [photos];
+                        else if (typeof photos === 'string') photos = [];
+                        
                         const style = App.State.journalStyles[key] || 'clean';
                         
                         const isHighlight = App.State.journalHighlights[key]; 
@@ -840,7 +843,16 @@
                         if (style === 'grid') paperClass = 'bg-white paper-grid border-stone-200';
                         if (style === 'craft') paperClass = 'paper-craft text-stone-800';
                         
-                        const photoHTML = photo ? `<div class="polaroid mx-auto mb-4 mt-2 max-w-[80%]"><img src="${photo}" class="rounded w-full"><div class="font-hand text-center mt-3 text-2xl text-stone-800">${location || formattedDate}</div></div>` : '';
+                        let photoHTML = '';
+                        if (photos.length > 0) {
+                            photoHTML = `<div class="flex flex-col gap-4 mb-4 mt-2">` + 
+                                photos.map((p, idx) => `
+                                    <div class="polaroid mx-auto max-w-[80%] transform ${idx % 2 === 0 ? 'rotate-1' : '-rotate-2'} transition hover:rotate-0 shadow-md">
+                                        <img src="${p}" class="rounded w-full">
+                                        ${idx === photos.length - 1 ? `<div class="font-hand text-center mt-3 text-2xl text-stone-800">${location || formattedDate}</div>` : ''}
+                                    </div>
+                                `).join('') + `</div>`;
+                        }
                         const partnerHTML = partnerNote ? `<div class="mt-4 pt-4 border-t border-stone-300/40 relative"><span class="absolute -top-3 right-4 bg-orange-100 text-orange-600 px-2 rounded-full text-[10px] font-bold">הזווית של ${App.State.partnerName}</span><p class="font-hand text-2xl leading-relaxed text-stone-700">${partnerNote}</p></div>` : '';
 
                         feedHTML += `<div class="p-6 rounded-[28px] border transition-all relative shadow-sm ${paperClass}">
@@ -1308,7 +1320,7 @@
                                 <div class="flex gap-2">
                                     <div class="relative flex-1 flex items-center">
                                         <span id="active-magnet" class="absolute right-3 text-xl z-10 cursor-pointer drop-shadow-sm" onclick="document.getElementById('magnet-picker').classList.toggle('hidden')">📌</span>
-                                        <input type="text" id="new-board-note" placeholder="לכתוב פתק..." class="w-full bg-white border border-stone-200 rounded-xl pr-10 pl-4 py-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-orange-400 shadow-sm transition-colors">
+                                        <input type="text" id="new-board-note" placeholder="לכתוב פתק..." class="w-full bg-yellow-100 border border-stone-200 rounded-xl pr-10 pl-4 py-3 text-sm font-bold text-stone-700 focus:outline-none focus:border-orange-400 shadow-sm transition-colors">
                                         <input type="hidden" id="note-color-val" value="bg-yellow-100">
                                         <input type="hidden" id="note-magnet-val" value="📌">
                                     </div>
@@ -1660,7 +1672,9 @@
                     const savedLocation = (App.State.journalLocations || {})[dateKey] || '';
                     const savedMood = (App.State.journalMoods || {})[dateKey] || '';
                     const savedStyle = (App.State.journalStyles || {})[dateKey] || 'clean';
-                    const savedPhoto = (App.State.journalPhotos || {})[dateKey] || '';
+                    let savedPhotos = (App.State.journalPhotos || {})[dateKey] || [];
+if (typeof savedPhotos === 'string' && savedPhotos !== '') savedPhotos = [savedPhotos];
+else if (typeof savedPhotos === 'string') savedPhotos = [];
                     const allTags = {...App.Data.journalTags, ...App.State.customTags};
 
                     let tagsHTML = `<div class="grid grid-cols-4 gap-1.5 mt-1">`; 
@@ -1718,11 +1732,14 @@
                             </label>
                         </div>
 
-                        <div id="photo-preview-container" class="${savedPhoto ? '' : 'hidden'} relative polaroid w-3/4 mx-auto mt-2">
-                            <img id="journal-photo-preview" src="${savedPhoto}" class="w-full rounded">
-                            <input type="hidden" id="journal-photo-base64" value="${savedPhoto}">
-                            <button onclick="App.Actions.removePhoto()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 shadow text-xs"><i class="fa-solid fa-xmark"></i></button>
-                        </div>
+                        <div id="photo-preview-container" class="w-full flex flex-col items-center">
+                                ${savedPhotos.map(photo => `
+                                    <div class="relative polaroid w-3/4 mx-auto mt-2 mb-4">
+                                        <img src="${photo}" class="w-full rounded journal-photo-item">
+                                        <button onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 shadow text-xs"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                `).join('')}
+                            </div>
 
                         <div class="bg-stone-50 p-1 rounded-2xl flex gap-1 mb-1">
                             <button onclick="document.getElementById('journal-input').classList.remove('hidden'); document.getElementById('journal-partner-input').classList.add('hidden'); this.classList.add('bg-white','shadow-sm','text-stone-800'); this.nextElementSibling.classList.remove('bg-white','shadow-sm','text-stone-800'); this.nextElementSibling.classList.add('text-stone-400');" class="flex-1 py-1.5 text-xs font-bold rounded-xl bg-white shadow-sm text-stone-800 transition">הזווית של ${App.State.userName || 'אני'}</button>
@@ -1837,15 +1854,24 @@
                     App.Navigation.navigate('journal'); 
                 },
                 
-                deleteJournalDay(dateKey) {
+deleteJournalDay(dateKey) {
                     if (!confirm("למחוק לחלוטין את הרשומה, התמונה והתיוגים של יום זה? 🗑️")) return;
 
                     const notes = {...App.State.journalNotes}; const pNotes = {...App.State.journalPartnerNotes}; const photos = {...App.State.journalPhotos}; const styles = {...App.State.journalStyles}; const highlights = {...App.State.journalHighlights}; const tags = {...App.State.journalTags}; const locs = {...App.State.journalLocations}; const moods = {...App.State.journalMoods};
+                    
+                    // בודקים אם היה תוכן שמזכה בנקודות לפני שמוחקים
+                    const hadContent = !!(notes[dateKey] || (photos[dateKey] && photos[dateKey].length > 0));
+                    
                     delete notes[dateKey]; delete pNotes[dateKey]; delete photos[dateKey]; delete styles[dateKey]; delete highlights[dateKey]; delete tags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
                     
                     App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
 
-                    App.UI.showToast("הרשומה נמחקה בהצלחה", "info");
+                    // מורידים חזרה את ה-XP אם נמחק אירוע ממשי
+                    if (hadContent) { 
+                        App.State.subtractXP(20); 
+                    }
+
+                    App.UI.showToast("הרשומה נמחקה", "info");
                     App.Navigation.navigate('journal');
                 },
 
