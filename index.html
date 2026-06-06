@@ -2426,7 +2426,7 @@ function setupGlobalSwipe() {
         const dy = t.clientY - startY;
         if (Math.abs(dx) < 60 || Math.abs(dy) > 50) return;
         // RTL: dx > 0 (ימינה) => קודם ; dx < 0 (שמאלה) => הבא
-        const dir = dx > 0 ? 'right' : 'left';
+        const dir = dx > 0 ? 'left' : 'right';
         if (scope === 'journal') App.Actions.swipeJournalView(dir);
         else App.Actions.swipeMainTab(dir);
     }, { passive: true });
