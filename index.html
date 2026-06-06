@@ -41,18 +41,38 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-slide-left  { animation: slideInFromLeft  0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-.animate-slide-right { animation: slideInFromRight 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-
-@keyframes slideInFromLeft {
-    from { opacity: 0; transform: translateX(-48px); }
-    to { opacity: 1; transform: translateX(0); }
+.animate-slide-left {
+    animation: slideContentLeft 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes slideInFromRight {
-    from { opacity: 0; transform: translateX(48px); }
-    to { opacity: 1; transform: translateX(0); }
+.animate-slide-right {
+    animation: slideContentRight 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* החלקה שמאלה: התוכן זז שמאלה */
+@keyframes slideContentLeft {
+    from {
+        opacity: 0;
+        transform: translateX(56px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* החלקה ימינה: התוכן זז ימינה */
+@keyframes slideContentRight {
+    from {
+        opacity: 0;
+        transform: translateX(-56px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 
 
         
@@ -520,11 +540,17 @@
                     const viewport = document.getElementById('app-viewport');
                     viewport.innerHTML = ''; 
                     const container = document.createElement('div');
-                    const _sd = App.Navigation._swipeDir;
-                    App.Navigation._swipeDir = null;
-                    container.className = _sd === 'left'  ? 'animate-slide-left'
-                                        : _sd === 'right' ? 'animate-slide-right'
-                                        : 'animate-page-entry';
+                    const swipeDirection = App.Navigation._swipeDir;
+App.Navigation._swipeDir = null;
+
+if (swipeDirection === 'left') {
+    container.className = 'animate-slide-left';
+} else if (swipeDirection === 'right') {
+    container.className = 'animate-slide-right';
+} else {
+    container.className = 'animate-page-entry';
+}
+
 
                     switch(tabId) { 
                         case 'garden': container.innerHTML = App.Components.Garden(); break; 
@@ -2398,30 +2424,40 @@ App.Navigation.mainTabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
 
 App.Actions.swipeMainTab = function(direction) {
     const tabs = App.Navigation.mainTabs;
-    const cur = tabs.indexOf(App.State.activeTab);
-    if (cur === -1) return;
+    const currentIndex = tabs.indexOf(App.State.activeTab);
+    if (currentIndex === -1) return;
 
-    // RTL: החלקה ימינה עוברת למסך שנמצא מימין, החלקה שמאלה למסך שנמצא משמאל
-    const next = direction === 'right' ? cur - 1 : cur + 1;
-    if (next < 0 || next >= tabs.length) return;
+    // לפי הסדר הוויזואלי ב-RTL:
+    // שמאלה = הטאב שמשמאל
+    // ימינה = הטאב שמימין
+    const nextIndex = direction === 'left'
+        ? currentIndex + 1
+        : currentIndex - 1;
+
+    if (nextIndex < 0 || nextIndex >= tabs.length) return;
 
     App.Navigation._swipeDir = direction;
-    App.Navigation.navigate(tabs[next]);
+    App.Navigation.navigate(tabs[nextIndex]);
 };
+
 
 // ביומן: לוח שנה -> פיד -> מפה, בלי קפיצה מהקצה לקצה
 App.Actions.swipeJournalView = function(direction) {
     const modes = App.Actions.journalModes || ['calendar', 'feed', 'map'];
-    const cur = modes.indexOf(App.State.journalViewMode);
-    if (cur === -1) return;
+    const currentIndex = modes.indexOf(App.State.journalViewMode);
+    if (currentIndex === -1) return;
 
-    // RTL: ימינה = מצב שנמצא מימין, שמאלה = מצב שנמצא משמאל
-    const next = direction === 'right' ? cur - 1 : cur + 1;
-    if (next < 0 || next >= modes.length) return;
+    const nextIndex = direction === 'left'
+        ? currentIndex + 1
+        : currentIndex - 1;
+
+    // חשוב: בלי קפיצה מעגלית, כי זה מה שגרם לכיוון להרגיש הפוך
+    if (nextIndex < 0 || nextIndex >= modes.length) return;
 
     App.Navigation._swipeDir = direction;
-    App.Actions.setJournalView(modes[next]);
+    App.Actions.setJournalView(modes[nextIndex]);
 };
+
 
 function setupGlobalSwipe() {
     let startX = 0;
@@ -2430,29 +2466,41 @@ function setupGlobalSwipe() {
     let scope = 'main';
 
     document.addEventListener('touchstart', (e) => {
-        if (e.target.closest('.leaflet-container, button, a, input, textarea, select, [data-no-swipe], nav, #bottom-nav, .modal-overlay')) {
+        if (
+            e.target.closest(
+                '.leaflet-container, button, a, input, textarea, select, [data-no-swipe], nav, #bottom-nav, .modal-overlay'
+            )
+        ) {
             tracking = false;
             return;
         }
 
-        const t = e.touches[0];
-        startX = t.clientX;
-        startY = t.clientY;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
         tracking = true;
+
         scope = e.target.closest('#journal-swipe-area') ? 'journal' : 'main';
     }, { passive: true });
 
     document.addEventListener('touchend', (e) => {
         if (!tracking) return;
+
         tracking = false;
 
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
 
-        if (Math.abs(dx) < 60 || Math.abs(dy) > 50) return;
+        const isHorizontalSwipe = Math.abs(dx) >= 60;
+        const isMostlyHorizontal = Math.abs(dy) <= 50;
 
-        const direction = dx > 0 ? 'right' : 'left';
+        if (!isHorizontalSwipe || !isMostlyHorizontal) return;
+
+        // זה החלק הכי חשוב:
+        // dx שלילי = האצבע זזה שמאלה
+        // dx חיובי = האצבע זזה ימינה
+        const direction = dx < 0 ? 'left' : 'right';
 
         if (scope === 'journal') {
             App.Actions.swipeJournalView(direction);
@@ -2461,6 +2509,7 @@ function setupGlobalSwipe() {
         }
     }, { passive: true });
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
     App.State.init();
