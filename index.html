@@ -2633,12 +2633,11 @@
           const currentIndex = tabs.indexOf(App.State.activeTab);
           if (currentIndex === -1) return;
 
-          // לפי הסדר הוויזואלי ב-RTL:
-          // שמאלה = הטאב שמשמאל
-          // ימינה = הטאב שמימין
+          // בטאבים הראשיים הכיוון צריך להתאים לתחושת ההחלקה בפועל:
+          // שמאלה = חזרה לאינדקס הקודם, ימינה = מעבר לאינדקס הבא.
           const nextIndex = direction === 'left'
-              ? currentIndex + 1
-              : currentIndex - 1;
+              ? currentIndex - 1
+              : currentIndex + 1;
 
           if (nextIndex < 0 || nextIndex >= tabs.length) return;
 
