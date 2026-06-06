@@ -1639,17 +1639,18 @@
                 },
 
                 // פונקציות יומן משודרגות ומאובטחות!
-                handlePhotoUpload(event) {
+async handlePhotoUpload(event) {
                     const file = event.target.files[0];
                     if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const b64 = e.target.result;
-                            document.getElementById('journal-photo-preview').src = b64;
-                            document.getElementById('photo-preview-container').classList.remove('hidden');
-                            document.getElementById('journal-photo-base64').value = b64;
-                        };
-                        reader.readAsDataURL(file);
+                        App.UI.showToast("מכווץ תמונה...", "info");
+                        const compressedBase64 = await App.Utils.compressImage(file);
+                        const container = document.getElementById('photo-preview-container');
+                        container.insertAdjacentHTML('beforeend', `
+                            <div class="relative polaroid w-3/4 mx-auto mt-2 mb-4">
+                                <img src="${compressedBase64}" class="w-full rounded journal-photo-item">
+                                <button onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 shadow text-xs"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        `);
                     }
                 },
 
@@ -1876,6 +1877,11 @@ deleteJournalDay(dateKey) {
                 },
 
                 setJournalView(mode) { App.State.save('journalViewMode', mode); App.Navigation.navigate('journal'); },
+                setJournalFilter(filterKey) { 
+                    App.State.save('journalFilter', filterKey); 
+                    App.Navigation.navigate('journal'); 
+                },
+
                 changeJournalMonth(delta) {
                     let month = App.State.journalViewMonth + delta; let year = App.State.journalViewYear;
                     if (month > 11) { month = 0; year++; } if (month < 0) { month = 11; year--; }
@@ -2052,14 +2058,12 @@ deleteJournalDay(dateKey) {
                     App.Navigation.navigate('board');
                 },
 
-                handleBoardPhoto(event) {
+                async handleBoardPhoto(event) {
                     const file = event.target.files[0];
                     if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            App.Actions.saveBoardNote('photo', e.target.result);
-                        };
-                        reader.readAsDataURL(file);
+                        App.UI.showToast("מכווץ תמונה...", "info");
+                        const compressedBase64 = await App.Utils.compressImage(file);
+                        App.Actions.saveBoardNote('photo', compressedBase64);
                     }
                 },
 
@@ -2239,72 +2243,114 @@ deleteJournalDay(dateKey) {
                 showModal(html) { const m = document.getElementById('custom-modal'); document.getElementById('modal-body').innerHTML = html; m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); },
                 closeModal() { document.getElementById('custom-modal').classList.add('hidden'); },
 
-                async renderMap() {
-                    const mapRoot = document.getElementById('map-root');
-                    if (!mapRoot) return;
+                                async renderMap() {
+                    const mapRoot = document.getElementById('map-root');
+                    if (!mapRoot) return;
 
-                    // ניקוי מפה קודמת אם קיימת כדי למנוע כפילויות במעבר בין מסכים
-                    if (App.State.mapInstance) {
-                        App.State.mapInstance.remove();
-                    }
+                    if (App.State.mapInstance) {
+                        App.State.mapInstance.remove();
+                    }
 
-                    // יצירת מפה חדשה במרכז ישראל
-                    App.State.mapInstance = L.map('map-root').setView([31.5, 34.8], 7);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    }).addTo(App.State.mapInstance);
+                    App.State.mapInstance = L.map('map-root').setView([31.5, 34.8], 7);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap'
+                    }).addTo(App.State.mapInstance);
 
-                    const bounds = [];
-                    const uniqueLocations = {};
+                    const bounds = [];
+                    const uniqueLocations = {};
+                    const allTags = {...App.Data.journalTags, ...App.State.customTags};
 
-                    // קיבוץ מיקומים למניעת בקשות כפולות לשרת וחיבור התאריכים לאותו פופ-אפ
-                    Object.entries(App.State.journalLocations).forEach(([dateKey, locName]) => {
-                        if (!locName) return;
-                        const parts = dateKey.split('-');
-                        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                        if (!uniqueLocations[locName]) uniqueLocations[locName] = [];
-                        uniqueLocations[locName].push(formattedDate);
-                    });
+                    Object.entries(App.State.journalLocations).forEach(([dateKey, locName]) => {
+                        if (!locName) return;
+                        const tagKey = App.State.journalTags[dateKey];
+                        const parts = dateKey.split('-');
+                        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                        
+                        if (!uniqueLocations[locName]) {
+                            uniqueLocations[locName] = { dates: [], tag: tagKey, dateKey: dateKey };
+                        }
+                        uniqueLocations[locName].dates.push(formattedDate);
+                        if (tagKey) uniqueLocations[locName].tag = tagKey; 
+                    });
 
-                    // הוספת סיכות למפה
-                    for (const [locName, dates] of Object.entries(uniqueLocations)) {
-                        let coords = App.State.cachedCoords[locName];
-                        
-                        if (!coords) {
-                            try {
-                                // שימוש ב-API חינמי להמרת טקסט לנקודות ציון
-                                const searchQuery = locName.includes('ישראל') ? locName : `${locName}, ישראל`;
-                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
-                                const data = await res.json();
-                                if (data && data.length > 0) {
-                                    coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-                                    App.State.cachedCoords[locName] = coords;
-                                    App.State.save('cachedCoords', App.State.cachedCoords);
-                                }
-                                // השהייה קלה למניעת חסימה מהשרת (לפי חוקי השימוש של Nominatim)
-                                await new Promise(resolve => setTimeout(resolve, 1000));
-                            } catch (e) {
-                                console.error('Failed to geocode:', locName);
-                            }
-                        }
+                    for (const [locName, dataObj] of Object.entries(uniqueLocations)) {
+                        let coords = App.State.cachedCoords[locName];
+                        
+                        if (!coords) {
+                            try {
+                                const searchQuery = locName.includes('ישראל') ? locName : `${locName}, ישראל`;
+                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
+                                const data = await res.json();
+                                if (data && data.length > 0) {
+                                    coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                                    App.State.cachedCoords[locName] = coords;
+                                    App.State.save('cachedCoords', App.State.cachedCoords);
+                                }
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            } catch (e) {
+                                console.error('Failed to geocode:', locName);
+                            }
+                        }
 
-                        if (coords) {
-                            bounds.push(coords);
-                            const marker = L.marker(coords).addTo(App.State.mapInstance);
-                            const datesStr = dates.join(', ');
-                            marker.bindPopup(`<div class="text-center font-bold text-stone-800"><i class="fa-solid fa-location-dot text-orange-500 mb-1 text-lg"></i><br>${locName}<br><span class="text-[10px] text-stone-500 font-normal">${datesStr}</span></div>`);
-                        }
-                    }
+                        if (coords) {
+                            bounds.push(coords);
+                            
+                            const tagData = allTags[dataObj.tag] || { icon: 'fa-location-dot', color: 'text-stone-500 bg-stone-100' };
+                            const textColor = tagData.color.split(' ')[0];
+                            const bgColor = tagData.color.split(' ')[1] || 'bg-stone-100';
+                            
+                            // מחלצים את הצבע החזק עבור הסיכה עצמה
+                            const baseBg = bgColor.replace('-50', '-500').replace('-100', '-500').replace('bg-', '');
+                            
+                            const customIcon = L.divIcon({
+                                className: '', // איפוס עיצוב דיפולטיבי
+                                html: `<div class="w-8 h-8 rounded-full bg-${baseBg} text-white border-2 border-white flex items-center justify-center transform -translate-y-4 hover:scale-110 transition" style="box-shadow: 0 4px 10px rgba(0,0,0,0.3);"><i class="fa-solid ${tagData.icon}"></i></div>`,
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
 
-                    // אם יש נקודות במפה, מתמקדים עליהן בצורה יפה
-                    if (bounds.length > 0) {
-                        App.State.mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
-                    }
-                }
+                            const marker = L.marker(coords, {icon: customIcon}).addTo(App.State.mapInstance);
+                            const datesStr = dataObj.dates.join(', ');
+                            
+                            marker.bindPopup(`
+                                <div class="text-center p-1 font-heebo" dir="rtl">
+                                    <div class="font-bold text-stone-800 text-sm mb-1">${locName}</div>
+                                    <div class="text-[10px] text-stone-500 mb-3 leading-tight">${datesStr}</div>
+                                    <button onclick="App.Actions.setJournalView('feed'); setTimeout(()=>App.Actions.setJournalFilter('${dataObj.tag || 'all'}'), 50);" class="${bgColor} ${textColor} text-xs px-3 py-2 rounded-xl font-bold transition w-full shadow-sm hover:scale-105 active:scale-95">צפה בזיכרונות <i class="fa-solid fa-arrow-left mr-1"></i></button>
+                                </div>
+                            `);
+                        }
+                    }
+
+                    if (bounds.length > 0) {
+                        App.State.mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+                    }
+                }
             },
 
             Utils: {
-                camelToSnake(s) { return s.replace(/[A-Z]/g, l => `_${l.toLowerCase()}`); },
+  camelToSnake(s) { return s.replace(/[A-Z]/g, l => `_${l.toLowerCase()}`); },
+                compressImage(file, maxDimension = 800, quality = 0.7) {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        reader.onload = (e) => {
+                            const img = new Image();
+                            img.src = e.target.result;
+                            img.onload = () => {
+                                let w = img.width; let h = img.height;
+                                if (w > h) { if (w > maxDimension) { h = Math.round(h * maxDimension / w); w = maxDimension; } } 
+                                else { if (h > maxDimension) { w = Math.round(w * maxDimension / h); h = maxDimension; } }
+                                const canvas = document.createElement('canvas');
+                                canvas.width = w; canvas.height = h;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0, w, h);
+                                resolve(canvas.toDataURL('image/jpeg', quality));
+                            };
+                        };
+                    });
+                },
                 getClosestCountdown() { const now = new Date(); now.setHours(0,0,0,0); let closest = null; let minDiff = Infinity; Object.keys(App.State.journalNotes).forEach(key => { const parts = key.split('-'); if(parts.length === 3) { const eventDate = new Date(parts[0], parts[1]-1, parts[2]); if(eventDate > now) { const diff = eventDate - now; if(diff < minDiff) { minDiff = diff; closest = { text: App.State.journalNotes[key], daysLeft: Math.ceil(diff / (1000 * 60 * 60 * 24)), dateStr: eventDate.toLocaleDateString('he-IL') }; } } } }); return closest; }
             }
         };
