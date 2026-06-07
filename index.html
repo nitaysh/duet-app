@@ -16,15 +16,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-              .map-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    background: transparent;
-}
               .paper-lines { background-image: linear-gradient(#e5e7eb 1px, transparent 1px); background-size: 100% 28px; }
               .paper-grid { background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
               .paper-craft { background-color: #e6dcc8; border: 1px solid #d4c5b0; }
@@ -1025,7 +1016,8 @@
 
                           if (mode === 'map') {
                               setTimeout(() => App.UI.renderMap(), 100);
-                              return `<div id="journal-swipe-area" style="touch-action: pan-y;" class="space-y-4">${toggleHeaderHTML}<div id="map-root" class="w-full h-[38vh] rounded-[32px] shadow-sm border-4 border-white z-10"></div><p class="text-center text-xs text-stone-400 font-bold">המפה מציגה את כל המקומות שתייגתם ביומן 📍</p></div>`;
+                              return `<div id="journal-swipe-area" style="touch-action: pan-y;" class="space-y-4">${toggleHeaderHTML}<div id="map-root" class="w-full h-[65vh] rounded-[32px] shadow-sm border-4 border-white z-10"></div><p class="text-center text-xs text-stone-400 font-bold">המפה מציגה את כל המקומות שתייגתם ביומן 📍</p></div>`;
+
                           }
 
                           if (mode === 'feed') {
@@ -1282,12 +1274,15 @@
                           const km = App.State.knowMeLastResult;
                           const tt = App.State.thisOrThatLastResult;
                           const ll = App.State.loveLangLastResult;
+                          const pName = App.State.partnerName || 'בן/בת הזוג';
 
-                          const kmPct = km ? Math.round((km.score / Math.max(1, km.total)) * 100) : null;
-                          const ttPct = tt ? Math.round((tt.answered / Math.max(1, tt.total)) * 100) : null;
-                          const llPct = ll ? Math.min(100, Math.round((ll.totalSelected / 12) * 100)) : null;
+                          // completion: 50% when only user answered, 100% when both
+                          const completionPct = (r) => !r ? null : (r.partnerAnswered ? 100 : 50);
+                          const kmC = completionPct(km);
+                          const ttC = completionPct(tt);
+                          const llC = completionPct(ll);
 
-                          const played = [kmPct, ttPct, llPct].filter(v => v !== null);
+                          const played = [kmC, ttC, llC].filter(v => v !== null);
                           const coupleScore = played.length ? Math.round(played.reduce((a, b) => a + b, 0) / played.length) : 0;
 
                           let coupleLabel = 'התחילו לשחק יחד 💫';
@@ -1299,30 +1294,49 @@
                               else { coupleLabel = 'יש מה לגלות יחד 🔍'; coupleColor = 'from-sky-400 to-indigo-400'; }
                           }
 
-                          const bar = (label, emoji, pct, sub, color) => {
+                          const bar = (label, emoji, pct, sub, color, gameKey, result) => {
                               if (pct === null) {
                                   return `<div class="bg-white/70 rounded-2xl p-3 border border-white">
                                       <div class="flex justify-between items-center mb-1.5"><span class="text-xs font-bold text-stone-600">${emoji} ${label}</span><span class="text-[10px] font-bold text-stone-400">טרם שוחק</span></div>
                                       <div class="h-2 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-stone-200" style="width:0%"></div></div>
                                   </div>`;
                               }
+                              const waiting = !result.partnerAnswered;
+                              const youBadge = `<span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">אתה ✓</span>`;
+                              const partnerBadge = result.partnerAnswered
+                                  ? `<span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">${pName} ✓</span>`
+                                  : `<span class="text-[9px] font-extrabold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full animate-pulse">ממתין ל${pName}…</span>`;
+                              const simulateBtn = waiting ? `<button onclick="App.Actions.simulatePartnerAnswer('${gameKey}')" class="mt-2 w-full text-[10px] font-extrabold bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border border-indigo-200 py-1.5 rounded-xl active:scale-95 transition"><i class="fa-solid fa-wand-sparkles ml-1"></i> הדגם תשובות ${pName}</button>` : '';
                               return `<div class="bg-white/80 rounded-2xl p-3 border border-white shadow-sm">
                                   <div class="flex justify-between items-center mb-1.5">
                                       <span class="text-xs font-bold text-stone-700">${emoji} ${label}</span>
                                       <span class="text-xs font-extrabold text-stone-800">${pct}%</span>
                                   </div>
-                                  <div class="h-2 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-gradient-to-r ${color} transition-all" style="width:${pct}%"></div></div>
+                                  <div class="h-2 rounded-full bg-stone-100 overflow-hidden flex"><div class="h-full bg-gradient-to-r ${color} transition-all" style="width:${pct}%"></div></div>
+                                  <div class="flex items-center gap-1.5 mt-1.5">${youBadge}${partnerBadge}</div>
                                   <div class="text-[10px] font-bold text-stone-400 mt-1">${sub}</div>
+                                  ${simulateBtn}
                               </div>`;
                           };
 
                           const tips = [];
-                          if (kmPct !== null && kmPct < 70) tips.push('🧠 ספרו אחד לשני עוד פרטים קטנים מהיומיום — זה משפר את ההיכרות העמוקה.');
-                          if (ttPct === null) tips.push('⚡ שחקו "זה או זה?" יחד — דרך מהירה לראות איפה אתם דומים.');
-                          if (llPct === null) tips.push('💝 גלו את שפת האהבה — תדעו בדיוק מה ממלא את הלב של בן/בת הזוג.');
-                          if (ll && ll.topName) tips.push(`💖 שפת האהבה המובילה אצלך היא "${ll.topName}" — בקשו מהפרטנר ליישם השבוע מחווה אחת בסגנון הזה.`);
-                          if (kmPct !== null && kmPct >= 85) tips.push('🌟 אתם מכירים אחד את השני מצוין! נסו את חפיסת "חלומות ועתיד" כדי לצלול לעוד שכבה.');
+                          const waitingCount = [km, tt, ll].filter(r => r && !r.partnerAnswered).length;
+                          if (waitingCount > 0) tips.push(`⏳ ${waitingCount} שאלונים ממתינים לתשובות ${pName} — הסנכרון יושק בקרוב.`);
+                          if (km && km.partnerAnswered && km.score / km.total < 0.7) tips.push('🧠 ספרו אחד לשני עוד פרטים קטנים מהיומיום — זה משפר את ההיכרות העמוקה.');
+                          if (tt === null) tips.push('⚡ שחקו "זה או זה?" יחד — דרך מהירה לראות איפה אתם דומים.');
+                          if (ll === null) tips.push('💝 גלו את שפת האהבה — תדעו בדיוק מה ממלא את הלב של בן/בת הזוג.');
+                          if (ll && ll.topName) tips.push(`💖 שפת האהבה המובילה אצלך היא "${ll.topName}" — בקשו מ${pName} ליישם השבוע מחווה אחת בסגנון הזה.`);
                           if (!tips.length) tips.push('✨ המשיכו לשחק יחד פעם בשבוע — עקביות זה הסוד.');
+
+                          const partnerWaitingBanner = waitingCount > 0 ? `
+                              <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-3 mb-3 flex items-center gap-3">
+                                  <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-sm text-lg">🔗</div>
+                                  <div class="flex-1">
+                                      <div class="text-[11px] font-extrabold text-indigo-700">${waitingCount} שאלונים מחכים ל${pName}</div>
+                                      <div class="text-[10px] font-bold text-stone-500">כשבן/בת הזוג יענו דרך הסנכרון — תגיעו ל-100%</div>
+                                  </div>
+                              </div>
+                          ` : '';
 
                           return `
                               <div class="bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 border border-pink-100 rounded-[32px] p-5 shadow-sm">
@@ -1344,16 +1358,18 @@
                                           <div class="absolute text-center"><div class="text-lg font-extrabold text-stone-800 leading-none">${coupleScore}</div><div class="text-[9px] font-bold text-stone-400">/100</div></div>
                                       </div>
                                       <div class="flex-1">
-                                          <div class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">ניקוד זוגי משותף</div>
+                                          <div class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">השלמה זוגית</div>
                                           <div class="inline-block bg-gradient-to-r ${coupleColor} text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-sm">${coupleLabel}</div>
-                                          <div class="text-[10px] font-bold text-stone-400 mt-1.5">ממוצע של ${played.length || 0} מתוך 3 שאלונים</div>
+                                          <div class="text-[10px] font-bold text-stone-400 mt-1.5">ממוצע השלמה של ${played.length || 0}/3 שאלונים</div>
                                       </div>
                                   </div>
 
+                                  ${partnerWaitingBanner}
+
                                   <div class="space-y-2 mb-3">
-                                      ${bar('כמה אתה מכיר אותי?', '🧠', kmPct, km ? `${km.score}/${km.total} נכון · ${km.date}` : '', 'from-pink-500 to-rose-500')}
-                                      ${bar('זה או זה?', '⚡', ttPct, tt ? `${tt.answered}/${tt.total} שאלות · ${tt.date}` : '', 'from-orange-500 to-amber-500')}
-                                      ${bar('שפת האהבה שלנו', '💝', llPct, ll ? `${ll.topName ? 'מובילה: ' + ll.topName : 'נשמר'} · ${ll.date}` : '', 'from-rose-400 to-pink-400')}
+                                      ${bar('כמה אתה מכיר אותי?', '🧠', kmC, km ? `אתה: ${km.score}/${km.total}${km.partnerAnswered ? ` · ${pName}: ${km.partnerScore}/${km.total}` : ''} · ${km.date}` : '', 'from-pink-500 to-rose-500', 'knowMe', km)}
+                                      ${bar('זה או זה?', '⚡', ttC, tt ? `אתה: ${tt.answered}/${tt.total}${tt.partnerAnswered ? ` · ${pName}: ${tt.partnerScore}/${tt.total}` : ''} · ${tt.date}` : '', 'from-orange-500 to-amber-500', 'thisOrThat', tt)}
+                                      ${bar('שפת האהבה שלנו', '💝', llC, ll ? `אתה: ${ll.topName || '—'}${ll.partnerAnswered ? ` · ${pName}: ${ll.partnerTopName || '—'}` : ''} · ${ll.date}` : '', 'from-rose-400 to-pink-400', 'loveLang', ll)}
                                   </div>
 
                                   <div class="bg-white/70 rounded-2xl p-3 border border-pink-100">
@@ -1545,12 +1561,25 @@
                           const total = App.State.knowMeQuestions ? App.State.knowMeQuestions.length : 0;
                           const finished = total > 0 && idx >= total;
                           if (finished) {
+                              const r = App.State.knowMeLastResult;
+                              const pName = App.State.partnerName || 'בן/בת הזוג';
+                              const partnerDone = r && r.partnerAnswered;
+                              const completion = partnerDone ? 100 : 50;
                               return `
                                   <div class="glass-panel rounded-[32px] p-8 text-center border-2 border-pink-100 bg-gradient-to-b from-pink-50/60 to-white shadow-lg">
                                       <div class="text-6xl mb-4">🧠💖</div>
-                                      <h2 class="text-2xl font-extrabold text-stone-800 mb-2">סיימתם את החידון!</h2>
-                                      <p class="text-stone-500 text-sm mb-6">השלמתם ${total} שאלות יחד</p>
-                                      <div class="bg-pink-100 text-pink-700 py-4 rounded-2xl font-extrabold text-lg mb-4">+25 XP לגינה 🌸</div>
+                                      <h2 class="text-2xl font-extrabold text-stone-800 mb-2">סיימת את החלק שלך!</h2>
+                                      <p class="text-stone-500 text-sm mb-4">ענית על ${total} שאלות · ניקוד: ${score}/${total}</p>
+                                      <div class="bg-white rounded-2xl p-3 mb-4 border border-pink-100">
+                                          <div class="flex justify-between items-center mb-2"><span class="text-xs font-extrabold text-stone-600">השלמה זוגית</span><span class="text-sm font-extrabold text-pink-600">${completion}%</span></div>
+                                          <div class="h-2 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all" style="width:${completion}%"></div></div>
+                                          <div class="flex justify-center gap-2 mt-3">
+                                              <span class="text-[10px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">אתה ✓</span>
+                                              ${partnerDone ? `<span class="text-[10px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">${pName} ✓ (${r.partnerScore}/${r.total})</span>` : `<span class="text-[10px] font-extrabold bg-amber-100 text-amber-700 px-2 py-1 rounded-full animate-pulse">ממתין ל${pName}…</span>`}
+                                          </div>
+                                      </div>
+                                      <div class="bg-pink-100 text-pink-700 py-3 rounded-2xl font-extrabold text-base mb-4">+25 XP לגינה 🌸</div>
+                                      ${!partnerDone ? `<button onclick="App.Actions.simulatePartnerAnswer('knowMe')" class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-2xl font-extrabold active:scale-95 transition shadow-md mb-3"><i class="fa-solid fa-wand-sparkles ml-1"></i> הדגם תשובות ${pName}</button>` : ''}
                                       <button onclick="App.Actions.exitMiniGame()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold active:scale-95 transition shadow-md">חזרה למסך הראשי</button>
                                   </div>`;
                           }
@@ -2528,7 +2557,7 @@
                           App.State.addXP(30);
                           App.State.save('questionsAnsweredCountToday', (App.State.questionsAnsweredCountToday || 0) + 10);
                           App.State.save('gameQuestions', []); App.State.save('gameAnswers', {}); App.State.save('intimacyMode', 'qa');
-                          App.State.save('thisOrThatLastResult', { answered: 10, total: 10, date: new Date().toLocaleDateString('he-IL') });
+                          App.State.save('thisOrThatLastResult', { answered: 10, total: 10, partnerAnswered: false, partnerScore: null, date: new Date().toLocaleDateString('he-IL') });
 
                           App.Navigation.navigate('intimacy');
                           App.UI.throwPetals();
@@ -2604,7 +2633,7 @@
                           if (App.State.knowMeIndex >= App.State.knowMeQuestions.length) {
                               App.State.addXP(25);
                               App.UI.throwPetals();
-                              App.State.save('knowMeLastResult', { score: App.State.knowMeScore, total: App.State.knowMeQuestions.length, date: new Date().toLocaleDateString('he-IL') });
+                              App.State.save('knowMeLastResult', { score: App.State.knowMeScore, total: App.State.knowMeQuestions.length, partnerAnswered: false, partnerScore: null, date: new Date().toLocaleDateString('he-IL') });
                           }
                           App.Navigation.navigate('intimacy');
                       },
@@ -2626,6 +2655,27 @@
                           App.UI.throwPetals();
                           App.UI.showToast("בחירה מעולה! תהנו 💖", "success");
                           App.Actions.exitMiniGame();
+                      },
+
+                      simulatePartnerAnswer(gameKey) {
+                          const pName = App.State.partnerName || 'בן/בת הזוג';
+                          if (gameKey === 'knowMe') {
+                              const r = App.State.knowMeLastResult; if (!r || r.partnerAnswered) return;
+                              const partnerScore = Math.max(0, Math.min(r.total, r.score + (Math.floor(Math.random() * 3) - 1)));
+                              App.State.save('knowMeLastResult', { ...r, partnerAnswered: true, partnerScore });
+                          } else if (gameKey === 'thisOrThat') {
+                              const r = App.State.thisOrThatLastResult; if (!r || r.partnerAnswered) return;
+                              App.State.save('thisOrThatLastResult', { ...r, partnerAnswered: true, partnerScore: r.total });
+                          } else if (gameKey === 'loveLang') {
+                              const r = App.State.loveLangLastResult; if (!r || r.partnerAnswered) return;
+                              const keys = Object.keys(App.Data.loveLanguagesBank);
+                              const pickKey = keys[Math.floor(Math.random() * keys.length)];
+                              const partnerTopName = App.Data.loveLanguagesBank[pickKey]?.name || null;
+                              App.State.save('loveLangLastResult', { ...r, partnerAnswered: true, partnerTopName });
+                          }
+                          App.UI.throwPetals();
+                          App.UI.showToast(`${pName} השלים/ה את השאלון! 100% 💞`, 'success');
+                          App.Navigation.navigate('intimacy');
                       },
 
                       openLoveLanguages() {
@@ -2655,7 +2705,7 @@
                               if (c > topCount) { topCount = c; topKey = k; }
                           });
                           const topName = topKey && App.Data.loveLanguagesBank[topKey] ? App.Data.loveLanguagesBank[topKey].name : null;
-                          App.State.save('loveLangLastResult', { topName, topKey, topCount, totalSelected, date: new Date().toLocaleDateString('he-IL') });
+                          App.State.save('loveLangLastResult', { topName, topKey, topCount, totalSelected, partnerAnswered: false, partnerTopName: null, date: new Date().toLocaleDateString('he-IL') });
                           App.UI.showToast("נשמר! דברו על זה ביחד 💝", "success");
                           App.Actions.exitMiniGame();
                       },
@@ -3030,53 +3080,95 @@
       App.Navigation.mainTabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
 
       App.Actions.swipeMainTab = function(direction) {
-          const tabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
+          const tabs = App.Navigation.mainTabs;
           const currentIndex = tabs.indexOf(App.State.activeTab);
-          // RTL: ימינה זה קודם, שמאלה זה הבא
-          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
-          
-          if (nextIndex >= 0 && nextIndex < tabs.length) {
-              App.Navigation.navigate(tabs[nextIndex]);
-          }
+          if (currentIndex === -1) return;
+
+          // בטאבים הראשיים הכיוון צריך להתאים לתחושת ההחלקה בפועל:
+          // שמאלה = חזרה לאינדקס הקודם, ימינה = מעבר לאינדקס הבא.
+          const nextIndex = direction === 'left'
+              ? currentIndex - 1
+              : currentIndex + 1;
+
+          if (nextIndex < 0 || nextIndex >= tabs.length) return;
+
+          App.Navigation._swipeDir = direction;
+          App.Navigation.navigate(tabs[nextIndex]);
       };
 
+
+      // ביומן: לוח שנה -> פיד -> מפה. בקצוות נופלים חזרה למעבר בין הטאבים הראשיים.
       App.Actions.swipeJournalView = function(direction) {
-          const modes = ['calendar', 'feed', 'map'];
+          const modes = App.Actions.journalModes || ['calendar', 'feed', 'map'];
           const currentIndex = modes.indexOf(App.State.journalViewMode);
-          
-          // ניווט פנימי בתוך היומן
-          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
-          
-          if (nextIndex >= 0 && nextIndex < modes.length) {
-              // נשארים ביומן
-              App.Actions.setJournalView(modes[nextIndex]);
-          } else {
-              // רק אם הגענו לקצה של היומן, נאפשר מעבר לטאב ראשי
+          if (currentIndex === -1) {
               App.Actions.swipeMainTab(direction);
+              return;
           }
+
+          const nextIndex = direction === 'left'
+              ? currentIndex - 1
+              : currentIndex + 1;
+
+          if (nextIndex < 0 || nextIndex >= modes.length) {
+              // הגענו לקצה של תצוגות היומן - נעבור בין הטאבים הראשיים
+              App.Actions.swipeMainTab(direction);
+              return;
+          }
+
+          App.Navigation._swipeDir = direction;
+          App.Actions.setJournalView(modes[nextIndex]);
       };
+
+
 
       function setupGlobalSwipe() {
           let startX = 0;
           let startY = 0;
-          
+          let tracking = false;
+          let scope = 'main';
+
           document.addEventListener('touchstart', (e) => {
-              startX = e.touches[0].clientX;
-              startY = e.touches[0].clientY;
+              if (
+                  e.target.closest(
+                      '.leaflet-container, button, a, input, textarea, select, [data-no-swipe], nav, #bottom-nav, .modal-overlay'
+                  )
+              ) {
+                  tracking = false;
+                  return;
+              }
+
+              const touch = e.touches[0];
+              startX = touch.clientX;
+              startY = touch.clientY;
+              tracking = true;
+
+              scope = e.target.closest('#journal-swipe-area') ? 'journal' : 'main';
           }, { passive: true });
 
           document.addEventListener('touchend', (e) => {
-              const dx = e.changedTouches[0].clientX - startX;
-              const dy = e.changedTouches[0].clientY - startY;
-              
-              if (Math.abs(dx) > 80 && Math.abs(dy) < 50) {
-                  const direction = dx > 0 ? 'right' : 'left';
-                  
-                  if (App.State.activeTab === 'journal') {
-                      App.Actions.swipeJournalView(direction);
-                  } else {
-                      App.Actions.swipeMainTab(direction);
-                  }
+              if (!tracking) return;
+
+              tracking = false;
+
+              const touch = e.changedTouches[0];
+              const dx = touch.clientX - startX;
+              const dy = touch.clientY - startY;
+
+              const isHorizontalSwipe = Math.abs(dx) >= 60;
+              const isMostlyHorizontal = Math.abs(dy) <= 50;
+
+              if (!isHorizontalSwipe || !isMostlyHorizontal) return;
+
+              // זה החלק הכי חשוב:
+              // dx שלילי = האצבע זזה שמאלה
+              // dx חיובי = האצבע זזה ימינה
+              const direction = dx < 0 ? 'left' : 'right';
+
+              if (scope === 'journal') {
+                  App.Actions.swipeJournalView(direction);
+              } else {
+                  App.Actions.swipeMainTab(direction);
               }
           }, { passive: true });
       }
