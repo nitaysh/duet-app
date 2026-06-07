@@ -3040,26 +3040,28 @@
 
       // ביומן: לוח שנה -> פיד -> מפה. בקצוות נופלים חזרה למעבר בין הטאבים הראשיים.
       App.Actions.swipeJournalView = function(direction) {
-          const modes = App.Actions.journalModes || ['calendar', 'feed', 'map'];
-          const currentIndex = modes.indexOf(App.State.journalViewMode);
-          if (currentIndex === -1) {
-              App.Actions.swipeMainTab(direction);
-              return;
-          }
-
-          // טיפול ספציפי למפה: החלקה ימינה מעבירה רק לפיד החוויות
-          if (App.State.journalViewMode === 'map' && direction === 'right') {
+          const mode = App.State.journalViewMode;
+          
+          // חסימה הרמטית למצב מפה:
+          // כל החלקה כשהמפה פתוחה תיקח אותך אך ורק לפיד החוויות.
+          // זה מבטל לחלוטין את הקפיצה בטעות לגינה.
+          if (mode === 'map') {
               App.Navigation._swipeDir = direction;
               App.Actions.setJournalView('feed');
               return;
           }
 
-          const nextIndex = direction === 'left'
-              ? currentIndex - 1
-              : currentIndex + 1;
+          const modes = ['calendar', 'feed', 'map'];
+          const currentIndex = modes.indexOf(mode);
+          
+          if (currentIndex === -1) {
+              App.Actions.swipeMainTab(direction);
+              return;
+          }
+
+          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
 
           if (nextIndex < 0 || nextIndex >= modes.length) {
-              // הגענו לקצה של תצוגות היומן - נעבור בין הטאבים הראשיים
               App.Actions.swipeMainTab(direction);
               return;
           }
