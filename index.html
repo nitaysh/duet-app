@@ -585,7 +585,11 @@
                               { id: 2, text: "פטור משטיפת כלים 🍽️", cost: 100 },
                               { id: 3, text: "בחירת הסרט בערב 🎬", cost: 50 }
                           ];
-                          this.purchasedRewards = JSON.parse(localStorage.getItem('duet_purchased_rewards')) || [];
+                          this.purchasedRewards = JSON.parse(localStorage.getItem('duet_purchased_rewards')) || [];
+
+                          this.knowMeLastResult = JSON.parse(localStorage.getItem('duet_know_me_last_result')) || null;
+                          this.thisOrThatLastResult = JSON.parse(localStorage.getItem('duet_this_or_that_last_result')) || null;
+                          this.loveLangLastResult = JSON.parse(localStorage.getItem('duet_love_lang_last_result')) || null;
 
                           App.UI.updateGlobalCounters();
                           if(App.Data.themes[this.appTheme]) document.body.style.background = App.Data.themes[this.appTheme].bg;
@@ -733,7 +737,31 @@
                           future: { name: "חלומות ועתיד", icon: "fa-sparkles", color: "bg-blue-100 text-blue-600", questions: ["איזה חלום משותף נקדם החודש?", "אם היינו טסים מחר, לאן זה היה?", "איך הבית שלנו ייראה בעוד 5 שנים?"] }
                       },
                       mockPartnerAnswers: ["אני מרגישה שהחיבור מתחזק כשאנחנו מדברים בלי טלפונים.", "הכי כיף לי כשאתה מחבק אותי בסוף היום.", "אני חולמת שנטייל יחד יותר, רק שנינו.", "הצחוק המשותף שלנו הכי חשוב לי."],
-                      writingPrompts: ["הדבר הכי מצחיק שקרה לנו היום היה...", "הייתי כל כך גאה בך היום כש...", "רגע קטן של שקט שהיה לנו היום...", "המחשבה הראשונה שלי עליך הבוקר הייתה..."]
+                      writingPrompts: ["הדבר הכי מצחיק שקרה לנו היום היה...", "הייתי כל כך גאה בך היום כש...", "רגע קטן של שקט שהיה לנו היום...", "המחשבה הראשונה שלי עליך הבוקר הייתה..."],
+                      knowMeBank: [
+                          "מה המאכל האהוב עליי?", "מה הסרט שאני יכול/ה לראות אינסוף פעמים?", "מה הפחד הכי גדול שלי?", "מה החלום הכי גדול שלי?",
+                          "מה הצבע האהוב עליי?", "איזו מתנה ריגשה אותי הכי הרבה?", "מה האפליקציה שאני הכי משתמש/ת בה?", "מי הזמר/ת האהוב/ה עליי?",
+                          "מה הריח שאני הכי אוהב/ת?", "מה הכי מרגיע אותי אחרי יום קשה?", "מה הזיכרון הילדותי האהוב עליי?", "מה היעד שאני הכי רוצה לטוס אליו?"
+                      ],
+                      dateRouletteBank: [
+                          { emoji: "🍳", title: "בישול שף ביתי", desc: "תבחרו מתכון חדש ותכינו אותו ביחד הערב" },
+                          { emoji: "🌃", title: "טיול לילי", desc: "צאו להליכה של 30 דקות בשכונה בלי טלפונים" },
+                          { emoji: "🎬", title: "ערב סרט וינטג'", desc: "תבחרו סרט משנות ה-90 שאף אחד מכם לא ראה" },
+                          { emoji: "🧺", title: "פיקניק בסלון", desc: "פרסו שמיכה על הרצפה ואכלו ארוחה רומנטית" },
+                          { emoji: "🎨", title: "סדנת ציור זוגית", desc: "כל אחד מצייר דיוקן של השני בלי להציץ" },
+                          { emoji: "💃", title: "ערב ריקודים", desc: "תפעילו פלייליסט ותרקדו 15 דקות בסלון" },
+                          { emoji: "📸", title: "מסע צילום", desc: "צאו לצלם 10 דברים יפים שלא שמתם לב אליהם" },
+                          { emoji: "🍷", title: "טעימת יין עיוורת", desc: "כסו את התוויות ונסו לנחש איזה יין יותר טעים" },
+                          { emoji: "🌅", title: "זריחה משותפת", desc: "תקבעו לקום מוקדם ולצפות בזריחה ביחד" },
+                          { emoji: "🎮", title: "טורניר משחקים", desc: "תבחרו 3 משחקים פשוטים ותתחרו זה בזה" }
+                      ],
+                      loveLanguagesBank: {
+                          words: { name: "מילים מחזקות", icon: "💬", items: ["מחמאות יומיות", "פתקים מפתיעים", "אמירת 'אני אוהב/ת אותך'", "הבעת הערכה"] },
+                          touch: { name: "מגע פיזי", icon: "🤗", items: ["חיבוקים ארוכים", "החזקת ידיים", "ליטוף בשיער", "נשיקות פתאומיות"] },
+                          time: { name: "זמן איכות", icon: "⏰", items: ["שיחות בלי מסכים", "ארוחות משותפות", "טיולים זוגיים", "ערבי משחק"] },
+                          gifts: { name: "מתנות", icon: "🎁", items: ["מתנות קטנות מהלב", "פרחים סתם ככה", "הפתעות בעבודה", "משהו שנזכרת בו"] },
+                          acts: { name: "מעשי שירות", icon: "🛠️", items: ["הכנת קפה בבוקר", "עזרה במטלות", "טיפול כשחולים", "סידור ההפתעות"] }
+                      }
                   },
 
                   Navigation: {
@@ -988,11 +1016,8 @@
 
                           if (mode === 'map') {
                               setTimeout(() => App.UI.renderMap(), 100);
-                              return `<div id="journal-swipe-area" style="touch-action: pan-y;" class="space-y-4 mb-8">
-                                ${toggleHeaderHTML}
-                                <div id="map-root" class="w-full h-[45vh] rounded-[32px] shadow-sm border-4 border-white z-10"></div>
-                                <p class="text-center text-xs text-stone-400 font-bold mt-4">המפה מציגה את כל המקומות שתייגתם ביומן 📍</p>
-                              </div>`;
+                              return `<div id="journal-swipe-area" style="touch-action: pan-y;" class="space-y-4">${toggleHeaderHTML}<div id="map-root" class="w-full h-[65vh] rounded-[32px] shadow-sm border-4 border-white z-10"></div><p class="text-center text-xs text-stone-400 font-bold">המפה מציגה את כל המקומות שתייגתם ביומן 📍</p></div>`;
+
                           }
 
                           if (mode === 'feed') {
@@ -1153,6 +1178,10 @@
 
                           // מצב דייט על הספה (טיימר)
                           if (App.State.intimacyMode === 'offline') return `<div class="space-y-4">${streakHTML}${this.renderOfflineMode()}</div>`;
+                          if (App.State.intimacyMode === 'knowme') return `<div class="space-y-4">${streakHTML}${this.renderKnowMeQuiz()}</div>`;
+                          if (App.State.intimacyMode === 'roulette') return `<div class="space-y-4">${streakHTML}${this.renderDateRoulette()}</div>`;
+                          if (App.State.intimacyMode === 'lovelang') return `<div class="space-y-4">${streakHTML}${this.renderLoveLanguages()}</div>`;
+                          if (App.State.intimacyMode === 'breathe') return `<div class="space-y-4">${streakHTML}${this.renderConnectionMoment()}</div>`;
 
                           // תיקון קריטי: מוודא שהאפליקציה לא קורסת בגלל המילה null בזיכרון
                           if (!App.State.selectedDeck || App.State.selectedDeck === 'null') return `<div class="space-y-4">${streakHTML}${this.renderDeckSelector()}</div>`;
@@ -1241,6 +1270,95 @@
                               </div>`;
                       },
 
+                      renderCoupleScoreboard() {
+                          const km = App.State.knowMeLastResult;
+                          const tt = App.State.thisOrThatLastResult;
+                          const ll = App.State.loveLangLastResult;
+
+                          const kmPct = km ? Math.round((km.score / Math.max(1, km.total)) * 100) : null;
+                          const ttPct = tt ? Math.round((tt.answered / Math.max(1, tt.total)) * 100) : null;
+                          const llPct = ll ? Math.min(100, Math.round((ll.totalSelected / 12) * 100)) : null;
+
+                          const played = [kmPct, ttPct, llPct].filter(v => v !== null);
+                          const coupleScore = played.length ? Math.round(played.reduce((a, b) => a + b, 0) / played.length) : 0;
+
+                          let coupleLabel = 'התחילו לשחק יחד 💫';
+                          let coupleColor = 'from-stone-400 to-stone-500';
+                          if (played.length) {
+                              if (coupleScore >= 85) { coupleLabel = 'נשמה תאומה 💞'; coupleColor = 'from-rose-500 to-pink-500'; }
+                              else if (coupleScore >= 65) { coupleLabel = 'זוג מחובר 💝'; coupleColor = 'from-pink-400 to-rose-400'; }
+                              else if (coupleScore >= 40) { coupleLabel = 'בדרך הנכונה 🌱'; coupleColor = 'from-amber-400 to-orange-400'; }
+                              else { coupleLabel = 'יש מה לגלות יחד 🔍'; coupleColor = 'from-sky-400 to-indigo-400'; }
+                          }
+
+                          const bar = (label, emoji, pct, sub, color) => {
+                              if (pct === null) {
+                                  return `<div class="bg-white/70 rounded-2xl p-3 border border-white">
+                                      <div class="flex justify-between items-center mb-1.5"><span class="text-xs font-bold text-stone-600">${emoji} ${label}</span><span class="text-[10px] font-bold text-stone-400">טרם שוחק</span></div>
+                                      <div class="h-2 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-stone-200" style="width:0%"></div></div>
+                                  </div>`;
+                              }
+                              return `<div class="bg-white/80 rounded-2xl p-3 border border-white shadow-sm">
+                                  <div class="flex justify-between items-center mb-1.5">
+                                      <span class="text-xs font-bold text-stone-700">${emoji} ${label}</span>
+                                      <span class="text-xs font-extrabold text-stone-800">${pct}%</span>
+                                  </div>
+                                  <div class="h-2 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-gradient-to-r ${color} transition-all" style="width:${pct}%"></div></div>
+                                  <div class="text-[10px] font-bold text-stone-400 mt-1">${sub}</div>
+                              </div>`;
+                          };
+
+                          const tips = [];
+                          if (kmPct !== null && kmPct < 70) tips.push('🧠 ספרו אחד לשני עוד פרטים קטנים מהיומיום — זה משפר את ההיכרות העמוקה.');
+                          if (ttPct === null) tips.push('⚡ שחקו "זה או זה?" יחד — דרך מהירה לראות איפה אתם דומים.');
+                          if (llPct === null) tips.push('💝 גלו את שפת האהבה — תדעו בדיוק מה ממלא את הלב של בן/בת הזוג.');
+                          if (ll && ll.topName) tips.push(`💖 שפת האהבה המובילה אצלך היא "${ll.topName}" — בקשו מהפרטנר ליישם השבוע מחווה אחת בסגנון הזה.`);
+                          if (kmPct !== null && kmPct >= 85) tips.push('🌟 אתם מכירים אחד את השני מצוין! נסו את חפיסת "חלומות ועתיד" כדי לצלול לעוד שכבה.');
+                          if (!tips.length) tips.push('✨ המשיכו לשחק יחד פעם בשבוע — עקביות זה הסוד.');
+
+                          return `
+                              <div class="bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 border border-pink-100 rounded-[32px] p-5 shadow-sm">
+                                  <div class="flex items-center gap-2 mb-3">
+                                      <div class="w-9 h-9 rounded-2xl bg-white/80 flex items-center justify-center shadow-inner"><i class="fa-solid fa-trophy text-pink-500"></i></div>
+                                      <div>
+                                          <h3 class="text-lg font-extrabold text-stone-800">לוח התוצאות הזוגי</h3>
+                                          <p class="text-[11px] font-bold text-stone-400">סיכום השאלונים האחרונים שלכם</p>
+                                      </div>
+                                  </div>
+
+                                  <div class="bg-white/90 rounded-3xl p-4 mb-3 border border-white shadow-sm flex items-center gap-4">
+                                      <div class="relative w-20 h-20 flex items-center justify-center">
+                                          <svg class="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
+                                              <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f5f5f4" stroke-width="3"></circle>
+                                              <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#coupleGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="${coupleScore}, 100"></circle>
+                                              <defs><linearGradient id="coupleGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs>
+                                          </svg>
+                                          <div class="absolute text-center"><div class="text-lg font-extrabold text-stone-800 leading-none">${coupleScore}</div><div class="text-[9px] font-bold text-stone-400">/100</div></div>
+                                      </div>
+                                      <div class="flex-1">
+                                          <div class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">ניקוד זוגי משותף</div>
+                                          <div class="inline-block bg-gradient-to-r ${coupleColor} text-white text-xs font-extrabold px-3 py-1.5 rounded-xl shadow-sm">${coupleLabel}</div>
+                                          <div class="text-[10px] font-bold text-stone-400 mt-1.5">ממוצע של ${played.length || 0} מתוך 3 שאלונים</div>
+                                      </div>
+                                  </div>
+
+                                  <div class="space-y-2 mb-3">
+                                      ${bar('כמה אתה מכיר אותי?', '🧠', kmPct, km ? `${km.score}/${km.total} נכון · ${km.date}` : '', 'from-pink-500 to-rose-500')}
+                                      ${bar('זה או זה?', '⚡', ttPct, tt ? `${tt.answered}/${tt.total} שאלות · ${tt.date}` : '', 'from-orange-500 to-amber-500')}
+                                      ${bar('שפת האהבה שלנו', '💝', llPct, ll ? `${ll.topName ? 'מובילה: ' + ll.topName : 'נשמר'} · ${ll.date}` : '', 'from-rose-400 to-pink-400')}
+                                  </div>
+
+                                  <div class="bg-white/70 rounded-2xl p-3 border border-pink-100">
+                                      <div class="text-[11px] font-extrabold text-pink-600 uppercase tracking-widest mb-2"><i class="fa-solid fa-wand-magic-sparkles ml-1"></i> טיפים לשיפור הקרבה</div>
+                                      <ul class="space-y-1.5">
+                                          ${tips.slice(0, 3).map(t => `<li class="text-xs font-bold text-stone-700 leading-relaxed">${t}</li>`).join('')}
+                                      </ul>
+                                  </div>
+                              </div>
+                          `;
+                      },
+
+
                       renderDeckSelector() {
                           const hasPlayedToday = (App.State.questionsAnsweredCountToday || 0) >= 10;
 
@@ -1276,18 +1394,48 @@
                                           <h3 class="font-extrabold text-sm">דייט על הספה</h3>
                                           <p class="text-white/80 text-[10px] mt-1">טיימר 5 דקות לשיחה בלי מסכים</p>
                                       </div>
+                                      <div onclick="App.Actions.startKnowMeQuiz()" class="category-card bg-gradient-to-br from-pink-500 to-rose-500 rounded-[32px] p-5 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3">
+                                          <div class="text-3xl mb-2">🧠</div>
+                                          <h3 class="font-extrabold text-sm">כמה אתה מכיר אותי?</h3>
+                                          <p class="text-white/90 text-[10px] mt-1">חידון זוגי על העדפות וחלומות</p>
+                                      </div>
+                                      <div onclick="App.Actions.spinDateRoulette()" class="category-card bg-gradient-to-br from-yellow-500 to-orange-500 rounded-[32px] p-5 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3">
+                                          <div class="text-3xl mb-2">🎰</div>
+                                          <h3 class="font-extrabold text-sm">גלגל את הדייט</h3>
+                                          <p class="text-white/90 text-[10px] mt-1">רעיון אקראי לדייט מיידי</p>
+                                      </div>
+                                      <div onclick="App.Actions.openLoveLanguages()" class="category-card bg-gradient-to-br from-rose-400 to-pink-400 rounded-[32px] p-5 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3">
+                                          <div class="text-3xl mb-2">💝</div>
+                                          <h3 class="font-extrabold text-sm">שפת האהבה שלנו</h3>
+                                          <p class="text-white/90 text-[10px] mt-1">גלו מה ממלא לכם את המצברים</p>
+                                      </div>
+                                      <div onclick="App.Actions.startBreathing()" class="category-card bg-gradient-to-br from-teal-500 to-cyan-500 rounded-[32px] p-5 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3">
+                                          <div class="text-3xl mb-2">🧘</div>
+                                          <h3 class="font-extrabold text-sm">רגע של חיבור</h3>
+                                          <p class="text-white/90 text-[10px] mt-1">תרגיל נשימה זוגי של דקה</p>
+                                      </div>
                                   </div>
 
-                                  <div class="grid grid-cols-1 gap-3">
-                                      ${Object.entries(App.Data.decks).map(([key, deck]) => `
-                                          <div onclick="App.Actions.selectDeck('${key}')" class="category-card glass-panel rounded-[32px] p-5 flex items-center gap-5 border border-white cursor-pointer hover:bg-white transition shadow-sm">
-                                              <div class="w-14 h-14 rounded-[22px] ${deck.color} flex items-center justify-center text-2xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
-                                              <div>
-                                                  <h3 class="font-bold text-base text-stone-800">${deck.name}</h3>
-                                                  <p class="text-xs text-stone-400">שאלות עומק וקרבה בנושא ${deck.name.toLowerCase()}</p>
+
+                                  ${this.renderCoupleScoreboard()}
+
+
+                                  <div class="bg-gradient-to-br from-green-100 to-emerald-100 border border-green-200 rounded-[32px] p-5 shadow-sm">
+                                      <div class="flex items-center gap-2 mb-4">
+                                          <div class="w-9 h-9 rounded-2xl bg-white/70 flex items-center justify-center shadow-inner"><i class="fa-solid fa-lightbulb text-green-600"></i></div>
+                                          <h3 class="text-lg font-extrabold text-green-800">שאלה למחשבה</h3>
+                                      </div>
+                                      <div class="grid grid-cols-1 gap-3">
+                                          ${Object.entries(App.Data.decks).map(([key, deck]) => `
+                                              <div onclick="App.Actions.selectDeck('${key}')" class="category-card bg-white/80 rounded-[28px] p-4 flex items-center gap-4 border border-white cursor-pointer hover:bg-white transition shadow-sm">
+                                                  <div class="w-12 h-12 rounded-[20px] ${deck.color} flex items-center justify-center text-xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
+                                                  <div>
+                                                      <h3 class="font-bold text-base text-stone-800">${deck.name}</h3>
+                                                      <p class="text-xs text-stone-400">שאלות עומק וקרבה בנושא ${deck.name.toLowerCase()}</p>
+                                                  </div>
                                               </div>
-                                          </div>
-                                      `).join('')}
+                                          `).join('')}
+                                      </div>
                                   </div>
                               </div>`;
                       },
@@ -1323,7 +1471,7 @@
                                       </button>
                                   </div>
 
-                                  <div id="game-scroll-area" class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
+                                  <div class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
                                       ${itemsHTML}
                                   </div>
 
@@ -1381,6 +1529,135 @@
                                   `}
                               </div>
                           `;
+                      },
+
+                      renderKnowMeQuiz() {
+                          const idx = App.State.knowMeIndex || 0;
+                          const score = App.State.knowMeScore || 0;
+                          const total = App.State.knowMeQuestions ? App.State.knowMeQuestions.length : 0;
+                          const finished = total > 0 && idx >= total;
+                          if (finished) {
+                              return `
+                                  <div class="glass-panel rounded-[32px] p-8 text-center border-2 border-pink-100 bg-gradient-to-b from-pink-50/60 to-white shadow-lg">
+                                      <div class="text-6xl mb-4">🧠💖</div>
+                                      <h2 class="text-2xl font-extrabold text-stone-800 mb-2">סיימתם את החידון!</h2>
+                                      <p class="text-stone-500 text-sm mb-6">השלמתם ${total} שאלות יחד</p>
+                                      <div class="bg-pink-100 text-pink-700 py-4 rounded-2xl font-extrabold text-lg mb-4">+25 XP לגינה 🌸</div>
+                                      <button onclick="App.Actions.exitMiniGame()" class="w-full bg-stone-800 text-white py-4 rounded-2xl font-bold active:scale-95 transition shadow-md">חזרה למסך הראשי</button>
+                                  </div>`;
+                          }
+                          const q = App.State.knowMeQuestions[idx];
+                          return `
+                              <div class="glass-panel rounded-[32px] p-6 border-2 border-pink-100 bg-gradient-to-b from-pink-50/60 to-white shadow-lg space-y-5">
+                                  <div class="flex justify-between items-center">
+                                      <div class="text-xs font-extrabold text-pink-600">שאלה ${idx + 1} מתוך ${total}</div>
+                                      <button onclick="App.Actions.exitMiniGame()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl active:scale-95 transition"><i class="fa-solid fa-arrow-right"></i> יציאה</button>
+                                  </div>
+                                  <div class="text-5xl text-center">🧠</div>
+                                  <h2 class="text-xl font-bold text-stone-800 text-center leading-relaxed px-2">${q}</h2>
+                                  <p class="text-xs text-center text-stone-400">דברו ביחד — אחד שואל, השני עונה, ואז גלו אם צדקתם</p>
+                                  <div class="grid grid-cols-2 gap-3 pt-2">
+                                      <button onclick="App.Actions.knowMeAnswer(false)" class="py-4 rounded-2xl font-extrabold bg-stone-100 text-stone-600 border border-stone-200 active:scale-95 transition">❌ פספסתי</button>
+                                      <button onclick="App.Actions.knowMeAnswer(true)" class="py-4 rounded-2xl font-extrabold bg-pink-500 text-white shadow-md active:scale-95 transition">✅ צדקתי</button>
+                                  </div>
+                                  <div class="text-center text-sm font-bold text-pink-700">ניקוד נוכחי: ${score}/${idx}</div>
+                              </div>`;
+                      },
+
+                      renderDateRoulette() {
+                          const result = App.State.rouletteResult;
+                          const spinning = App.State.rouletteSpinning;
+                          return `
+                              <div class="glass-panel rounded-[32px] p-8 text-center border-2 border-orange-100 bg-gradient-to-b from-yellow-50/60 to-white shadow-lg space-y-5 min-h-[60vh] flex flex-col justify-center">
+                                  <div class="absolute"><button onclick="App.Actions.exitMiniGame()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl active:scale-95 transition"><i class="fa-solid fa-arrow-right"></i> יציאה</button></div>
+                                  ${spinning ? `
+                                      <div class="text-8xl animate-spin">🎰</div>
+                                      <h2 class="text-xl font-extrabold text-stone-800">מסובבים את הגלגל...</h2>
+                                  ` : result ? `
+                                      <div class="text-7xl">${result.emoji}</div>
+                                      <h2 class="text-2xl font-extrabold text-stone-800">${result.title}</h2>
+                                      <p class="text-stone-600 text-base leading-relaxed px-4">${result.desc}</p>
+                                      <div class="grid grid-cols-2 gap-3 pt-4">
+                                          <button onclick="App.Actions.spinDateRoulette()" class="py-4 rounded-2xl font-bold bg-stone-100 text-stone-700 border border-stone-200 active:scale-95 transition">🔄 גלגל שוב</button>
+                                          <button onclick="App.Actions.acceptDate()" class="py-4 rounded-2xl font-extrabold bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-md active:scale-95 transition">💖 בחרנו!</button>
+                                      </div>
+                                  ` : ''}
+                              </div>`;
+                      },
+
+                      renderLoveLanguages() {
+                          const scores = App.State.loveLanguageScores || {};
+                          const total = Object.values(scores).reduce((a,b) => a + (b ? b.length : 0), 0);
+                          const cardsHTML = Object.entries(App.Data.loveLanguagesBank).map(([key, lang]) => {
+                              const selected = scores[key] || [];
+                              const pct = lang.items.length ? Math.round((selected.length / lang.items.length) * 100) : 0;
+                              return `
+                                  <div class="bg-white/80 rounded-[24px] p-4 border border-rose-100 shadow-sm">
+                                      <div class="flex items-center justify-between mb-3">
+                                          <div class="flex items-center gap-2">
+                                              <span class="text-2xl">${lang.icon}</span>
+                                              <h4 class="font-extrabold text-stone-800">${lang.name}</h4>
+                                          </div>
+                                          <span class="text-xs font-bold text-rose-500">${pct}%</span>
+                                      </div>
+                                      <div class="w-full bg-rose-50 rounded-full h-2 mb-3 overflow-hidden"><div class="bg-gradient-to-r from-rose-400 to-pink-500 h-full transition-all" style="width:${pct}%"></div></div>
+                                      <div class="flex flex-wrap gap-2">
+                                          ${lang.items.map((item, i) => {
+                                              const on = selected.includes(item);
+                                              return `<button onclick="App.Actions.toggleLoveLangItem('${key}',${i})" class="text-[11px] font-bold py-1.5 px-3 rounded-full transition active:scale-95 ${on ? 'bg-rose-500 text-white shadow-sm' : 'bg-rose-50 text-rose-600 border border-rose-100'}">${on ? '✓ ' : ''}${item}</button>`;
+                                          }).join('')}
+                                      </div>
+                                  </div>`;
+                          }).join('');
+                          const topLang = Object.entries(scores).sort((a,b) => (b[1]?.length||0) - (a[1]?.length||0))[0];
+                          const topName = topLang && topLang[1]?.length ? App.Data.loveLanguagesBank[topLang[0]].name : null;
+                          return `
+                              <div class="space-y-4">
+                                  <div class="flex justify-between items-center bg-white p-3 rounded-2xl border shadow-sm">
+                                      <div class="text-right">
+                                          <h3 class="font-extrabold text-stone-800 text-sm">💝 שפת האהבה שלי</h3>
+                                          <p class="text-[10px] font-bold text-rose-400">סמנו את מה שהכי ממלא אתכם</p>
+                                      </div>
+                                      <button onclick="App.Actions.exitMiniGame()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl active:scale-95 transition"><i class="fa-solid fa-arrow-right"></i> יציאה</button>
+                                  </div>
+                                  ${topName ? `<div class="bg-gradient-to-r from-rose-100 to-pink-100 border border-rose-200 rounded-2xl p-4 text-center"><div class="text-xs font-bold text-rose-600 mb-1">השפה הדומיננטית שלך</div><div class="text-lg font-extrabold text-rose-700">${topName}</div></div>` : ''}
+                                  <div class="space-y-3">${cardsHTML}</div>
+                                  ${total > 0 ? `<button onclick="App.Actions.saveLoveLanguages()" class="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white py-4 rounded-2xl font-extrabold active:scale-95 transition shadow-md">שמור ושתף עם ${App.State.partnerName}</button>` : ''}
+                              </div>`;
+                      },
+
+                      renderConnectionMoment() {
+                          const phase = App.State.breathePhase || 'ready';
+                          const cycle = App.State.breatheCycle || 0;
+                          const phaseText = { inhale: 'שאיפה...', hold: 'החזיקו', exhale: 'נשיפה...', ready: 'מוכנים?', done: 'נשמתם יחד 🌬️' }[phase];
+                          const scale = phase === 'inhale' ? 'scale-110' : phase === 'exhale' ? 'scale-75' : 'scale-90';
+                          const color = phase === 'inhale' ? 'from-teal-300 to-cyan-400' : phase === 'exhale' ? 'from-cyan-200 to-teal-300' : 'from-teal-400 to-cyan-500';
+                          return `
+                              <div class="glass-panel rounded-[32px] p-8 text-center border-2 border-teal-100 bg-gradient-to-b from-teal-50/60 to-white shadow-lg min-h-[65vh] flex flex-col items-center justify-center relative">
+                                  <div class="absolute top-5 right-5">
+                                      <button onclick="App.Actions.exitMiniGame()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl active:scale-95 transition"><i class="fa-solid fa-arrow-right"></i> יציאה</button>
+                                  </div>
+                                  <div class="text-xs font-extrabold text-teal-600 mb-3 uppercase tracking-widest">🧘 רגע של חיבור</div>
+                                  ${phase === 'ready' ? `
+                                      <div class="text-7xl mb-6">🧘‍♀️🧘</div>
+                                      <h2 class="text-xl font-extrabold text-stone-800 mb-3">תרגיל נשימה זוגי</h2>
+                                      <p class="text-stone-500 text-sm mb-6 max-w-[260px] leading-relaxed">שבו זה מול זה, החזיקו ידיים, ונשמו יחד 4 מחזורים מלאים</p>
+                                      <button onclick="App.Actions.startBreathingCycle()" class="bg-teal-500 text-white py-4 px-10 rounded-2xl font-extrabold shadow-md active:scale-95 transition">התחל</button>
+                                  ` : phase === 'done' ? `
+                                      <div class="text-7xl mb-6">💚</div>
+                                      <h2 class="text-2xl font-extrabold text-stone-800 mb-2">סיימתם יחד</h2>
+                                      <p class="text-stone-500 text-sm mb-6">הבטו אחד בשני לעוד רגע לפני שתחזרו</p>
+                                      <div class="bg-teal-100 text-teal-700 py-3 px-5 rounded-2xl font-extrabold mb-4">+20 XP לגינה 🌿</div>
+                                      <button onclick="App.Actions.exitMiniGame()" class="bg-stone-800 text-white py-4 px-10 rounded-2xl font-bold active:scale-95 transition shadow-md">סיום</button>
+                                  ` : `
+                                      <div class="text-xs font-bold text-teal-500 mb-3">מחזור ${cycle}/4</div>
+                                      <div class="relative w-48 h-48 flex items-center justify-center mb-6">
+                                          <div class="absolute inset-0 rounded-full bg-gradient-to-br ${color} transition-all duration-[3500ms] ${scale} opacity-80 shadow-2xl"></div>
+                                          <div class="relative text-white text-xl font-extrabold drop-shadow">${phaseText}</div>
+                                      </div>
+                                      <p class="text-xs text-stone-400">המשיכו לנשום בקצב</p>
+                                  `}
+                              </div>`;
                       },
 
                       Profile() {
@@ -2226,24 +2503,7 @@
                       selectGameAnswer(qIdx, choice) {
                           const answers = {...App.State.gameAnswers}; answers[qIdx] = choice;
                           App.State.save('gameAnswers', answers);
-                          
-                          // שומרים את הגלילה גם של המסך וגם של אזור השאלות הפנימי
-                          const viewport = document.getElementById('app-viewport');
-                          const mainScrollPos = viewport ? viewport.scrollTop : 0;
-                          
-                          const gameArea = document.getElementById('game-scroll-area');
-                          const gameScrollPos = gameArea ? gameArea.scrollTop : 0;
-                          
-                          if (viewport && viewport.firstChild) {
-                              viewport.firstChild.innerHTML = App.Components.Intimacy();
-                              viewport.scrollTop = mainScrollPos;
-                              
-                              // מחזירים את הגלילה המדויקת לאזור השאלות אחרי הרענון
-                              const newGameArea = document.getElementById('game-scroll-area');
-                              if (newGameArea) newGameArea.scrollTop = gameScrollPos;
-                          } else {
-                              App.Navigation.navigate('intimacy');
-                          }
+                          App.Navigation.navigate('intimacy');
                       },
 
                       submitThisOrThatGame() {
@@ -2260,6 +2520,7 @@
                           App.State.addXP(30);
                           App.State.save('questionsAnsweredCountToday', (App.State.questionsAnsweredCountToday || 0) + 10);
                           App.State.save('gameQuestions', []); App.State.save('gameAnswers', {}); App.State.save('intimacyMode', 'qa');
+                          App.State.save('thisOrThatLastResult', { answered: 10, total: 10, date: new Date().toLocaleDateString('he-IL') });
 
                           App.Navigation.navigate('intimacy');
                           App.UI.throwPetals();
@@ -2312,6 +2573,118 @@
                           App.State.save('intimacyMode', 'qa');
                           App.Navigation.navigate('intimacy');
                       },
+
+                      exitMiniGame() {
+                          if (App.State.breatheTimeout) { clearTimeout(App.State.breatheTimeout); App.State.breatheTimeout = null; }
+                          App.State.breathePhase = 'ready'; App.State.breatheCycle = 0;
+                          App.State.rouletteSpinning = false; App.State.rouletteResult = null;
+                          App.State.save('intimacyMode', 'qa');
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      startKnowMeQuiz() {
+                          const shuffled = [...App.Data.knowMeBank].sort(() => 0.5 - Math.random()).slice(0, 6);
+                          App.State.knowMeQuestions = shuffled;
+                          App.State.knowMeIndex = 0;
+                          App.State.knowMeScore = 0;
+                          App.State.save('intimacyMode', 'knowme');
+                          App.Navigation.navigate('intimacy');
+                      },
+                      knowMeAnswer(correct) {
+                          if (correct) App.State.knowMeScore = (App.State.knowMeScore || 0) + 1;
+                          App.State.knowMeIndex = (App.State.knowMeIndex || 0) + 1;
+                          if (App.State.knowMeIndex >= App.State.knowMeQuestions.length) {
+                              App.State.addXP(25);
+                              App.UI.throwPetals();
+                              App.State.save('knowMeLastResult', { score: App.State.knowMeScore, total: App.State.knowMeQuestions.length, date: new Date().toLocaleDateString('he-IL') });
+                          }
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      spinDateRoulette() {
+                          App.State.save('intimacyMode', 'roulette');
+                          App.State.rouletteSpinning = true;
+                          App.State.rouletteResult = null;
+                          App.Navigation.navigate('intimacy');
+                          setTimeout(() => {
+                              const bank = App.Data.dateRouletteBank;
+                              App.State.rouletteResult = bank[Math.floor(Math.random() * bank.length)];
+                              App.State.rouletteSpinning = false;
+                              if (App.State.activeTab === 'intimacy') App.Navigation.navigate('intimacy');
+                          }, 1400);
+                      },
+                      acceptDate() {
+                          App.State.addXP(15);
+                          App.UI.throwPetals();
+                          App.UI.showToast("בחירה מעולה! תהנו 💖", "success");
+                          App.Actions.exitMiniGame();
+                      },
+
+                      openLoveLanguages() {
+                          if (!App.State.loveLanguageScores) App.State.loveLanguageScores = {};
+                          App.State.save('intimacyMode', 'lovelang');
+                          App.Navigation.navigate('intimacy');
+                      },
+                      toggleLoveLangItem(category, index) {
+                          const item = App.Data.loveLanguagesBank[category]?.items[index];
+                          if (!item) return;
+                          const scores = { ...(App.State.loveLanguageScores || {}) };
+                          const list = scores[category] ? [...scores[category]] : [];
+                          const i = list.indexOf(item);
+                          if (i >= 0) list.splice(i, 1); else list.push(item);
+                          scores[category] = list;
+                          App.State.loveLanguageScores = scores;
+                          App.Navigation.navigate('intimacy');
+                      },
+                      saveLoveLanguages() {
+                          App.State.addXP(20);
+                          App.UI.throwPetals();
+                          const scores = App.State.loveLanguageScores || {};
+                          let topKey = null, topCount = 0, totalSelected = 0;
+                          Object.entries(scores).forEach(([k, list]) => {
+                              const c = (list || []).length;
+                              totalSelected += c;
+                              if (c > topCount) { topCount = c; topKey = k; }
+                          });
+                          const topName = topKey && App.Data.loveLanguagesBank[topKey] ? App.Data.loveLanguagesBank[topKey].name : null;
+                          App.State.save('loveLangLastResult', { topName, topKey, topCount, totalSelected, date: new Date().toLocaleDateString('he-IL') });
+                          App.UI.showToast("נשמר! דברו על זה ביחד 💝", "success");
+                          App.Actions.exitMiniGame();
+                      },
+
+                      startBreathing() {
+                          App.State.breathePhase = 'ready';
+                          App.State.breatheCycle = 0;
+                          App.State.save('intimacyMode', 'breathe');
+                          App.Navigation.navigate('intimacy');
+                      },
+                      startBreathingCycle() {
+                          App.State.breatheCycle = 1;
+                          App.Actions._breathStep('inhale');
+                      },
+                      _breathStep(phase) {
+                          App.State.breathePhase = phase;
+                          if (App.State.activeTab === 'intimacy') App.Navigation.navigate('intimacy');
+                          const next = { inhale: ['hold', 1500], hold: ['exhale', 4000], exhale: ['next', 4000] };
+                          const [n, ms] = phase === 'inhale' ? next.inhale : phase === 'hold' ? next.hold : next.exhale;
+                          App.State.breatheTimeout = setTimeout(() => {
+                              if (App.State.intimacyMode !== 'breathe') return;
+                              if (n === 'next') {
+                                  if (App.State.breatheCycle >= 4) {
+                                      App.State.breathePhase = 'done';
+                                      App.State.addXP(20);
+                                      App.UI.throwPetals();
+                                      if (App.State.activeTab === 'intimacy') App.Navigation.navigate('intimacy');
+                                  } else {
+                                      App.State.breatheCycle++;
+                                      App.Actions._breathStep('inhale');
+                                  }
+                              } else {
+                                  App.Actions._breathStep(n);
+                              }
+                          }, phase === 'inhale' ? 4000 : ms);
+                      },
+
 
                       selectDeck(deckKey) { App.State.save('selectedDeck', deckKey); App.State.save('questionIndex', Math.floor(Math.random() * 3)); App.Navigation.navigate('intimacy'); },
                       exitDeck() { App.State.save('selectedDeck', null); App.Navigation.navigate('intimacy'); },
