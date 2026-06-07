@@ -3033,7 +3033,7 @@
           const tabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
           const currentIndex = tabs.indexOf(App.State.activeTab);
           // RTL: ימינה זה קודם, שמאלה זה הבא
-          const nextIndex = direction === 'right' ? currentIndex - 1 : currentIndex + 1;
+          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
           
           if (nextIndex >= 0 && nextIndex < tabs.length) {
               App.Navigation.navigate(tabs[nextIndex]);
@@ -3045,7 +3045,7 @@
           const currentIndex = modes.indexOf(App.State.journalViewMode);
           
           // ניווט פנימי בתוך היומן
-          const nextIndex = direction === 'right' ? currentIndex - 1 : currentIndex + 1;
+          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
           
           if (nextIndex >= 0 && nextIndex < modes.length) {
               // נשארים ביומן
