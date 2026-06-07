@@ -3047,6 +3047,13 @@
               return;
           }
 
+          // טיפול ספציפי למפה: החלקה ימינה מעבירה רק לפיד החוויות
+          if (App.State.journalViewMode === 'map' && direction === 'right') {
+              App.Navigation._swipeDir = direction;
+              App.Actions.setJournalView('feed');
+              return;
+          }
+
           const nextIndex = direction === 'left'
               ? currentIndex - 1
               : currentIndex + 1;
