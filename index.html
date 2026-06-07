@@ -1323,7 +1323,7 @@
                                       </button>
                                   </div>
 
-                                  <div class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
+                                  <div id="game-scroll-area" class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
                                       ${itemsHTML}
                                   </div>
 
@@ -2227,14 +2227,20 @@
                           const answers = {...App.State.gameAnswers}; answers[qIdx] = choice;
                           App.State.save('gameAnswers', answers);
                           
-                          // שומרים את מיקום הגלילה הנוכחי
+                          // שומרים את הגלילה גם של המסך וגם של אזור השאלות הפנימי
                           const viewport = document.getElementById('app-viewport');
-                          const scrollPos = viewport.scrollTop;
+                          const mainScrollPos = viewport ? viewport.scrollTop : 0;
                           
-                          // מעדכנים רק את התוכן של הדף בלי לטעון אותו מחדש ומחזירים את הגלילה
-                          if (viewport.firstChild) {
+                          const gameArea = document.getElementById('game-scroll-area');
+                          const gameScrollPos = gameArea ? gameArea.scrollTop : 0;
+                          
+                          if (viewport && viewport.firstChild) {
                               viewport.firstChild.innerHTML = App.Components.Intimacy();
-                              viewport.scrollTop = scrollPos;
+                              viewport.scrollTop = mainScrollPos;
+                              
+                              // מחזירים את הגלילה המדויקת לאזור השאלות אחרי הרענון
+                              const newGameArea = document.getElementById('game-scroll-area');
+                              if (newGameArea) newGameArea.scrollTop = gameScrollPos;
                           } else {
                               App.Navigation.navigate('intimacy');
                           }
