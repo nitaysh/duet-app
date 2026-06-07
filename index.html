@@ -16,6 +16,15 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
+              .map-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background: transparent;
+}
               .paper-lines { background-image: linear-gradient(#e5e7eb 1px, transparent 1px); background-size: 100% 28px; }
               .paper-grid { background-image: linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
               .paper-craft { background-color: #e6dcc8; border: 1px solid #d4c5b0; }
@@ -3024,50 +3033,32 @@
           const tabs = App.Navigation.mainTabs;
           const currentIndex = tabs.indexOf(App.State.activeTab);
           if (currentIndex === -1) return;
-
-          // בטאבים הראשיים הכיוון צריך להתאים לתחושת ההחלקה בפועל:
-          // שמאלה = חזרה לאינדקס הקודם, ימינה = מעבר לאינדקס הבא.
-          const nextIndex = direction === 'left'
-              ? currentIndex - 1
-              : currentIndex + 1;
-
+          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
           if (nextIndex < 0 || nextIndex >= tabs.length) return;
-
           App.Navigation._swipeDir = direction;
           App.Navigation.navigate(tabs[nextIndex]);
       };
 
-
-      // ביומן: לוח שנה -> פיד -> מפה. בקצוות נופלים חזרה למעבר בין הטאבים הראשיים.
       App.Actions.swipeJournalView = function(direction) {
           const mode = App.State.journalViewMode;
-          
-          // חסימה הרמטית למצב מפה:
-          // כל החלקה כשהמפה פתוחה תיקח אותך אך ורק לפיד החוויות.
-          // זה מבטל לחלוטין את הקפיצה בטעות לגינה.
-          if (mode === 'map') {
+          // חסימה: אם אנחנו במפה, אי אפשר להחליק ימינה לטאבים אחרים
+          if (mode === 'map' && direction === 'right') {
               App.Navigation._swipeDir = direction;
               App.Actions.setJournalView('feed');
               return;
           }
-
+          // ניווט פנימי ביומן
           const modes = ['calendar', 'feed', 'map'];
           const currentIndex = modes.indexOf(mode);
+          const nextIndex = direction === 'left' ? currentIndex + 1 : currentIndex - 1;
           
-          if (currentIndex === -1) {
+          if (nextIndex >= 0 && nextIndex < modes.length) {
+              App.Navigation._swipeDir = direction;
+              App.Actions.setJournalView(modes[nextIndex]);
+          } else {
+              // אם יצאנו מגבולות היומן, נעבור טאב ראשי
               App.Actions.swipeMainTab(direction);
-              return;
           }
-
-          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
-
-          if (nextIndex < 0 || nextIndex >= modes.length) {
-              App.Actions.swipeMainTab(direction);
-              return;
-          }
-
-          App.Navigation._swipeDir = direction;
-          App.Actions.setJournalView(modes[nextIndex]);
       };
 
 
