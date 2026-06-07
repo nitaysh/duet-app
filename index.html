@@ -3077,9 +3077,10 @@
           let scope = 'main';
 
           document.addEventListener('touchstart', (e) => {
+              // הסרנו את .leaflet-container מהרשימה כדי שלא יתעלם מהמפה
               if (
                   e.target.closest(
-                      '.leaflet-container, button, a, input, textarea, select, [data-no-swipe], nav, #bottom-nav, .modal-overlay'
+                      'button, a, input, textarea, select, [data-no-swipe], nav, #bottom-nav, .modal-overlay'
                   )
               ) {
                   tracking = false;
@@ -3092,7 +3093,7 @@
               tracking = true;
 
               scope = e.target.closest('#journal-swipe-area') ? 'journal' : 'main';
-          }, { passive: true });
+          }, { passive: true, capture: true }); // הוספנו capture כדי לתפוס את ההחלקה לפני שהמפה עוצרת אותה
 
           document.addEventListener('touchend', (e) => {
               if (!tracking) return;
@@ -3108,9 +3109,6 @@
 
               if (!isHorizontalSwipe || !isMostlyHorizontal) return;
 
-              // זה החלק הכי חשוב:
-              // dx שלילי = האצבע זזה שמאלה
-              // dx חיובי = האצבע זזה ימינה
               const direction = dx < 0 ? 'left' : 'right';
 
               if (scope === 'journal') {
@@ -3118,7 +3116,7 @@
               } else {
                   App.Actions.swipeMainTab(direction);
               }
-          }, { passive: true });
+          }, { passive: true, capture: true }); // הוספנו capture גם כאן
       }
 
 
