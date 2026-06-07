@@ -3032,33 +3032,26 @@
       App.Actions.swipeMainTab = function(direction) {
           const tabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
           const currentIndex = tabs.indexOf(App.State.activeTab);
-          // הפכנו את הכיוונים: שמאלה עכשיו מחזיר אחורה (מינוס), ימינה מקדם קדימה (פלוס)
-          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
+          // RTL: ימינה זה קודם, שמאלה זה הבא
+          const nextIndex = direction === 'right' ? currentIndex - 1 : currentIndex + 1;
+          
           if (nextIndex >= 0 && nextIndex < tabs.length) {
               App.Navigation.navigate(tabs[nextIndex]);
           }
       };
 
       App.Actions.swipeJournalView = function(direction) {
-          const mode = App.State.journalViewMode;
           const modes = ['calendar', 'feed', 'map'];
-          const currentIndex = modes.indexOf(mode);
-
-          // הפכנו את כיווני ההחלקה ביומן כדי שיתאימו ל-RTL
-          if (mode === 'map' && direction === 'left') {
-              App.Actions.setJournalView('feed');
-              return;
-          }
-          if (mode === 'feed' && direction === 'right') {
-              App.Actions.setJournalView('map');
-              return;
-          }
+          const currentIndex = modes.indexOf(App.State.journalViewMode);
           
-          // ניווט רגיל בתוך היומן
-          const nextIndex = direction === 'left' ? currentIndex + 1 : currentIndex - 1;
+          // ניווט פנימי בתוך היומן
+          const nextIndex = direction === 'right' ? currentIndex - 1 : currentIndex + 1;
+          
           if (nextIndex >= 0 && nextIndex < modes.length) {
+              // נשארים ביומן
               App.Actions.setJournalView(modes[nextIndex]);
           } else {
+              // רק אם הגענו לקצה של היומן, נאפשר מעבר לטאב ראשי
               App.Actions.swipeMainTab(direction);
           }
       };
@@ -3077,8 +3070,8 @@
               const dy = e.changedTouches[0].clientY - startY;
               
               if (Math.abs(dx) > 80 && Math.abs(dy) < 50) {
-                  // dx חיובי = ימינה, dx שלילי = שמאלה
                   const direction = dx > 0 ? 'right' : 'left';
+                  
                   if (App.State.activeTab === 'journal') {
                       App.Actions.swipeJournalView(direction);
                   } else {
