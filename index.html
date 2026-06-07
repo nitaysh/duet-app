@@ -3032,8 +3032,8 @@
       App.Actions.swipeMainTab = function(direction) {
           const tabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
           const currentIndex = tabs.indexOf(App.State.activeTab);
-          // ב-RTL החלקה שמאלה (dx < 0) היא לרוב התקדמות קדימה
-          const nextIndex = direction === 'left' ? currentIndex + 1 : currentIndex - 1;
+          // הפכנו את הכיוונים: שמאלה עכשיו מחזיר אחורה (מינוס), ימינה מקדם קדימה (פלוס)
+          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
           if (nextIndex >= 0 && nextIndex < tabs.length) {
               App.Navigation.navigate(tabs[nextIndex]);
           }
@@ -3044,12 +3044,12 @@
           const modes = ['calendar', 'feed', 'map'];
           const currentIndex = modes.indexOf(mode);
 
-          // לוגיקה ספציפית למפה:
-          if (mode === 'map' && direction === 'right') {
+          // הפכנו את כיווני ההחלקה ביומן כדי שיתאימו ל-RTL
+          if (mode === 'map' && direction === 'left') {
               App.Actions.setJournalView('feed');
               return;
           }
-          if (mode === 'feed' && direction === 'left') {
+          if (mode === 'feed' && direction === 'right') {
               App.Actions.setJournalView('map');
               return;
           }
@@ -3077,7 +3077,8 @@
               const dy = e.changedTouches[0].clientY - startY;
               
               if (Math.abs(dx) > 80 && Math.abs(dy) < 50) {
-                  const direction = dx < 0 ? 'left' : 'right';
+                  // dx חיובי = ימינה, dx שלילי = שמאלה
+                  const direction = dx > 0 ? 'right' : 'left';
                   if (App.State.activeTab === 'journal') {
                       App.Actions.swipeJournalView(direction);
                   } else {
