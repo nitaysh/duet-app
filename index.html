@@ -552,6 +552,9 @@
                           this.questionIndex = parseInt(localStorage.getItem('duet_question_index')) || parseInt(localStorage.getItem('duet_q_index')) || 0;
                           this.savedAnswer = localStorage.getItem('duet_saved_answer') || '';
                           this.answeredToday = localStorage.getItem('duet_answered_today') === 'true';
+                          this.partnerAnsweredToday = localStorage.getItem('duet_partner_answered_today') === 'true';
+                          this.pendingDeepQ = JSON.parse(localStorage.getItem('duet_pending_deep_q')) || null;
+
 
                           this.journalNotes = JSON.parse(localStorage.getItem('duet_journal_notes')) || {};
                           this.journalPartnerNotes = JSON.parse(localStorage.getItem('duet_journal_partner_notes')) || {};
@@ -1188,7 +1191,12 @@
 
                           const deck = App.Data.decks[App.State.selectedDeck];
                           const question = deck.questions[App.State.questionIndex % deck.questions.length];
-                          const isUnlocked = App.State.answeredToday;
+                          const userAnswered = !!App.State.answeredToday;
+                          const partnerAnswered = !!App.State.partnerAnsweredToday;
+                          const isUnlocked = userAnswered && partnerAnswered;
+                          const isWaiting = userAnswered && !partnerAnswered;
+                          const pName = App.State.partnerName || 'בן/בת הזוג';
+                          const deepCompletionPct = isUnlocked ? 100 : (userAnswered ? 50 : 0);
 
                           let historyHTML = '';
                           if (App.State.intimacyHistory.length === 0) historyHTML = `<div class="text-center py-4 text-xs font-bold text-stone-400">הקפסולה ריקה. ענו על השאלה למעלה כדי להתחיל לשמור זיכרונות!</div>`;
@@ -1200,7 +1208,7 @@
 
                           const whatsappText = encodeURIComponent(`היי! עניתי על שאלת היום שלנו ב-Duet... עכשיו תורך כדי שהתשובה תיפתח! ❤️`);
 
-                          const moodHTML = !isUnlocked ? `
+                          const moodHTML = !userAnswered ? `
                               <div class="mb-4">
                                   <label class="text-[11px] font-bold text-stone-400 block mb-2 uppercase tracking-wider">עם איזה כוח הגעת לשאלה?</label>
                                   <div class="flex gap-2">
@@ -1246,9 +1254,25 @@
 
                                   <div class="glass-panel rounded-[32px] p-6 space-y-4">
                                       ${moodHTML}
-                                      <textarea id="answer-box" ${isUnlocked ? 'disabled' : ''} class="w-full h-32 p-4 bg-stone-50 rounded-2xl border focus:border-orange-400 transition no-scrollbar" placeholder="התשובה שלי...">${App.State.savedAnswer}</textarea>
-                                      ${!isUnlocked ? `<button onclick="App.Actions.saveIntimacyAnswer()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold active:scale-95 transition shadow-md">שמור וחשוף את ${App.State.partnerName}</button>` : ''}
+                                      <textarea id="answer-box" ${userAnswered ? 'disabled' : ''} class="w-full h-32 p-4 bg-stone-50 rounded-2xl border focus:border-orange-400 transition no-scrollbar" placeholder="התשובה שלי...">${App.State.savedAnswer}</textarea>
+                                      ${!userAnswered ? `<button onclick="App.Actions.saveIntimacyAnswer()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-bold active:scale-95 transition shadow-md">שמור את התשובה שלי</button>` : ''}
                                   </div>
+
+                                  ${userAnswered ? `
+                                  <div class="bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 border border-pink-100 rounded-[28px] p-4 shadow-sm">
+                                      <div class="flex justify-between items-center mb-2">
+                                          <span class="text-xs font-extrabold text-stone-700">💞 השלמה זוגית לשאלה</span>
+                                          <span class="text-xs font-extrabold text-stone-800">${deepCompletionPct}%</span>
+                                      </div>
+                                      <div class="h-2 rounded-full bg-stone-100 overflow-hidden"><div class="h-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all" style="width:${deepCompletionPct}%"></div></div>
+                                      <div class="flex items-center gap-1.5 mt-2">
+                                          <span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">אתה ✓</span>
+                                          ${partnerAnswered
+                                              ? `<span class="text-[9px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">${pName} ✓</span>`
+                                              : `<span class="text-[9px] font-extrabold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full animate-pulse">ממתין ל${pName}…</span>`}
+                                      </div>
+                                      ${isWaiting ? `<button onclick="App.Actions.simulatePartnerAnswer('deepQ')" class="mt-3 w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-2xl font-extrabold active:scale-95 transition shadow-md"><i class="fa-solid fa-wand-sparkles ml-1"></i> הדגם תשובות ${pName}</button>` : ''}
+                                  </div>` : ''}
 
                                   <div class="glass-panel rounded-[32px] p-6 relative min-h-[120px] flex flex-col items-center justify-center overflow-hidden">
                                       <h3 class="text-xs font-bold text-stone-400 absolute top-4 right-4">התשובה של ${App.State.partnerName}</h3>
@@ -1262,6 +1286,7 @@
 
                                       ${isUnlocked ? `<a href="https://wa.me/?text=${whatsappText}" target="_blank" class="w-full text-center mt-6 text-xs font-bold text-green-600 bg-green-50 py-2.5 rounded-xl border border-green-100 active:scale-95 transition"><i class="fa-brands fa-whatsapp mr-1 text-sm"></i> שלח נדנוד בוואטסאפ ל${App.State.partnerName}</a>` : ''}
                                   </div>
+
 
                                   ${catalystHTML}
                                   ${nextQHTML}
@@ -2497,30 +2522,33 @@
 
                           App.State.save('savedAnswer', val);
                           App.State.save('answeredToday', true);
+                          App.State.save('partnerAnsweredToday', false);
                           App.State.save('lastIntimacyDate', todayStr);
 
                           const deck = App.Data.decks[App.State.selectedDeck];
                           const question = deck.questions[App.State.questionIndex % deck.questions.length];
-                          const partner = App.Data.mockPartnerAnswers[App.State.questionIndex % 3];
-                          const history = [...App.State.intimacyHistory];
 
-                          history.unshift({ date: new Date().toLocaleDateString('he-IL'), question: question, userAnswer: val, partnerAnswer: partner, isFavorite: false });
-                          App.State.save('intimacyHistory', history);
-                          App.State.addXP(30);
-                          App.State.save('dailyDeepQCount', (App.State.dailyDeepQCount || 0) + 1);
+                          // Store pending Q so it can be added to history once partner answers
+                          App.State.save('pendingDeepQ', { date: new Date().toLocaleDateString('he-IL'), question: question, userAnswer: val });
+
+                          App.State.addXP(15);
 
                           App.Navigation.navigate('intimacy');
                           App.UI.throwPetals();
-                          App.UI.showToast(`חיבור נוצר! הגינה קיבלה +30 XP 🌱`, "success");
+                          App.UI.showToast(`נשמר! ממתינים ל${App.State.partnerName} 💞`, "success");
                       },
+
 
                       nextDeepQuestion() {
                           App.State.save('answeredToday', false);
+                          App.State.save('partnerAnsweredToday', false);
                           App.State.save('savedAnswer', '');
                           App.State.save('userMood', '');
+                          App.State.save('pendingDeepQ', null);
                           App.State.save('questionIndex', App.State.questionIndex + 1);
                           App.Navigation.navigate('intimacy');
                       },
+
 
                       switchIntimacyMode(mode) {
                           if (App.State.offlineInterval) { clearInterval(App.State.offlineInterval); App.State.offlineInterval = null; App.State.offlineTimer = 0; }
@@ -2672,7 +2700,21 @@
                               const pickKey = keys[Math.floor(Math.random() * keys.length)];
                               const partnerTopName = App.Data.loveLanguagesBank[pickKey]?.name || null;
                               App.State.save('loveLangLastResult', { ...r, partnerAnswered: true, partnerTopName });
+                          } else if (gameKey === 'deepQ') {
+                              if (!App.State.answeredToday || App.State.partnerAnsweredToday) return;
+                              App.State.save('partnerAnsweredToday', true);
+                              const pending = App.State.pendingDeepQ;
+                              if (pending) {
+                                  const partner = App.Data.mockPartnerAnswers[App.State.questionIndex % App.Data.mockPartnerAnswers.length];
+                                  const history = [...App.State.intimacyHistory];
+                                  history.unshift({ ...pending, partnerAnswer: partner, isFavorite: false });
+                                  App.State.save('intimacyHistory', history);
+                                  App.State.save('pendingDeepQ', null);
+                                  App.State.addXP(15);
+                                  App.State.save('dailyDeepQCount', (App.State.dailyDeepQCount || 0) + 1);
+                              }
                           }
+
                           App.UI.throwPetals();
                           App.UI.showToast(`${pName} השלים/ה את השאלון! 100% 💞`, 'success');
                           App.Navigation.navigate('intimacy');
@@ -2744,8 +2786,25 @@
                       },
 
 
-                      selectDeck(deckKey) { App.State.save('selectedDeck', deckKey); App.State.save('questionIndex', Math.floor(Math.random() * 3)); App.Navigation.navigate('intimacy'); },
-                      exitDeck() { App.State.save('selectedDeck', null); App.Navigation.navigate('intimacy'); },
+                      selectDeck(deckKey) {
+                          App.State.save('selectedDeck', deckKey);
+                          App.State.save('questionIndex', Math.floor(Math.random() * 3));
+                          App.State.save('savedAnswer', '');
+                          App.State.save('answeredToday', false);
+                          App.State.save('partnerAnsweredToday', false);
+                          App.State.save('userMood', '');
+                          App.State.save('pendingDeepQ', null);
+                          App.Navigation.navigate('intimacy');
+                      },
+                      exitDeck() {
+                          App.State.save('selectedDeck', null);
+                          App.State.save('savedAnswer', '');
+                          App.State.save('answeredToday', false);
+                          App.State.save('partnerAnsweredToday', false);
+                          App.State.save('userMood', '');
+                          App.State.save('pendingDeepQ', null);
+                          App.Navigation.navigate('intimacy');
+                      },
                       toggleFavorite(index) { const history = [...App.State.intimacyHistory]; history[index].isFavorite = !history[index].isFavorite; App.State.save('intimacyHistory', history); App.Navigation.navigate('intimacy'); },
 
                       saveBoardNote(type = 'text', imageBase64 = null) {
