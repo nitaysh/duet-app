@@ -3030,86 +3030,61 @@
       App.Navigation.mainTabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
 
       App.Actions.swipeMainTab = function(direction) {
-          const tabs = App.Navigation.mainTabs;
+          const tabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
           const currentIndex = tabs.indexOf(App.State.activeTab);
-          if (currentIndex === -1) return;
-          const nextIndex = direction === 'left' ? currentIndex - 1 : currentIndex + 1;
-          if (nextIndex < 0 || nextIndex >= tabs.length) return;
-          App.Navigation._swipeDir = direction;
-          App.Navigation.navigate(tabs[nextIndex]);
+          // ב-RTL החלקה שמאלה (dx < 0) היא לרוב התקדמות קדימה
+          const nextIndex = direction === 'left' ? currentIndex + 1 : currentIndex - 1;
+          if (nextIndex >= 0 && nextIndex < tabs.length) {
+              App.Navigation.navigate(tabs[nextIndex]);
+          }
       };
 
       App.Actions.swipeJournalView = function(direction) {
           const mode = App.State.journalViewMode;
-          // חסימה: אם אנחנו במפה, אי אפשר להחליק ימינה לטאבים אחרים
+          const modes = ['calendar', 'feed', 'map'];
+          const currentIndex = modes.indexOf(mode);
+
+          // לוגיקה ספציפית למפה:
           if (mode === 'map' && direction === 'right') {
-              App.Navigation._swipeDir = direction;
               App.Actions.setJournalView('feed');
               return;
           }
-          // ניווט פנימי ביומן
-          const modes = ['calendar', 'feed', 'map'];
-          const currentIndex = modes.indexOf(mode);
-          const nextIndex = direction === 'left' ? currentIndex + 1 : currentIndex - 1;
+          if (mode === 'feed' && direction === 'left') {
+              App.Actions.setJournalView('map');
+              return;
+          }
           
+          // ניווט רגיל בתוך היומן
+          const nextIndex = direction === 'left' ? currentIndex + 1 : currentIndex - 1;
           if (nextIndex >= 0 && nextIndex < modes.length) {
-              App.Navigation._swipeDir = direction;
               App.Actions.setJournalView(modes[nextIndex]);
           } else {
-              // אם יצאנו מגבולות היומן, נעבור טאב ראשי
               App.Actions.swipeMainTab(direction);
           }
       };
 
-
-
       function setupGlobalSwipe() {
           let startX = 0;
           let startY = 0;
-          let tracking = false;
-          let scope = 'main';
-
+          
           document.addEventListener('touchstart', (e) => {
-              // הסרנו את .leaflet-container מהרשימה כדי שלא יתעלם מהמפה
-              if (
-                  e.target.closest(
-                      'button, a, input, textarea, select, [data-no-swipe], nav, #bottom-nav, .modal-overlay'
-                  )
-              ) {
-                  tracking = false;
-                  return;
-              }
-
-              const touch = e.touches[0];
-              startX = touch.clientX;
-              startY = touch.clientY;
-              tracking = true;
-
-              scope = e.target.closest('#journal-swipe-area') ? 'journal' : 'main';
-          }, { passive: true, capture: true }); // הוספנו capture כדי לתפוס את ההחלקה לפני שהמפה עוצרת אותה
+              startX = e.touches[0].clientX;
+              startY = e.touches[0].clientY;
+          }, { passive: true });
 
           document.addEventListener('touchend', (e) => {
-              if (!tracking) return;
-
-              tracking = false;
-
-              const touch = e.changedTouches[0];
-              const dx = touch.clientX - startX;
-              const dy = touch.clientY - startY;
-
-              const isHorizontalSwipe = Math.abs(dx) >= 60;
-              const isMostlyHorizontal = Math.abs(dy) <= 50;
-
-              if (!isHorizontalSwipe || !isMostlyHorizontal) return;
-
-              const direction = dx < 0 ? 'left' : 'right';
-
-              if (scope === 'journal') {
-                  App.Actions.swipeJournalView(direction);
-              } else {
-                  App.Actions.swipeMainTab(direction);
+              const dx = e.changedTouches[0].clientX - startX;
+              const dy = e.changedTouches[0].clientY - startY;
+              
+              if (Math.abs(dx) > 80 && Math.abs(dy) < 50) {
+                  const direction = dx < 0 ? 'left' : 'right';
+                  if (App.State.activeTab === 'journal') {
+                      App.Actions.swipeJournalView(direction);
+                  } else {
+                      App.Actions.swipeMainTab(direction);
+                  }
               }
-          }, { passive: true, capture: true }); // הוספנו capture גם כאן
+          }, { passive: true });
       }
 
 
