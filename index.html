@@ -2226,7 +2226,18 @@
                       selectGameAnswer(qIdx, choice) {
                           const answers = {...App.State.gameAnswers}; answers[qIdx] = choice;
                           App.State.save('gameAnswers', answers);
-                          App.Navigation.navigate('intimacy');
+                          
+                          // שומרים את מיקום הגלילה הנוכחי
+                          const viewport = document.getElementById('app-viewport');
+                          const scrollPos = viewport.scrollTop;
+                          
+                          // מעדכנים רק את התוכן של הדף בלי לטעון אותו מחדש ומחזירים את הגלילה
+                          if (viewport.firstChild) {
+                              viewport.firstChild.innerHTML = App.Components.Intimacy();
+                              viewport.scrollTop = scrollPos;
+                          } else {
+                              App.Navigation.navigate('intimacy');
+                          }
                       },
 
                       submitThisOrThatGame() {
