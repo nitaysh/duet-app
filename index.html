@@ -169,6 +169,16 @@
               class="w-full bg-white border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none shadow-sm placeholder:text-stone-300 text-left"
             />
           </div>
+          <div id="ob-children-list" class="space-y-2"></div>
+          <div>
+            <button
+              type="button"
+              onclick="App.Actions.addChildField('ob-children-list')"
+              class="w-full bg-white border border-dashed border-stone-300 rounded-xl py-2.5 px-4 text-xs font-bold text-stone-600 hover:bg-stone-50 transition active:scale-95"
+            >
+              <i class="fa-solid fa-plus text-[10px] ml-1"></i> הוסף ילד
+            </button>
+          </div>
           <div class="pt-2">
             <button
               onclick="App.Actions.completeOnboarding()"
@@ -238,6 +248,16 @@
                 maxlength="4"
                 oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);"
               />
+            </div>
+            <div id="ob-children-list-splash" class="space-y-2"></div>
+            <div>
+              <button
+                type="button"
+                onclick="App.Actions.addChildField('ob-children-list-splash')"
+                class="w-full bg-white/60 border border-dashed border-stone-300 rounded-xl py-2.5 px-4 text-xs font-bold text-stone-600 hover:bg-white/90 transition active:scale-95"
+              >
+                <i class="fa-solid fa-plus text-[10px] ml-1"></i> הוסף ילד
+              </button>
             </div>
             <div class="pt-1">
               <button
@@ -518,6 +538,7 @@
                       activeTripId: null,
                       gardenView: 'main',
                       isFamilyMode: false,
+                      children: [],
                       familyBoard: { todo: [], doing: [], done: [] },
                       _preFamilyTab: 'garden',
                       _tripMapInstances: {},
@@ -634,16 +655,20 @@
                           if (!storedTrips) localStorage.setItem('duet_trips', JSON.stringify(this.trips));
                           this.gardenView = localStorage.getItem('duet_garden_view') || 'main';
 
-                          this.isFamilyMode = localStorage.getItem('duet_is_family_mode') === 'true';
+                          this.children = JSON.parse(localStorage.getItem('duet_children') || '[]');
+                          this.isFamilyMode = localStorage.getItem('duet_is_family_mode') === 'true' || (Array.isArray(this.children) && this.children.length > 0);
                           const storedBoard = JSON.parse(localStorage.getItem('duet_family_board'));
-                          this.familyBoard = storedBoard || {
-                              todo: [
-                                  { id: 1, text: "אימון כדורגל לארבל", who: "ארבל", time: "יום ג' 17:00" },
-                                  { id: 2, text: "איסוף יובל מהגן", who: "יובל", time: "16:00" }
-                              ],
-                              doing: [ { id: 3, text: "קניות לסופ\"ש", who: "משותף", time: "" } ],
-                              done: [ { id: 4, text: "תיאום קב\"ס לארבל", who: "ארבל", time: "" } ]
+                          const kids = this.children || [];
+                          const defaultBoard = {
+                              todo: kids.length > 0
+                                  ? kids.slice(0, 2).map((n, i) => ({ id: Date.now() + i, text: i === 0 ? `אימון / חוג של ${n}` : `איסוף ${n}`, who: n, time: i === 0 ? "יום ג' 17:00" : "16:00" }))
+                                  : [],
+                              doing: [ { id: Date.now() + 10, text: "קניות לסופ\"ש", who: "משותף", time: "" } ],
+                              done: kids.length > 0
+                                  ? [ { id: Date.now() + 20, text: `תיאום פגישה עבור ${kids[0]}`, who: kids[0], time: "" } ]
+                                  : []
                           };
+                          this.familyBoard = storedBoard || defaultBoard;
                           if (!storedBoard) localStorage.setItem('duet_family_board', JSON.stringify(this.familyBoard));
 
                           App.UI.updateGlobalCounters();
@@ -892,9 +917,24 @@
                             { key: 'doing', title: 'בתהליך', icon: 'fa-spinner',    color: 'bg-amber-50 border-amber-200', dot: 'bg-amber-400' },
                             { key: 'done',  title: 'הושלם',  icon: 'fa-check',      color: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-400' }
                         ];
+                        const kids = App.State.children || [];
+                        const palette = [
+                            'bg-blue-100 text-blue-700 border-blue-200',
+                            'bg-emerald-100 text-emerald-700 border-emerald-200',
+                            'bg-purple-100 text-purple-700 border-purple-200',
+                            'bg-pink-100 text-pink-700 border-pink-200',
+                            'bg-amber-100 text-amber-700 border-amber-200',
+                            'bg-cyan-100 text-cyan-700 border-cyan-200',
+                            'bg-lime-100 text-lime-700 border-lime-200',
+                            'bg-rose-100 text-rose-700 border-rose-200'
+                        ];
                         const whoBadge = (who) => {
-                            const map = { 'ארבל': 'bg-blue-100 text-blue-700 border-blue-200', 'יובל': 'bg-emerald-100 text-emerald-700 border-emerald-200', 'משותף': 'bg-orange-100 text-orange-700 border-orange-200' };
-                            const cls = map[who] || 'bg-stone-100 text-stone-600 border-stone-200';
+                            let cls;
+                            if (who === 'משותף') cls = 'bg-orange-100 text-orange-700 border-orange-200';
+                            else {
+                                const i = kids.indexOf(who);
+                                cls = i >= 0 ? palette[i % palette.length] : 'bg-stone-100 text-stone-600 border-stone-200';
+                            }
                             return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${cls}">${who}</span>`;
                         };
                         const renderCard = (col, t) => {
@@ -941,7 +981,7 @@
                                 <div class="bg-gradient-to-r from-sky-100 to-emerald-100 border border-sky-200 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
                                     <div class="text-right">
                                         <div class="text-[10px] font-bold text-teal-700 tracking-widest uppercase">מצב משפחה פעיל</div>
-                                        <div class="text-xs font-bold text-stone-700">לוגיסטיקה לילדים · ארבל ויובל</div>
+                                        <div class="text-xs font-bold text-stone-700">לוגיסטיקה לילדים${kids.length ? ' · ' + kids.join(' ו') : ''}</div>
                                     </div>
                                     <button onclick="App.Actions.toggleFamilyMode()" class="text-[11px] font-extrabold bg-white border border-teal-200 text-teal-700 px-3 py-1.5 rounded-xl shadow-sm active:scale-95 transition"><i class="fa-solid fa-heart text-rose-400 ml-1"></i> חזרה לזוגי</button>
                                 </div>
@@ -1119,31 +1159,12 @@
 
                                   ${wallOfFameHTML}
 
-                                  <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
-                                         <div class="space-y-3 px-1">
-                                             <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                                 <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}</span>
-                                                 <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף מתנה</button>
-                                             </h3>
-                                             
-                                             <div class="mt-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 border border-blue-100 rounded-[24px] p-4 shadow-sm relative overflow-hidden">
-                                                 <div class="absolute -right-4 -top-4 text-6xl text-blue-500/5"><i class="fa-solid fa-tags"></i></div>
-                                                 <div class="flex items-center justify-between mb-2">
-                                                     <h3 class="text-[11px] font-bold text-stone-700 uppercase tracking-widest flex items-center gap-1.5">
-                                                         <i class="fa-solid fa-ticket text-blue-400"></i> הטבות Duet בחוץ
-                                                     </h3>
-                                                     <span class="text-[9px] font-extrabold bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full animate-pulse">בקרוב</span>
-                                                 </div>
-                                                 <p class="text-[10px] text-stone-500 font-bold mb-3">הטבות אמיתיות מחכות לכם בהמשך!</p>
-                                                 <div class="flex gap-2 overflow-x-auto no-scrollbar">
-                                                     ${['מסעדות', 'קמפינג', 'ספא', 'תרבות'].map(cat => `
-                                                         <div class="flex-shrink-0 w-20 bg-white/50 border border-white rounded-xl p-2 text-center opacity-60">
-                                                             <div class="text-[10px] text-stone-400 mb-1"><i class="fa-solid fa-lock"></i></div>
-                                                             <div class="text-[9px] font-bold text-stone-600">${cat}</div>
-                                                         </div>
-                                                     `).join('')}
-                                                 </div>
-                                             </div>
+                                 <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
+                                      <div class="space-y-3 px-1">
+                                          <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
+                                              <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}</span>
+                                              <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף מתנה</button>
+                                          </h3>
                                           <div class="bg-white/80 border border-stone-100 rounded-2xl p-4 shadow-sm">
                                               <div class="flex justify-between items-center mb-4">
                                                   <div class="text-xs font-bold text-stone-500">היתרה שלך: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
@@ -2251,8 +2272,13 @@
                       },
 
                       ChefsCorner() {
-                          const recipes = JSON.parse(localStorage.getItem('duet_recipes')) || App.Data.recipes || [];
-                          const modalRecipe = App.State.chefsModalRecipeId ? recipes.find(r => r.id === App.State.chefsModalRecipeId) : null;
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const base = App.Data.recipes || [];
+                          const deleted = JSON.parse(localStorage.getItem('duet_deleted_recipes') || '[]').map(String);
+                          const map = new Map();
+                          [...base, ...stored].forEach(r => { if (!deleted.includes(String(r.id))) map.set(String(r.id), r); });
+                          const recipes = Array.from(map.values());
+                          const modalRecipe = App.State.chefsModalRecipeId ? recipes.find(r => String(r.id) === String(App.State.chefsModalRecipeId)) : null;
 
                           const cardsHTML = recipes.map(r => `
                               <div onclick="App.Actions.openRecipe('${r.id}')" class="category-card glass-panel rounded-[32px] p-5 text-right cursor-pointer transition shadow-sm border border-white hover:scale-[1.02] active:scale-95 relative overflow-hidden bg-gradient-to-br ${r.accent}">
@@ -2273,7 +2299,8 @@
                               <div onclick="App.Actions.closeRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
                                   <div onclick="event.stopPropagation()" class="glass-panel rounded-[32px] shadow-xl border border-white w-full max-w-md max-h-[88vh] overflow-y-auto relative">
                                       <div class="relative bg-gradient-to-br ${modalRecipe.accent} p-6 pb-8 rounded-t-[32px]">
-                                      <button onclick="App.Actions.closeRecipe()" class="absolute top-4 left-4 z-20 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-stone-600 flex items-center justify-center shadow-sm transition active:scale-90 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                                          <button onclick="App.Actions.closeRecipe()" class="absolute top-6 left-4 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-stone-600 flex items-center justify-center shadow-sm transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                          <button onclick="App.Actions.deleteRecipe('${modalRecipe.id}')" class="absolute top-6 right-4 w-9 h-9 rounded-full bg-white/70 hover:bg-rose-100 text-rose-500 flex items-center justify-center shadow-sm transition active:scale-90" title="מחק מתכון"><i class="fa-solid fa-trash"></i></button>
                                           <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
                                           <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
                                           <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
@@ -2312,7 +2339,7 @@
                                           <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider">פינת השף שלנו 🍷</h2>
                                           <p class="text-stone-500 text-xs font-bold">מתכון אחד, ערב אחד, שני בשלנים</p>
                                       </div>
-                                      <button onclick="App.Actions.addNewRecipe()" class="w-9 h-9 rounded-full bg-white/70 border border-white text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fa-solid fa-plus"></i></button>
+                                      <div class="w-9"></div>
                                   </div>
                                   <div class="grid grid-cols-2 gap-4">
                                       ${cardsHTML}
@@ -2349,7 +2376,12 @@
                               nav.style.pointerEvents = on ? 'none' : 'auto';
                           }
                           const chip = document.getElementById('mode-chip');
-                          if (chip) chip.textContent = on ? 'מצב משפחה · ארבל ויובל' : 'צומחים יחד, אהבה שקטה';
+                          if (chip) {
+                              const kids = App.State.children || [];
+                              chip.textContent = on
+                                  ? (kids.length ? 'מצב משפחה · ' + kids.join(' ו') : 'מצב משפחה')
+                                  : 'צומחים יחד, אהבה שקטה';
+                          }
                           const r = document.getElementById('fm-pill-romance');
                           const f = document.getElementById('fm-pill-family');
                           const tog = document.getElementById('family-mode-toggle');
@@ -2370,8 +2402,13 @@
                       addFamilyTask(col) {
                           const text = prompt('משימה חדשה — מה צריך לעשות?');
                           if (!text || !text.trim()) return;
-                          let who = (prompt('שייך למי? כתוב: ארבל / יובל / משותף', 'משותף') || 'משותף').trim();
-                          if (!['ארבל','יובל','משותף'].includes(who)) who = 'משותף';
+                          const kids = App.State.children || [];
+                          const options = [...kids, 'משותף'];
+                          const promptLabel = options.length > 1
+                              ? `שייך למי? כתוב: ${options.join(' / ')}`
+                              : 'שייך למי? (כתוב שם או "משותף")';
+                          let who = (prompt(promptLabel, 'משותף') || 'משותף').trim();
+                          if (!options.includes(who)) who = 'משותף';
                           const time = (prompt('שעה / תאריך (אופציונלי)', '') || '').trim();
                           const board = App.State.familyBoard;
                           board[col] = board[col] || [];
@@ -2934,14 +2971,62 @@
                           `);
                       },
 
+                      addChildField(containerId) {
+                          const container = document.getElementById(containerId);
+                          if (!container) return;
+                          const existing = container.querySelectorAll('input.ob-child-input');
+                          if (existing.length >= 15) {
+                              App.UI.showToast('ניתן להוסיף עד 15 ילדים', 'info');
+                              return;
+                          }
+                          const idx = Date.now() + Math.floor(Math.random() * 1000);
+                          const wrap = document.createElement('div');
+                          wrap.className = 'flex items-center gap-2';
+                          wrap.id = `ob-child-wrap-${idx}`;
+                          wrap.innerHTML = `
+                              <input
+                                type="text"
+                                id="ob-child-${idx}"
+                                data-child-input="1"
+                                placeholder="שם הילד/ה"
+                                class="ob-child-input flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none transition shadow-sm"
+                              />
+                              <button type="button" onclick="document.getElementById('ob-child-wrap-${idx}').remove()" class="w-9 h-9 rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 transition flex items-center justify-center">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                              </button>
+                          `;
+                          container.appendChild(wrap);
+                          const input = wrap.querySelector('input');
+                          if (input) input.focus();
+                      },
+
+                      _collectChildren(containerId) {
+                          const container = document.getElementById(containerId);
+                          if (!container) return [];
+                          const inputs = container.querySelectorAll('input.ob-child-input');
+                          const names = [];
+                          inputs.forEach(inp => {
+                              const v = (inp.value || '').trim();
+                              if (v) names.push(v);
+                          });
+                          return names;
+                      },
+
                       completeOnboarding() {
                           const uName = document.getElementById('ob-user-name').value.trim();
                           const pName = document.getElementById('ob-partner-name').value.trim();
                           const email = document.getElementById('ob-user-email') ? document.getElementById('ob-user-email').value.trim() : '';
+                          const kids = this._collectChildren('ob-children-list');
 
                           if(uName) App.State.save('userName', uName);
                           if(pName) App.State.save('partnerName', pName);
                           if(email) App.State.save('userEmail', email);
+                          App.State.children = kids;
+                          localStorage.setItem('duet_children', JSON.stringify(kids));
+                          if (kids.length > 0) {
+                              App.State.isFamilyMode = true;
+                              localStorage.setItem('duet_is_family_mode', 'true');
+                          }
 
                           localStorage.setItem('duet_onboarding_complete', 'true');
                           document.getElementById('onboarding-overlay').classList.add('hidden');
@@ -2954,11 +3039,18 @@
                           const pName = document.getElementById('ob-partner-name-splash').value.trim();
                           const email = document.getElementById('ob-user-email-splash') ? document.getElementById('ob-user-email-splash').value.trim() : '';
                           const pin = document.getElementById('ob-user-pin-splash') ? document.getElementById('ob-user-pin-splash').value.trim() : '';
+                          const kids = this._collectChildren('ob-children-list-splash');
 
                           if(uName) App.State.save('userName', uName);
                           if(pName) App.State.save('partnerName', pName);
                           if(email) App.State.save('userEmail', email);
                           if(pin) App.State.save('userPin', pin);
+                          App.State.children = kids;
+                          localStorage.setItem('duet_children', JSON.stringify(kids));
+                          if (kids.length > 0) {
+                              App.State.isFamilyMode = true;
+                              localStorage.setItem('duet_is_family_mode', 'true');
+                          }
 
                           localStorage.setItem('duet_onboarding_complete', 'true');
                           document.getElementById('splash-screen').classList.add('hidden');
@@ -3926,50 +4018,30 @@
                           App.Navigation.navigate('intimacy');
                       },
 
-                      addNewRecipe() {
-                          const name = prompt("איך קוראים למתכון החדש?");
-                          if (!name || !name.trim()) return;
-                          
-                          const emoji = prompt("בחרו אימוג'י מתאים (למשל 🥘):", "🥘") || "🥘";
-                          const time = prompt("זמן הכנה? (למשל 30 דק')", "30 דק'") || "30 דק'";
-                          const difficulty = prompt("רמת קושי? (קל / בינוני / קשה)", "קל") || "קל";
-                          const mood = prompt("איזו אווירה יש למתכון? (למשל 'רומנטי מהיר')", "כיף זוגי") || "כיף זוגי";
-                          
-                          const ingStr = prompt("הזינו מצרכים מופרדים בפסיק (למשל: 2 עגבניות, כף שמן זית):");
-                          const ingredients = ingStr ? ingStr.split(',').map(i => i.trim()).filter(i => i) : ["מצרכים חסרים"];
-                          
-                          const stepsStr = prompt("הזינו שלבי הכנה מופרדים בפסיק:");
-                          const steps = stepsStr ? stepsStr.split(',').map(s => s.trim()).filter(s => s) : ["שלבים חסרים"];
-
-                          // בוחרים עיצוב צבעוני רנדומלי מהתבניות הקיימות
-                          const accents = ["from-rose-200/70 to-red-200/70", "from-sky-200/70 to-emerald-200/70", "from-pink-200/70 to-rose-200/70", "from-amber-200/70 to-rose-200/70", "from-yellow-200/70 to-lime-200/70", "from-orange-200/70 to-amber-200/70"];
-                          const accent = accents[Math.floor(Math.random() * accents.length)];
-
-                          const newRecipe = {
-                              id: 'recipe-' + Date.now(),
-                              name: name.trim(),
-                              emoji: emoji.trim(),
-                              time,
-                              difficulty,
-                              mood,
-                              accent,
-                              ingredients,
-                              steps
-                          };
-
-                          // משיכת מתכונים קיימים ושמירה של החדש
-                          const recipes = JSON.parse(localStorage.getItem('duet_recipes')) || App.Data.recipes || [];
-                          recipes.unshift(newRecipe); // מוסיף את המתכון החדש לתחילת הרשימה
-                          localStorage.setItem('duet_recipes', JSON.stringify(recipes));
-                          
-                          App.UI.showToast("מתכון חדש נוסף לספר המתכונים! 🥘", "success");
-                          App.Navigation.navigate('intimacy'); // מרענן את המסך
+                      deleteRecipe(id) {
+                          const sid = String(id);
+                          if (!confirm('למחוק את המתכון לצמיתות?')) return;
+                          // Remove from user-stored recipes
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const filtered = stored.filter(r => String(r.id) !== sid);
+                          localStorage.setItem('duet_recipes', JSON.stringify(filtered));
+                          // Track deletion of built-in recipes
+                          const deleted = JSON.parse(localStorage.getItem('duet_deleted_recipes') || '[]').map(String);
+                          if (!deleted.includes(sid)) deleted.push(sid);
+                          localStorage.setItem('duet_deleted_recipes', JSON.stringify(deleted));
+                          // Remove from in-memory data
+                          if (App.Data.recipes) {
+                              App.Data.recipes = App.Data.recipes.filter(r => String(r.id) !== sid);
+                          }
+                          App.State.save('chefsModalRecipeId', null);
+                          App.UI.showToast('המתכון נמחק 🗑️', 'success');
+                          App.Navigation.navigate('intimacy');
                       },
 
                       cookTonight(id) {
-                          // מעודכן כדי לקרוא גם מתכונים חדשים
-                          const recipes = JSON.parse(localStorage.getItem('duet_recipes')) || App.Data.recipes || [];
-                          const recipe = recipes.find(r => r.id === id);
+                          const sid = String(id);
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const recipe = [...(App.Data.recipes || []), ...stored].find(r => String(r.id) === sid);
                           if (!recipe) return;
                           const text = `🍳 מבשלים הערב: ${recipe.name}\n\nרשימת קניות:\n` + recipe.ingredients.map(i => `• ${i}`).join('\n');
                           const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
