@@ -2251,7 +2251,7 @@
                       },
 
                       ChefsCorner() {
-                          const recipes = App.Data.recipes || [];
+                          const recipes = JSON.parse(localStorage.getItem('duet_recipes')) || App.Data.recipes || [];
                           const modalRecipe = App.State.chefsModalRecipeId ? recipes.find(r => r.id === App.State.chefsModalRecipeId) : null;
 
                           const cardsHTML = recipes.map(r => `
@@ -2273,7 +2273,7 @@
                               <div onclick="App.Actions.closeRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
                                   <div onclick="event.stopPropagation()" class="glass-panel rounded-[32px] shadow-xl border border-white w-full max-w-md max-h-[88vh] overflow-y-auto relative">
                                       <div class="relative bg-gradient-to-br ${modalRecipe.accent} p-6 pb-8 rounded-t-[32px]">
-                                          <button onclick="App.Actions.closeRecipe()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-stone-600 flex items-center justify-center shadow-sm transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                      <button onclick="App.Actions.closeRecipe()" class="absolute top-4 left-4 z-20 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-stone-600 flex items-center justify-center shadow-sm transition active:scale-90 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
                                           <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
                                           <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
                                           <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
@@ -2312,7 +2312,7 @@
                                           <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider">פינת השף שלנו 🍷</h2>
                                           <p class="text-stone-500 text-xs font-bold">מתכון אחד, ערב אחד, שני בשלנים</p>
                                       </div>
-                                      <div class="w-9"></div>
+                                      <button onclick="App.Actions.addNewRecipe()" class="w-9 h-9 rounded-full bg-white/70 border border-white text-rose-500 hover:bg-rose-50 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fa-solid fa-plus"></i></button>
                                   </div>
                                   <div class="grid grid-cols-2 gap-4">
                                       ${cardsHTML}
@@ -3926,8 +3926,50 @@
                           App.Navigation.navigate('intimacy');
                       },
 
+                      addNewRecipe() {
+                          const name = prompt("איך קוראים למתכון החדש?");
+                          if (!name || !name.trim()) return;
+                          
+                          const emoji = prompt("בחרו אימוג'י מתאים (למשל 🥘):", "🥘") || "🥘";
+                          const time = prompt("זמן הכנה? (למשל 30 דק')", "30 דק'") || "30 דק'";
+                          const difficulty = prompt("רמת קושי? (קל / בינוני / קשה)", "קל") || "קל";
+                          const mood = prompt("איזו אווירה יש למתכון? (למשל 'רומנטי מהיר')", "כיף זוגי") || "כיף זוגי";
+                          
+                          const ingStr = prompt("הזינו מצרכים מופרדים בפסיק (למשל: 2 עגבניות, כף שמן זית):");
+                          const ingredients = ingStr ? ingStr.split(',').map(i => i.trim()).filter(i => i) : ["מצרכים חסרים"];
+                          
+                          const stepsStr = prompt("הזינו שלבי הכנה מופרדים בפסיק:");
+                          const steps = stepsStr ? stepsStr.split(',').map(s => s.trim()).filter(s => s) : ["שלבים חסרים"];
+
+                          // בוחרים עיצוב צבעוני רנדומלי מהתבניות הקיימות
+                          const accents = ["from-rose-200/70 to-red-200/70", "from-sky-200/70 to-emerald-200/70", "from-pink-200/70 to-rose-200/70", "from-amber-200/70 to-rose-200/70", "from-yellow-200/70 to-lime-200/70", "from-orange-200/70 to-amber-200/70"];
+                          const accent = accents[Math.floor(Math.random() * accents.length)];
+
+                          const newRecipe = {
+                              id: 'recipe-' + Date.now(),
+                              name: name.trim(),
+                              emoji: emoji.trim(),
+                              time,
+                              difficulty,
+                              mood,
+                              accent,
+                              ingredients,
+                              steps
+                          };
+
+                          // משיכת מתכונים קיימים ושמירה של החדש
+                          const recipes = JSON.parse(localStorage.getItem('duet_recipes')) || App.Data.recipes || [];
+                          recipes.unshift(newRecipe); // מוסיף את המתכון החדש לתחילת הרשימה
+                          localStorage.setItem('duet_recipes', JSON.stringify(recipes));
+                          
+                          App.UI.showToast("מתכון חדש נוסף לספר המתכונים! 🥘", "success");
+                          App.Navigation.navigate('intimacy'); // מרענן את המסך
+                      },
+
                       cookTonight(id) {
-                          const recipe = (App.Data.recipes || []).find(r => r.id === id);
+                          // מעודכן כדי לקרוא גם מתכונים חדשים
+                          const recipes = JSON.parse(localStorage.getItem('duet_recipes')) || App.Data.recipes || [];
+                          const recipe = recipes.find(r => r.id === id);
                           if (!recipe) return;
                           const text = `🍳 מבשלים הערב: ${recipe.name}\n\nרשימת קניות:\n` + recipe.ingredients.map(i => `• ${i}`).join('\n');
                           const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
