@@ -1119,12 +1119,31 @@
 
                                   ${wallOfFameHTML}
 
-                                 <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
-                                      <div class="space-y-3 px-1">
-                                          <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                              <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}</span>
-                                              <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף מתנה</button>
-                                          </h3>
+                                  <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
+                                         <div class="space-y-3 px-1">
+                                             <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
+                                                 <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}</span>
+                                                 <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף מתנה</button>
+                                             </h3>
+                                             
+                                             <div class="mt-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 border border-blue-100 rounded-[24px] p-4 shadow-sm relative overflow-hidden">
+                                                 <div class="absolute -right-4 -top-4 text-6xl text-blue-500/5"><i class="fa-solid fa-tags"></i></div>
+                                                 <div class="flex items-center justify-between mb-2">
+                                                     <h3 class="text-[11px] font-bold text-stone-700 uppercase tracking-widest flex items-center gap-1.5">
+                                                         <i class="fa-solid fa-ticket text-blue-400"></i> הטבות Duet בחוץ
+                                                     </h3>
+                                                     <span class="text-[9px] font-extrabold bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full animate-pulse">בקרוב</span>
+                                                 </div>
+                                                 <p class="text-[10px] text-stone-500 font-bold mb-3">הטבות אמיתיות מחכות לכם בהמשך!</p>
+                                                 <div class="flex gap-2 overflow-x-auto no-scrollbar">
+                                                     ${['מסעדות', 'קמפינג', 'ספא', 'תרבות'].map(cat => `
+                                                         <div class="flex-shrink-0 w-20 bg-white/50 border border-white rounded-xl p-2 text-center opacity-60">
+                                                             <div class="text-[10px] text-stone-400 mb-1"><i class="fa-solid fa-lock"></i></div>
+                                                             <div class="text-[9px] font-bold text-stone-600">${cat}</div>
+                                                         </div>
+                                                     `).join('')}
+                                                 </div>
+                                             </div>
                                           <div class="bg-white/80 border border-stone-100 rounded-2xl p-4 shadow-sm">
                                               <div class="flex justify-between items-center mb-4">
                                                   <div class="text-xs font-bold text-stone-500">היתרה שלך: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
