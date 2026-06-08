@@ -405,14 +405,19 @@
       </div>
     </div>
 
-    <div id="app-container" class="h-full w-full flex flex-col hidden">
+    <div id="family-bg-overlay" class="fixed inset-0 pointer-events-none transition-opacity duration-500" style="opacity:0; z-index:0; background: linear-gradient(135deg,#eef5fb 0%,#eaf4ef 100%);"></div>
+    <div id="app-container" class="h-full w-full flex flex-col hidden relative" style="z-index:1;">
       <header class="glass-panel sticky top-0 w-full px-6 pt-6 pb-4 text-center z-40 border-b">
+        <button onclick="App.Actions.toggleFamilyMode()" id="family-mode-toggle" class="absolute top-4 left-4 flex items-center bg-stone-100 border border-stone-200 rounded-full p-0.5 text-[10px] font-bold transition shadow-sm active:scale-95" title="מצב משפחה">
+          <span id="fm-pill-romance" class="px-2.5 py-1 rounded-full bg-white shadow text-rose-500 transition">❤️</span>
+          <span id="fm-pill-family" class="px-2.5 py-1 rounded-full text-stone-400 transition">👨‍👩‍👧‍👦</span>
+        </button>
         <h1
           class="text-3xl font-bold tracking-tight text-stone-800 bg-gradient-to-r from-stone-800 to-stone-500 bg-clip-text text-transparent"
         >
           Duet
         </h1>
-        <p class="text-[10px] text-stone-400 font-bold uppercase tracking-[0.2em] mt-1">צומחים יחד, אהבה שקטה</p>
+        <p id="mode-chip" class="text-[10px] text-stone-400 font-bold uppercase tracking-[0.2em] mt-1">צומחים יחד, אהבה שקטה</p>
         <div
           class="mt-2 inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100/50 px-3 py-1 rounded-full text-emerald-700 text-xs font-bold tracking-wider"
         >
@@ -423,8 +428,8 @@
 
       <main class="flex-1 overflow-y-auto px-4 pt-4 pb-12 no-scrollbar" id="app-viewport"></main>
 
-      <nav
-        class="glass-panel w-full shrink-0 pt-3 pb-8 flex overflow-x-auto no-scrollbar items-start z-40 border-t shadow-[0_-8px_32px_rgba(0,0,0,0.02)] snap-x"
+      <nav id="bottom-nav"
+        class="glass-panel w-full shrink-0 pt-3 pb-8 flex overflow-x-auto no-scrollbar items-start z-40 border-t shadow-[0_-8px_32px_rgba(0,0,0,0.02)] snap-x transition-all duration-500"
       >
                    
         <button
@@ -500,6 +505,7 @@
                       appTheme: localStorage.getItem('duet_app_theme') || 'sage',
                       intimacyStreak: parseInt(localStorage.getItem('duet_intimacy_streak')) || 0,
                       intimacyMode: localStorage.getItem('duet_intimacy_mode') || 'qa',
+                      chefsModalRecipeId: null,
                       gameQuestions: JSON.parse(localStorage.getItem('duet_game_questions')) || [],
                       gameAnswers: JSON.parse(localStorage.getItem('duet_game_answers')) || {},
                       questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_questions_answered_count_today')) || parseInt(localStorage.getItem('duet_q_count_today')) || 0,
@@ -507,7 +513,15 @@
                       offlineTimer: 0, offlineInterval: null, offlineQuestion: '',
                       tempPin: '', 
                       storeItems: [],
-                      purchasedRewards: [],
+                      purchasedRewards: [],
+                      trips: [],
+                      activeTripId: null,
+                      gardenView: 'main',
+                      isFamilyMode: false,
+                      familyBoard: { todo: [], doing: [], done: [] },
+                      _preFamilyTab: 'garden',
+                      _tripMapInstances: {},
+                      _tripPinPending: null,
 
                       init() {
                           const hasOnboarded = localStorage.getItem('duet_onboarding_complete');
@@ -594,8 +608,47 @@
                           this.thisOrThatLastResult = JSON.parse(localStorage.getItem('duet_this_or_that_last_result')) || null;
                           this.loveLangLastResult = JSON.parse(localStorage.getItem('duet_love_lang_last_result')) || null;
 
-                          App.UI.updateGlobalCounters();
+                          const storedTrips = JSON.parse(localStorage.getItem('duet_trips'));
+                          this.trips = storedTrips && storedTrips.length ? storedTrips : [
+                              { id: 1, title: "קמפינג בירושלים", emoji: "🏕️", icon: "fa-tent", startDate: "2026-07-12", endDate: "2026-07-14", gradient: "from-sky-200/70 to-blue-200/70",
+                                checklist: [
+                                    { id: 11, text: "אוהל זוגי", packed: true },
+                                    { id: 12, text: "שקי שינה ומזרנים מתנפחים", packed: false },
+                                    { id: 13, text: "פנס ראש + סוללות רזרביות", packed: false },
+                                    { id: 14, text: "קפה, פינג'אן ושוקולד מריר", packed: true },
+                                    { id: 15, text: "ערכת עזרה ראשונה ודוחה יתושים", packed: false }
+                                ],
+                                pins: [ { id: 111, lat: 31.7767, lng: 35.2345, label: "מתחם הקמפינג" }, { id: 112, lat: 31.7780, lng: 35.2354, label: "נקודת תצפית 🌄" } ]
+                              },
+                              { id: 2, title: "חופשה משפחתית בקפריסין", emoji: "🌴", icon: "fa-umbrella-beach", startDate: "2026-08-20", endDate: "2026-08-27", gradient: "from-cyan-200/70 to-teal-200/70",
+                                checklist: [
+                                    { id: 21, text: "דרכונים בתוקף", packed: true },
+                                    { id: 22, text: "ביטוח נסיעות לכולם", packed: false },
+                                    { id: 23, text: "בגדי ים ומגבות חוף", packed: false },
+                                    { id: 24, text: "קרם הגנה SPF 50", packed: false },
+                                    { id: 25, text: "מתאם תקע אירופי", packed: false }
+                                ],
+                                pins: [ { id: 211, lat: 34.9229, lng: 33.6233, label: "המלון 🏨" }, { id: 212, lat: 34.7071, lng: 33.0226, label: "חוף לימסול 🏖️" } ]
+                              }
+                          ];
+                          if (!storedTrips) localStorage.setItem('duet_trips', JSON.stringify(this.trips));
+                          this.gardenView = localStorage.getItem('duet_garden_view') || 'main';
+
+                          this.isFamilyMode = localStorage.getItem('duet_is_family_mode') === 'true';
+                          const storedBoard = JSON.parse(localStorage.getItem('duet_family_board'));
+                          this.familyBoard = storedBoard || {
+                              todo: [
+                                  { id: 1, text: "אימון כדורגל לארבל", who: "ארבל", time: "יום ג' 17:00" },
+                                  { id: 2, text: "איסוף יובל מהגן", who: "יובל", time: "16:00" }
+                              ],
+                              doing: [ { id: 3, text: "קניות לסופ\"ש", who: "משותף", time: "" } ],
+                              done: [ { id: 4, text: "תיאום קב\"ס לארבל", who: "ארבל", time: "" } ]
+                          };
+                          if (!storedBoard) localStorage.setItem('duet_family_board', JSON.stringify(this.familyBoard));
+
+                          App.UI.updateGlobalCounters();
                           if(App.Data.themes[this.appTheme]) document.body.style.background = App.Data.themes[this.appTheme].bg;
+                          setTimeout(() => App.Actions._applyFamilyModeUI(), 50);
                       },
 
                       save(key, value) {
@@ -764,11 +817,42 @@
                           time: { name: "זמן איכות", icon: "⏰", items: ["שיחות בלי מסכים", "ארוחות משותפות", "טיולים זוגיים", "ערבי משחק"] },
                           gifts: { name: "מתנות", icon: "🎁", items: ["מתנות קטנות מהלב", "פרחים סתם ככה", "הפתעות בעבודה", "משהו שנזכרת בו"] },
                           acts: { name: "מעשי שירות", icon: "🛠️", items: ["הכנת קפה בבוקר", "עזרה במטלות", "טיפול כשחולים", "סידור ההפתעות"] }
-                      }
+                      },
+                      recipes: [
+                          { id: 'carrot-cake', name: "עוגת גזר", emoji: "🥕", time: "75 דק'", difficulty: "קל", mood: "מתוק וביתי", accent: "from-orange-200/70 to-amber-200/70",
+                            ingredients: ["3 גזרים מגורדים דק", "2 כוסות קמח", "1 כוס שמן", "3 ביצים", "1 כוס סוכר חום", "1 כפית קינמון", "חצי כפית אגוז מוסקט", "1 כפית סודה לשתייה", "אגוזי מלך קצוצים", "גבינת שמנת לציפוי"],
+                            steps: ["מחממים תנור ל-170°C ומשמנים תבנית קוגלהוף.", "טורפים ביצים עם סוכר עד תפיחה.", "מוסיפים שמן בהדרגה, אחר כך גזר וקמח עם התבלינים.", "מקפלים אגוזים ויוצקים לתבנית.", "אופים כ-50 דקות עד שקיסם יוצא יבש.", "מקררים ומורחים ציפוי גבינת שמנת."]
+                          },
+                          { id: 'fish-balls', name: "קציצות דגים ברוטב אדום", emoji: "🐟", time: "45 דק'", difficulty: "בינוני", mood: "חמים ומלטף", accent: "from-rose-200/70 to-red-200/70",
+                            ingredients: ["500 גרם פילה דג טחון", "1 בצל קצוץ דק", "צרור פטרוזיליה וכוסברה", "2 שיני שום", "1 ביצה", "3 כפות פירורי לחם", "מלח, פלפל וכמון", "4 עגבניות מרוסקות", "1 פלפל חריף", "שמן זית, מיץ לימון"],
+                            steps: ["מערבבים את הדג עם בצל, עשבים, ביצה ופירורי לחם.", "מתבלים ויוצרים קציצות עגולות.", "מטגנים בצל ושום בסיר רחב עד שקיפות.", "מוסיפים עגבניות מרוסקות, כוס מים, מלח ופלפל חריף.", "מניחים את הקציצות ברוטב ומבשלים 25 דקות על אש נמוכה.", "מסיימים במיץ לימון, פטרוזיליה ושמן זית."]
+                          },
+                          { id: 'preserved-lemons', name: "לימונים כבושים", emoji: "🍋", time: "10 דק' + שבועיים", difficulty: "קל", mood: "טקס משותף", accent: "from-yellow-200/70 to-lime-200/70",
+                            ingredients: ["8 לימונים בייבי", "חצי כוס מלח גס", "1 כפית פלפל שחור גרוס", "2 עלי דפנה", "1 כפית כורכום", "1 פלפל חריף יבש", "שמן זית לכיסוי", "מיץ מלימון נוסף", "צנצנת זכוכית סטרילית"],
+                            steps: ["שוטפים לימונים וחורצים פלוס בקודקוד.", "ממלאים את החריץ במלח גס.", "מסדרים בצנצנת לסירוגין עם תבלינים.", "סוחטים מעל מיץ לימון עד כיסוי.", "מכסים בשכבת שמן זית וסוגרים הרמטית.", "מחכים שבועיים בטמפ' החדר ואחר כך מעבירים למקרר."]
+                          },
+                          { id: 'sushi', name: "סושי ביתי", emoji: "🍣", time: "60 דק'", difficulty: "בינוני", mood: "כיף מתגלגל", accent: "from-sky-200/70 to-emerald-200/70",
+                            ingredients: ["2 כוסות אורז סושי", "חצי כוס חומץ אורז", "2 כפות סוכר וכפית מלח", "5 דפי נורי", "סלמון או טונה טריים", "מלפפון וקולורבי לרצועות", "אבוקדו בשל", "מחצלת במבוק", "סויה, וואסבי וג'ינג'ר כבוש"],
+                            steps: ["מבשלים אורז ומערבבים עם חומץ, סוכר ומלח.", "פורסים דגים, אבוקדו וירקות לרצועות דקות.", "מניחים נורי על מחצלת ומורחים שכבת אורז דקה.", "מסדרים מילוי בשליש התחתון ומגלגלים בעזרת המחצלת.", "פורסים לסושי בעזרת סכין רטוב.", "מגישים עם סויה, וואסבי וג'ינג'ר."]
+                          },
+                          { id: 'cream-pasta', name: "פסטה ברוטב שמנת", emoji: "🍝", time: "25 דק'", difficulty: "קל", mood: "רומנטי מהיר", accent: "from-pink-200/70 to-rose-200/70",
+                            ingredients: ["400 גרם פטוצ'יני", "2 כוסות שמנת מתוקה", "100 גרם פרמזן מגוררת", "3 שיני שום", "2 כפות חמאה", "מלח, פלפל ואגוז מוסקט", "פטרוזיליה קצוצה", "מים מבישול הפסטה"],
+                            steps: ["מבשלים פסטה במים מומלחים עד אל-דנטה ושומרים כוס מהמים.", "ממיסים חמאה ומאדים שום קצוץ דק.", "מוסיפים שמנת ומחממים בעדינות.", "מערבבים פרמזן עד רוטב חלק.", "מוסיפים פסטה ומעט מי בישול עד מרקם משיי.", "מתבלים ומקשטים בפטרוזיליה."]
+                          },
+                          { id: 'choco-mousse', name: "מוס שוקולד", emoji: "🍫", time: "20 דק' + צינון", difficulty: "קל", mood: "סוף ערב מפנק", accent: "from-amber-200/70 to-rose-200/70",
+                            ingredients: ["200 גרם שוקולד מריר", "4 ביצים מופרדות", "3 כפות סוכר", "1 כוס שמנת להקצפה", "1 כפית תמצית וניל", "קורט מלח", "תותים לקישוט"],
+                            steps: ["ממיסים שוקולד בבן מארי ומקררים מעט.", "מקציפים חלבונים עם סוכר לקצף יציב.", "מקציפים שמנת בנפרד עם וניל.", "מקפלים חלמונים לשוקולד, אחר כך שמנת ולבסוף חלבונים.", "מחלקים לכוסיות יפות.", "מצננים במקרר 3 שעות ומקשטים בתותים."]
+                          }
+                      ]
                   },
 
                   Navigation: {
                       navigate(tabId) {
+                          if (App.State.isFamilyMode) {
+                              const viewport = document.getElementById('app-viewport');
+                              if (viewport) { viewport.innerHTML = ''; const c = document.createElement('div'); c.className = 'animate-page-entry'; c.innerHTML = App.Components.FamilyBoard(); viewport.appendChild(c); }
+                              return;
+                          }
                           App.State.activeTab = tabId;
                           document.querySelectorAll('nav button').forEach(btn => { btn.classList.remove('text-orange-500'); btn.classList.add('text-stone-300'); });
                           const activeBtn = document.getElementById(`btn-nav-${tabId}`);
@@ -801,7 +885,74 @@
                   },
 
                   Components: {
+                    FamilyBoard() {
+                        const board = App.State.familyBoard || { todo: [], doing: [], done: [] };
+                        const cols = [
+                            { key: 'todo',  title: 'לעשות',  icon: 'fa-list-check', color: 'bg-sky-50 border-sky-200', dot: 'bg-sky-400' },
+                            { key: 'doing', title: 'בתהליך', icon: 'fa-spinner',    color: 'bg-amber-50 border-amber-200', dot: 'bg-amber-400' },
+                            { key: 'done',  title: 'הושלם',  icon: 'fa-check',      color: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-400' }
+                        ];
+                        const whoBadge = (who) => {
+                            const map = { 'ארבל': 'bg-blue-100 text-blue-700 border-blue-200', 'יובל': 'bg-emerald-100 text-emerald-700 border-emerald-200', 'משותף': 'bg-orange-100 text-orange-700 border-orange-200' };
+                            const cls = map[who] || 'bg-stone-100 text-stone-600 border-stone-200';
+                            return `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${cls}">${who}</span>`;
+                        };
+                        const renderCard = (col, t) => {
+                            const isFirst = col === 'todo';
+                            const isMid = col === 'doing';
+                            const isLast = col === 'done';
+                            return `
+                                <div class="bg-white border border-stone-200 rounded-2xl p-3 shadow-sm space-y-2">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <p class="text-sm font-bold text-stone-700 leading-snug flex-1">${t.text}</p>
+                                        <button onclick="App.Actions.deleteFamilyTask('${col}', ${t.id})" class="w-7 h-7 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded-lg flex items-center justify-center transition active:scale-90 shrink-0"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5">
+                                            ${whoBadge(t.who)}
+                                            ${t.time ? `<span class="text-[10px] text-stone-400 font-bold"><i class="fa-regular fa-clock ml-0.5"></i> ${t.time}</span>` : ''}
+                                        </div>
+                                        <div class="flex gap-1">
+                                            ${!isFirst ? `<button onclick="App.Actions.moveFamilyTask('${col}', ${t.id}, -1)" class="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-500 rounded-lg flex items-center justify-center transition active:scale-90"><i class="fa-solid fa-arrow-right text-[10px]"></i></button>` : ''}
+                                            ${!isLast ? `<button onclick="App.Actions.moveFamilyTask('${col}', ${t.id}, 1)" class="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-500 rounded-lg flex items-center justify-center transition active:scale-90"><i class="fa-solid fa-arrow-left text-[10px]"></i></button>` : ''}
+                                        </div>
+                                    </div>
+                                </div>`;
+                        };
+                        const columnsHTML = cols.map(c => {
+                            const items = (board[c.key] || []);
+                            return `
+                                <div class="rounded-[28px] border-2 ${c.color} p-3 space-y-3 min-h-[180px]">
+                                    <div class="flex items-center justify-between px-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full ${c.dot}"></span>
+                                            <h3 class="text-sm font-extrabold text-stone-700"><i class="fa-solid ${c.icon} ml-1 text-stone-400"></i> ${c.title}</h3>
+                                            <span class="text-[10px] font-bold text-stone-400">(${items.length})</span>
+                                        </div>
+                                        <button onclick="App.Actions.addFamilyTask('${c.key}')" class="text-[11px] font-bold bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 px-2 py-1 rounded-lg shadow-sm active:scale-95 transition"><i class="fa-solid fa-plus text-[9px] ml-1"></i> משימה</button>
+                                    </div>
+                                    <div class="space-y-2">
+                                        ${items.length === 0 ? `<div class="text-center text-[11px] text-stone-400 py-6 italic">אין משימות כרגע</div>` : items.map(t => renderCard(c.key, t)).join('')}
+                                    </div>
+                                </div>`;
+                        }).join('');
+                        return `
+                            <div class="space-y-4" dir="rtl">
+                                <div class="bg-gradient-to-r from-sky-100 to-emerald-100 border border-sky-200 rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
+                                    <div class="text-right">
+                                        <div class="text-[10px] font-bold text-teal-700 tracking-widest uppercase">מצב משפחה פעיל</div>
+                                        <div class="text-xs font-bold text-stone-700">לוגיסטיקה לילדים · ארבל ויובל</div>
+                                    </div>
+                                    <button onclick="App.Actions.toggleFamilyMode()" class="text-[11px] font-extrabold bg-white border border-teal-200 text-teal-700 px-3 py-1.5 rounded-xl shadow-sm active:scale-95 transition"><i class="fa-solid fa-heart text-rose-400 ml-1"></i> חזרה לזוגי</button>
+                                </div>
+                                <div class="grid grid-cols-1 gap-3">${columnsHTML}</div>
+                            </div>
+                        `;
+                    },
+
                     Garden() {
+                          if (App.State.gardenView === 'trips') return this.TripPlanner();
+
                           const todayStr = new Date().toDateString();
                           if (App.State.questsDate !== todayStr) {
                               const shuffled = [...App.Data.questsBank].sort(() => 0.5 - Math.random());
@@ -945,6 +1096,20 @@
                                       <div class="space-y-2">${activeListHTML}</div>
                                   </div>
 
+                                  <div onclick="App.Actions.openTripPlanner()" class="relative overflow-hidden rounded-[32px] p-5 cursor-pointer transition shadow-md active:scale-[0.98] hover:brightness-105 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-500 text-white">
+                                      <div class="absolute -left-3 -top-3 text-7xl opacity-25 select-none">✈️</div>
+                                      <div class="absolute -right-4 -bottom-5 text-6xl opacity-20 select-none">🗺️</div>
+                                      <div class="relative z-10 flex items-center justify-between gap-3">
+                                          <div class="text-right">
+                                              <h3 class="font-extrabold text-lg font-hand tracking-wider">מתכנן הטיולים שלנו</h3>
+                                              <p class="text-white/95 text-[11px] font-bold mt-0.5">תיקיות מסע, צ׳ק־ליסטים ומפות אישיות</p>
+                                              <p class="text-white/80 text-[10px] font-bold mt-2"><i class="fa-solid fa-folder-open ml-1"></i> ${App.State.trips.length} טיולים פעילים</p>
+                                          </div>
+                                          <div class="w-12 h-12 rounded-2xl bg-white/25 flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm"><i class="fa-solid fa-suitcase-rolling"></i></div>
+                                      </div>
+                                  </div>
+
+
                                   <div class="mb-0" style="margin-top: 8px;">
                                       <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
                                       <div class="overflow-x-auto no-scrollbar pb-2 px-1">
@@ -1007,7 +1172,102 @@
                                       </div>
                                   </div>
                               </div>`;
-                      },
+                      },
+
+                      TripPlanner() {
+                          const trips = App.State.trips || [];
+                          const fmt = (d) => { if(!d) return ''; try { return new Date(d).toLocaleDateString('he-IL', {day:'2-digit', month:'2-digit', year:'numeric'}); } catch(e){ return d; } };
+
+                          const cardsHTML = trips.length === 0 ? `
+                              <div class="text-center py-10 bg-white/40 border border-dashed border-sky-200 rounded-[32px]">
+                                  <div class="text-5xl mb-2">🧳</div>
+                                  <p class="text-sm font-bold text-stone-500">עוד אין טיולים. תכננו את הראשון!</p>
+                              </div>
+                          ` : trips.map(trip => {
+                              const isOpen = App.State.activeTripId === trip.id;
+                              const packed = trip.checklist.filter(i => i.packed).length;
+                              const total = trip.checklist.length;
+                              const pct = total ? Math.round(packed / total * 100) : 0;
+
+                              const checklistHTML = trip.checklist.map(item => `
+                                  <div class="flex items-center justify-between gap-2 bg-white/80 border ${item.packed ? 'border-emerald-200 bg-emerald-50/60' : 'border-stone-100'} rounded-2xl p-3 shadow-sm transition">
+                                      <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="App.Actions.toggleChecklistItem(${trip.id}, ${item.id})">
+                                          <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition ${item.packed ? 'bg-emerald-500 text-white shadow-inner' : 'bg-white border-2 border-stone-200 text-transparent'}"><i class="fa-solid fa-check text-xs"></i></div>
+                                          <span class="text-sm font-bold ${item.packed ? 'text-emerald-700 line-through opacity-70' : 'text-stone-700'}">${item.text}</span>
+                                      </div>
+                                      <button onclick="App.Actions.deleteChecklistItem(${trip.id}, ${item.id})" class="w-7 h-7 text-stone-300 hover:text-red-400 hover:bg-red-50 rounded-lg flex items-center justify-center transition active:scale-90"><i class="fa-regular fa-trash-can text-xs"></i></button>
+                                  </div>
+                              `).join('');
+
+                              const pinsListHTML = trip.pins.length ? trip.pins.map(p => `
+                                  <span class="inline-flex items-center gap-1.5 bg-white/80 border border-sky-100 text-sky-700 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm"><i class="fa-solid fa-location-dot text-rose-400"></i>${p.label}</span>
+                              `).join('') : `<span class="text-[11px] font-bold text-stone-400">עדיין אין נעצים — הוסיפו את היעד הראשון</span>`;
+
+                              const expandedHTML = isOpen ? `
+                                  <div class="mt-4 space-y-4 animate-page-entry">
+                                      <div class="bg-white/60 rounded-2xl p-4 border border-white shadow-sm">
+                                          <div class="flex items-center justify-between mb-3">
+                                              <h4 class="text-xs font-extrabold text-sky-700 uppercase tracking-widest"><i class="fa-solid fa-suitcase-rolling ml-1"></i> צ׳ק־ליסט אריזה (${packed}/${total})</h4>
+                                              <button onclick="App.Actions.addChecklistItem(${trip.id})" class="text-[11px] font-bold text-sky-600 bg-sky-50 hover:bg-sky-100 border border-sky-100 px-2.5 py-1 rounded-lg shadow-sm transition active:scale-95">+ פריט</button>
+                                          </div>
+                                          <div class="space-y-2">${checklistHTML || '<p class="text-xs text-stone-400 text-center py-2 font-bold">הצ׳ק־ליסט ריק</p>'}</div>
+                                      </div>
+
+                                      <div class="bg-white/60 rounded-2xl p-4 border border-white shadow-sm">
+                                          <div class="flex items-center justify-between mb-3">
+                                              <h4 class="text-xs font-extrabold text-sky-700 uppercase tracking-widest"><i class="fa-solid fa-map-location-dot ml-1"></i> המפה של ${trip.title}</h4>
+                                              <button onclick="App.Actions.startAddTripPin(${trip.id})" class="text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 px-2.5 py-1 rounded-lg shadow-sm transition active:scale-95"><i class="fa-solid fa-thumbtack ml-1"></i> הוסף נעץ</button>
+                                          </div>
+                                          <div id="trip-map-${trip.id}" class="w-full h-60 rounded-2xl border-4 border-white shadow-sm overflow-hidden z-0"></div>
+                                          <div class="flex flex-wrap gap-1.5 mt-3">${pinsListHTML}</div>
+                                      </div>
+
+                                      <div class="flex justify-between">
+                                          <button onclick="App.Actions.deleteTrip(${trip.id})" class="text-[11px] font-bold text-stone-400 hover:text-red-500 transition"><i class="fa-regular fa-trash-can ml-1"></i> מחק טיול</button>
+                                          <button onclick="App.Actions.toggleTrip(${trip.id})" class="text-[11px] font-bold text-sky-600 bg-white border border-sky-100 px-3 py-1.5 rounded-lg shadow-sm">סגור תיקייה ↑</button>
+                                      </div>
+                                  </div>
+                              ` : '';
+
+                              return `
+                                  <div class="glass-panel rounded-[32px] p-5 border border-white shadow-sm transition-all duration-500 ${isOpen ? 'ring-2 ring-sky-200' : ''} bg-gradient-to-br ${trip.gradient}">
+                                      <div onclick="App.Actions.toggleTrip(${trip.id})" class="flex items-center gap-4 cursor-pointer">
+                                          <div class="w-14 h-14 rounded-2xl bg-white/70 flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm shrink-0"><i class="fa-solid ${trip.icon} text-sky-600"></i></div>
+                                          <div class="flex-1 text-right">
+                                              <h3 class="font-extrabold text-base text-stone-800 font-hand tracking-wide">${trip.emoji} ${trip.title}</h3>
+                                              <p class="text-[11px] font-bold text-stone-600 mt-0.5"><i class="fa-regular fa-calendar ml-1"></i>${fmt(trip.startDate)} – ${fmt(trip.endDate)}</p>
+                                              <div class="w-full bg-white/60 h-2 rounded-full mt-2 overflow-hidden">
+                                                  <div class="bg-gradient-to-r from-sky-500 to-cyan-400 h-full transition-all duration-500" style="width:${pct}%"></div>
+                                              </div>
+                                              <div class="flex justify-between text-[10px] font-bold text-stone-600 mt-1"><span>${packed}/${total} ארוזים</span><span>${trip.pins.length} נעצים</span></div>
+                                          </div>
+                                          <div class="w-9 h-9 rounded-full bg-white/70 flex items-center justify-center text-stone-600 shadow-sm transition-transform ${isOpen ? 'rotate-180' : ''}"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+                                      </div>
+                                      ${expandedHTML}
+                                  </div>
+                              `;
+                          }).join('');
+
+                          // Init map for active trip after DOM update
+                          if (App.State.activeTripId) {
+                              requestAnimationFrame(() => App.Actions.initTripMap(App.State.activeTripId));
+                          }
+
+                          return `
+                              <div class="space-y-5 px-1">
+                                  <div class="flex items-center justify-between">
+                                      <button onclick="App.Actions.closeTripPlanner()" class="w-9 h-9 rounded-full bg-white/70 border border-white text-stone-500 hover:text-sky-500 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fa-solid fa-arrow-right"></i></button>
+                                      <div class="text-center flex-1">
+                                          <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider">המסעות שלנו ✈️</h2>
+                                          <p class="text-stone-500 text-xs font-bold">תיקיות מסע, אריזות חכמות ונעצים על המפה</p>
+                                      </div>
+                                      <button onclick="App.Actions.createTrip()" title="טיול חדש" class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white flex items-center justify-center shadow-md active:scale-90 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                                  </div>
+                                  <div class="space-y-4">${cardsHTML}</div>
+                              </div>
+                          `;
+                      },
+
 
                       Journal() {
                           const countdownEvent = App.Utils.getClosestCountdown();
@@ -1185,6 +1445,7 @@
                           if (App.State.intimacyMode === 'roulette') return `<div class="space-y-4">${streakHTML}${this.renderDateRoulette()}</div>`;
                           if (App.State.intimacyMode === 'lovelang') return `<div class="space-y-4">${streakHTML}${this.renderLoveLanguages()}</div>`;
                           if (App.State.intimacyMode === 'breathe') return `<div class="space-y-4">${streakHTML}${this.renderConnectionMoment()}</div>`;
+                          if (App.State.intimacyMode === 'chefs') return `<div class="space-y-4">${streakHTML}${this.ChefsCorner()}</div>`;
 
                           // תיקון קריטי: מוודא שהאפליקציה לא קורסת בגלל המילה null בזיכרון
                           if (!App.State.selectedDeck || App.State.selectedDeck === 'null') return `<div class="space-y-4">${streakHTML}${this.renderDeckSelector()}</div>`;
@@ -1463,8 +1724,26 @@
                                           <h3 class="font-extrabold text-sm">רגע של חיבור</h3>
                                           <p class="text-white/90 text-[10px] mt-1">תרגיל נשימה זוגי של דקה</p>
                                       </div>
+                                      <div onclick="App.Actions.openChefsCorner()" class="category-card bg-gradient-to-br from-rose-400 via-orange-400 to-amber-400 rounded-[32px] p-5 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white mb-3 col-span-2 relative overflow-hidden">
+                                          <div class="absolute -left-3 -top-3 text-7xl opacity-20">🍷</div>
+                                          <div class="absolute -right-3 -bottom-4 text-6xl opacity-20">🍳</div>
+                                          <div class="text-3xl mb-2 relative z-10">👩‍🍳</div>
+                                          <h3 class="font-extrabold text-base relative z-10">פינת השף שלנו</h3>
+                                          <p class="text-white/95 text-[11px] mt-1 relative z-10">בחרו מתכון לערב — והמצרכים יקפצו למקרר</p>
+                                      </div>
+                                      <div onclick="App.Actions.startRetroGame()" class="category-card rounded-[32px] p-5 flex items-center justify-center gap-3 cursor-pointer transition shadow-md hover:brightness-105 mb-3 col-span-2 relative overflow-hidden" style="background: repeating-linear-gradient(45deg, #fde7e0 0 8px, #fbd8cc 8px 16px); border: 2px solid #78716c;">
+                                          <div class="text-3xl" style="image-rendering: pixelated;">🕹️</div>
+                                          <div class="text-right">
+                                              <h3 class="font-extrabold text-base text-stone-800" style="font-family: ui-monospace, monospace; letter-spacing: 1px;">RETRO · לב-טאפ</h3>
+                                              <p class="text-stone-600 text-[11px] mt-0.5" style="font-family: ui-monospace, monospace;">60 שניות · ‎+20 XP בסיום</p>
+                                          </div>
+                                      </div>
                                   </div>
 
+                                  <button onclick="App.Actions.startConflictResolution()" class="w-full flex items-center justify-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-500 py-3 rounded-2xl text-xs font-medium transition active:scale-[0.98] shadow-sm">
+                                      <i class="fa-solid fa-flag text-stone-400"></i>
+                                      <span>דגל לבן · מרחב בטוח לפתרון קונפליקטים 🤍</span>
+                                  </button>
 
                                   ${this.renderCoupleScoreboard()}
 
@@ -1950,10 +2229,627 @@
                                   </div>
                               </div>
                           `;
-                      }
-                  },
+                      },
 
-                  Actions: {
+                      ChefsCorner() {
+                          const recipes = App.Data.recipes || [];
+                          const modalRecipe = App.State.chefsModalRecipeId ? recipes.find(r => r.id === App.State.chefsModalRecipeId) : null;
+
+                          const cardsHTML = recipes.map(r => `
+                              <div onclick="App.Actions.openRecipe('${r.id}')" class="category-card glass-panel rounded-[32px] p-5 text-right cursor-pointer transition shadow-sm border border-white hover:scale-[1.02] active:scale-95 relative overflow-hidden bg-gradient-to-br ${r.accent}">
+                                  <div class="absolute -left-3 -top-3 text-7xl opacity-25 select-none">${r.emoji}</div>
+                                  <div class="relative z-10 flex flex-col gap-2 min-h-[140px]">
+                                      <div class="text-3xl">${r.emoji}</div>
+                                      <h3 class="font-extrabold text-stone-800 text-base leading-tight font-hand tracking-wide">${r.name}</h3>
+                                      <p class="text-[11px] text-stone-600 font-bold">${r.mood}</p>
+                                      <div class="mt-auto flex flex-wrap gap-1.5 pt-2">
+                                          <span class="bg-white/70 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${r.time}</span>
+                                          <span class="bg-white/70 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/80">${r.difficulty}</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          `).join('');
+
+                          const modalHTML = modalRecipe ? `
+                              <div onclick="App.Actions.closeRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
+                                  <div onclick="event.stopPropagation()" class="glass-panel rounded-[32px] shadow-xl border border-white w-full max-w-md max-h-[88vh] overflow-y-auto relative">
+                                      <div class="relative bg-gradient-to-br ${modalRecipe.accent} p-6 pb-8 rounded-t-[32px]">
+                                          <button onclick="App.Actions.closeRecipe()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-stone-600 flex items-center justify-center shadow-sm transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                          <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
+                                          <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
+                                          <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
+                                          <div class="flex justify-center gap-2 mt-3">
+                                              <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${modalRecipe.time}</span>
+                                              <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-solid fa-gauge-simple ml-1"></i>${modalRecipe.difficulty}</span>
+                                          </div>
+                                      </div>
+                                      <div class="p-6 space-y-5 text-right">
+                                          <div>
+                                              <h4 class="text-xs font-extrabold text-orange-600 uppercase tracking-widest mb-2"><i class="fa-solid fa-basket-shopping ml-1"></i> מצרכים</h4>
+                                              <ul class="space-y-1.5 text-sm text-stone-700 font-medium">
+                                                  ${modalRecipe.ingredients.map(i => `<li class="flex items-start gap-2"><span class="text-rose-400 mt-1">●</span><span>${i}</span></li>`).join('')}
+                                              </ul>
+                                          </div>
+                                          <div>
+                                              <h4 class="text-xs font-extrabold text-orange-600 uppercase tracking-widest mb-2"><i class="fa-solid fa-fire ml-1"></i> אופן ההכנה</h4>
+                                              <ol class="space-y-2 text-sm text-stone-700 font-medium">
+                                                  ${modalRecipe.steps.map((s, i) => `<li class="flex items-start gap-2.5"><span class="shrink-0 w-6 h-6 rounded-full bg-orange-100 text-orange-600 text-xs font-extrabold flex items-center justify-center mt-0.5">${i+1}</span><span class="leading-relaxed">${s}</span></li>`).join('')}
+                                              </ol>
+                                          </div>
+                                          <button onclick="App.Actions.cookTonight('${modalRecipe.id}')" class="w-full bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white py-4 rounded-2xl font-extrabold text-base shadow-lg active:scale-95 transition hover:brightness-110">
+                                              🔥 מבשלים את זה הערב!
+                                          </button>
+                                          <p class="text-[10px] text-center text-stone-400 font-bold">המצרכים יתווספו כפתק טרי במקרר הווירטואלי</p>
+                                      </div>
+                                  </div>
+                              </div>
+                          ` : '';
+
+                          return `
+                              <div class="space-y-5 px-1">
+                                  <div class="flex items-center justify-between">
+                                      <button onclick="App.Actions.closeChefsCorner()" class="w-9 h-9 rounded-full bg-white/70 border border-white text-stone-500 hover:text-orange-500 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fa-solid fa-arrow-right"></i></button>
+                                      <div class="text-center flex-1">
+                                          <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider">פינת השף שלנו 🍷</h2>
+                                          <p class="text-stone-500 text-xs font-bold">מתכון אחד, ערב אחד, שני בשלנים</p>
+                                      </div>
+                                      <div class="w-9"></div>
+                                  </div>
+                                  <div class="grid grid-cols-2 gap-4">
+                                      ${cardsHTML}
+                                  </div>
+                                  ${modalHTML}
+                              </div>
+                          `;
+                      }
+                  },
+
+                  Actions: {
+                      // ===== 👨‍👩‍👧‍👦 מצב משפחה =====
+                      toggleFamilyMode() {
+                          const next = !App.State.isFamilyMode;
+                          if (next) App.State._preFamilyTab = App.State.activeTab || 'garden';
+                          App.State.isFamilyMode = next;
+                          localStorage.setItem('duet_is_family_mode', next ? 'true' : 'false');
+                          this._applyFamilyModeUI();
+                          if (next) {
+                              const viewport = document.getElementById('app-viewport');
+                              if (viewport) { viewport.innerHTML = ''; const c = document.createElement('div'); c.className = 'animate-page-entry'; c.innerHTML = App.Components.FamilyBoard(); viewport.appendChild(c); }
+                          } else {
+                              App.Navigation.navigate(App.State._preFamilyTab || 'garden');
+                          }
+                      },
+                      _applyFamilyModeUI() {
+                          const on = !!App.State.isFamilyMode;
+                          const overlay = document.getElementById('family-bg-overlay');
+                          if (overlay) overlay.style.opacity = on ? '1' : '0';
+                          const nav = document.getElementById('bottom-nav');
+                          if (nav) {
+                              nav.style.opacity = on ? '0.4' : '1';
+                              nav.style.filter = on ? 'grayscale(0.4)' : 'none';
+                              nav.style.pointerEvents = on ? 'none' : 'auto';
+                          }
+                          const chip = document.getElementById('mode-chip');
+                          if (chip) chip.textContent = on ? 'מצב משפחה · ארבל ויובל' : 'צומחים יחד, אהבה שקטה';
+                          const r = document.getElementById('fm-pill-romance');
+                          const f = document.getElementById('fm-pill-family');
+                          const tog = document.getElementById('family-mode-toggle');
+                          if (r && f && tog) {
+                              if (on) {
+                                  r.className = 'px-2.5 py-1 rounded-full text-stone-400 transition';
+                                  f.className = 'px-2.5 py-1 rounded-full bg-white shadow text-teal-600 transition';
+                                  tog.classList.remove('bg-stone-100','border-stone-200');
+                                  tog.classList.add('bg-teal-50','border-teal-200');
+                              } else {
+                                  r.className = 'px-2.5 py-1 rounded-full bg-white shadow text-rose-500 transition';
+                                  f.className = 'px-2.5 py-1 rounded-full text-stone-400 transition';
+                                  tog.classList.add('bg-stone-100','border-stone-200');
+                                  tog.classList.remove('bg-teal-50','border-teal-200');
+                              }
+                          }
+                      },
+                      addFamilyTask(col) {
+                          const text = prompt('משימה חדשה — מה צריך לעשות?');
+                          if (!text || !text.trim()) return;
+                          let who = (prompt('שייך למי? כתוב: ארבל / יובל / משותף', 'משותף') || 'משותף').trim();
+                          if (!['ארבל','יובל','משותף'].includes(who)) who = 'משותף';
+                          const time = (prompt('שעה / תאריך (אופציונלי)', '') || '').trim();
+                          const board = App.State.familyBoard;
+                          board[col] = board[col] || [];
+                          board[col].unshift({ id: Date.now(), text: text.trim().slice(0,120), who, time: time.slice(0,40) });
+                          App.State.save('familyBoard', board);
+                          App.Actions._refreshFamilyBoard();
+                      },
+                      moveFamilyTask(col, id, dir) {
+                          const order = ['todo','doing','done'];
+                          const idx = order.indexOf(col);
+                          const targetIdx = idx + dir;
+                          if (targetIdx < 0 || targetIdx > 2) return;
+                          const target = order[targetIdx];
+                          const board = App.State.familyBoard;
+                          const i = (board[col] || []).findIndex(t => t.id === id);
+                          if (i === -1) return;
+                          const [task] = board[col].splice(i, 1);
+                          board[target] = board[target] || [];
+                          board[target].unshift(task);
+                          App.State.save('familyBoard', board);
+                          App.Actions._refreshFamilyBoard();
+                      },
+                      deleteFamilyTask(col, id) {
+                          if (!confirm('למחוק את המשימה?')) return;
+                          const board = App.State.familyBoard;
+                          board[col] = (board[col] || []).filter(t => t.id !== id);
+                          App.State.save('familyBoard', board);
+                          App.Actions._refreshFamilyBoard();
+                      },
+                      _refreshFamilyBoard() {
+                          const viewport = document.getElementById('app-viewport');
+                          if (!viewport) return;
+                          viewport.innerHTML = '';
+                          const c = document.createElement('div');
+                          c.innerHTML = App.Components.FamilyBoard();
+                          viewport.appendChild(c);
+                      },
+
+
+                      // ===== 🕹️ משחק רטרו — לב-טאפ 8-bit =====
+                      _retro: { canvas: null, ctx: null, rafId: null, running: false, startTs: 0, lastSpawn: 0, secondsLeft: 60, cells: [], particles: [], score: { me: 0, partner: 0 }, rewardGiven: false, W: 320, H: 480, cols: 6, rows: 8 },
+                      _retroSprites: {
+                          // 8x8 pixel matrices; 0 = transparent, 1 = main, 2 = outline, 3 = highlight
+                          heart: [
+                              [0,2,2,0,0,2,2,0],
+                              [2,1,1,2,2,1,1,2],
+                              [2,1,3,1,1,1,1,2],
+                              [2,1,1,1,1,1,1,2],
+                              [0,2,1,1,1,1,2,0],
+                              [0,0,2,1,1,2,0,0],
+                              [0,0,0,2,2,0,0,0],
+                              [0,0,0,0,0,0,0,0],
+                          ],
+                          star: [
+                              [0,0,0,2,2,0,0,0],
+                              [0,0,2,1,1,2,0,0],
+                              [2,2,1,1,1,1,2,2],
+                              [2,1,1,3,3,1,1,2],
+                              [0,2,1,1,1,1,2,0],
+                              [0,2,1,2,2,1,2,0],
+                              [2,1,2,0,0,2,1,2],
+                              [2,2,0,0,0,0,2,2],
+                          ],
+                          skull: [
+                              [0,2,2,2,2,2,2,0],
+                              [2,1,1,1,1,1,1,2],
+                              [2,1,2,1,1,2,1,2],
+                              [2,1,1,1,1,1,1,2],
+                              [2,1,1,2,2,1,1,2],
+                              [0,2,1,1,1,1,2,0],
+                              [0,2,1,2,2,1,2,0],
+                              [0,0,2,2,2,2,0,0],
+                          ],
+                      },
+                      _retroPalette: { bg: '#f5f5f4', grid1: '#eeece9', grid2: '#e7e5e4', divider: '#a8a29e', outline: '#1c1917', text: '#1c1917', muted: '#78716c', pink: '#fb7185', pinkH: '#fecdd3', blue: '#60a5fa', blueH: '#bfdbfe', gold: '#fbbf24', goldH: '#fef3c7', skull: '#78716c', skullH: '#d6d3d1' },
+
+                      startRetroGame() {
+                          let host = document.getElementById('retro-game-overlay');
+                          if (!host) {
+                              host = document.createElement('div');
+                              host.id = 'retro-game-overlay';
+                              host.className = 'fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-hidden';
+                              host.style.background = 'repeating-linear-gradient(45deg, #f5f5f4 0 10px, #eeece9 10px 20px)';
+                              document.body.appendChild(host);
+                          }
+                          this._retro.rewardGiven = false;
+                          this._retroRenderStartScreen();
+                      },
+                      exitRetroGame() {
+                          if (this._retro.rafId) { cancelAnimationFrame(this._retro.rafId); this._retro.rafId = null; }
+                          this._retro.running = false;
+                          const host = document.getElementById('retro-game-overlay');
+                          if (host) host.remove();
+                      },
+                      _retroRenderStartScreen() {
+                          const host = document.getElementById('retro-game-overlay');
+                          if (!host) return;
+                          const me = App.State.userName || 'אני';
+                          const pa = App.State.partnerName || 'שותפ/ה';
+                          host.innerHTML = `
+                              <button onclick="App.Actions.exitRetroGame()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white border-2 border-stone-700 text-stone-700 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                              <div class="bg-white border-[3px] border-stone-800 rounded-2xl p-6 max-w-xs text-center" style="box-shadow: 6px 6px 0 #1c1917; font-family: ui-monospace, monospace;" dir="rtl">
+                                  <div class="text-4xl mb-2">🕹️</div>
+                                  <h2 class="text-xl font-extrabold text-stone-800 tracking-widest mb-1">לב-טאפ</h2>
+                                  <p class="text-[10px] text-stone-500 tracking-widest mb-4">8-BIT · DUET ARCADE</p>
+                                  <div class="text-right text-[11px] text-stone-700 leading-relaxed bg-stone-50 border-2 border-stone-300 rounded-lg p-3 mb-4 space-y-1">
+                                      <div><span style="color:#fb7185">💗</span> לב ורוד = ${me} · +1</div>
+                                      <div><span style="color:#60a5fa">💙</span> לב כחול = ${pa} · +1</div>
+                                      <div><span style="color:#fbbf24">⭐</span> כוכב = משותף · +3</div>
+                                      <div><span style="color:#78716c">💀</span> גולגולת · ‎-2</div>
+                                  </div>
+                                  <p class="text-[10px] text-stone-500 mb-4">60 שניות · המסך מחולק לחצי</p>
+                                  <button onclick="App.Actions._retroBeginRound()" class="w-full bg-stone-800 text-white py-3 rounded-lg font-extrabold tracking-[0.3em] active:scale-95 transition" style="font-family: ui-monospace, monospace; box-shadow: 0 4px 0 #57534e;">START</button>
+                              </div>`;
+                      },
+                      _retroBeginRound() {
+                          const host = document.getElementById('retro-game-overlay');
+                          if (!host) return;
+                          const R = this._retro;
+                          R.secondsLeft = 60; R.startTs = performance.now(); R.lastSpawn = 0;
+                          R.cells = []; R.particles = []; R.score = { me: 0, partner: 0 }; R.running = true;
+                          host.innerHTML = `
+                              <button onclick="App.Actions.exitRetroGame()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white border-2 border-stone-700 text-stone-700 flex items-center justify-center shadow-sm active:scale-90 z-10"><i class="fa-solid fa-xmark"></i></button>
+                              <canvas id="retro-canvas" style="image-rendering: pixelated; touch-action: none; border: 3px solid #1c1917; background:#f5f5f4; box-shadow: 6px 6px 0 #1c1917; max-width: 92vw; max-height: 80vh;"></canvas>
+                          `;
+                          const cvs = document.getElementById('retro-canvas');
+                          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                          cvs.width = R.W * dpr; cvs.height = R.H * dpr;
+                          cvs.style.width = R.W + 'px'; cvs.style.height = R.H + 'px';
+                          R.canvas = cvs; R.ctx = cvs.getContext('2d');
+                          R.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                          R.ctx.imageSmoothingEnabled = false;
+                          cvs.addEventListener('pointerdown', (e) => App.Actions._retroHandleTap(e));
+                          R.rafId = requestAnimationFrame((t) => App.Actions._retroLoop(t));
+                      },
+                      _retroLoop(t) {
+                          const R = this._retro;
+                          if (!R.running) return;
+                          const elapsed = (t - R.startTs) / 1000;
+                          R.secondsLeft = Math.max(0, 60 - Math.floor(elapsed));
+                          // spawn
+                          const spawnInterval = 700; // ms
+                          if (t - R.lastSpawn >= spawnInterval) {
+                              R.lastSpawn = t;
+                              this._retroSpawn(t);
+                          }
+                          // cull expired
+                          R.cells = R.cells.filter(c => t - c.bornAt < c.life);
+                          R.particles = R.particles.filter(p => t - p.bornAt < 400);
+                          this._retroDraw();
+                          if (R.secondsLeft <= 0) { this._retroEnd(); return; }
+                          R.rafId = requestAnimationFrame((nt) => App.Actions._retroLoop(nt));
+                      },
+                      _retroSpawn(t) {
+                          const R = this._retro;
+                          const cellW = R.W / R.cols;
+                          const playH = R.H - 60; // minus HUD
+                          const rowH = playH / R.rows;
+                          // pick free cell
+                          for (let i = 0; i < 8; i++) {
+                              const col = Math.floor(Math.random() * R.cols);
+                              const row = Math.floor(Math.random() * R.rows);
+                              if (R.cells.some(c => c.col === col && c.row === row)) continue;
+                              const r = Math.random();
+                              const isTop = row < R.rows / 2;
+                              let type;
+                              if (r < 0.1) type = 'star';
+                              else if (r < 0.2) type = 'skull';
+                              else type = isTop ? 'heartPink' : 'heartBlue';
+                              R.cells.push({ col, row, type, bornAt: t, life: 1300, cellW, rowH });
+                              return;
+                          }
+                      },
+                      _retroDraw() {
+                          const R = this._retro, ctx = R.ctx, P = this._retroPalette;
+                          ctx.fillStyle = P.bg;
+                          ctx.fillRect(0, 0, R.W, R.H);
+                          // HUD bar
+                          const hudH = 60;
+                          ctx.fillStyle = '#1c1917';
+                          ctx.fillRect(0, 0, R.W, hudH);
+                          ctx.fillStyle = P.bg;
+                          ctx.fillRect(4, 4, R.W - 8, hudH - 8);
+                          ctx.fillStyle = P.text;
+                          ctx.font = 'bold 11px ui-monospace, monospace';
+                          ctx.textBaseline = 'middle';
+                          ctx.textAlign = 'left';
+                          ctx.fillStyle = P.pink;
+                          ctx.fillRect(10, 14, 10, 10);
+                          ctx.fillStyle = P.text;
+                          ctx.fillText(String(R.score.me).padStart(2, '0'), 26, 19);
+                          ctx.textAlign = 'right';
+                          ctx.fillStyle = P.blue;
+                          ctx.fillRect(R.W - 20, 14, 10, 10);
+                          ctx.fillStyle = P.text;
+                          ctx.fillText(String(R.score.partner).padStart(2, '0'), R.W - 26, 19);
+                          ctx.textAlign = 'center';
+                          ctx.font = 'bold 14px ui-monospace, monospace';
+                          ctx.fillText('⏱ ' + String(R.secondsLeft).padStart(2, '0'), R.W / 2, 19);
+                          // time bar
+                          const tw = (R.secondsLeft / 60) * (R.W - 20);
+                          ctx.fillStyle = P.muted;
+                          ctx.fillRect(10, 38, R.W - 20, 6);
+                          ctx.fillStyle = R.secondsLeft <= 10 ? P.pink : P.gold;
+                          ctx.fillRect(10, 38, tw, 6);
+                          // play area
+                          const playY = hudH;
+                          const playH = R.H - hudH;
+                          const cellW = R.W / R.cols;
+                          const rowH = playH / R.rows;
+                          // checker grid
+                          for (let row = 0; row < R.rows; row++) {
+                              for (let col = 0; col < R.cols; col++) {
+                                  ctx.fillStyle = ((row + col) % 2) ? P.grid1 : P.grid2;
+                                  ctx.fillRect(col * cellW, playY + row * rowH, cellW, rowH);
+                              }
+                          }
+                          // divider (pixel dashes)
+                          const midY = playY + (R.rows / 2) * rowH;
+                          ctx.fillStyle = P.divider;
+                          for (let x = 0; x < R.W; x += 8) ctx.fillRect(x, midY - 1, 4, 2);
+                          // side labels
+                          ctx.save();
+                          ctx.fillStyle = P.muted;
+                          ctx.font = 'bold 9px ui-monospace, monospace';
+                          ctx.textAlign = 'left';
+                          ctx.fillText('P1 💗', 6, playY + 10);
+                          ctx.fillText('P2 💙', 6, midY + 12);
+                          ctx.restore();
+                          // entities
+                          R.cells.forEach(c => {
+                              const x = c.col * cellW + (cellW - 32) / 2;
+                              const y = playY + c.row * rowH + (rowH - 32) / 2;
+                              this._retroDrawSprite(c.type, x, y, 4);
+                          });
+                          // particles
+                          ctx.fillStyle = P.gold;
+                          R.particles.forEach(p => {
+                              const age = (performance.now() - p.bornAt) / 400;
+                              const px = p.x + p.vx * age * 30;
+                              const py = p.y + p.vy * age * 30;
+                              ctx.fillStyle = p.color;
+                              ctx.fillRect(Math.round(px), Math.round(py), 4, 4);
+                          });
+                      },
+                      _retroDrawSprite(type, x, y, scale) {
+                          const ctx = this._retro.ctx, P = this._retroPalette;
+                          let sprite, colors;
+                          if (type === 'heartPink') { sprite = this._retroSprites.heart; colors = { 1: P.pink, 2: P.outline, 3: P.pinkH }; }
+                          else if (type === 'heartBlue') { sprite = this._retroSprites.heart; colors = { 1: P.blue, 2: P.outline, 3: P.blueH }; }
+                          else if (type === 'star') { sprite = this._retroSprites.star; colors = { 1: P.gold, 2: P.outline, 3: P.goldH }; }
+                          else if (type === 'skull') { sprite = this._retroSprites.skull; colors = { 1: P.skull, 2: P.outline, 3: P.skullH }; }
+                          else return;
+                          for (let r = 0; r < 8; r++) {
+                              for (let c = 0; c < 8; c++) {
+                                  const v = sprite[r][c];
+                                  if (!v) continue;
+                                  ctx.fillStyle = colors[v];
+                                  ctx.fillRect(Math.round(x + c * scale), Math.round(y + r * scale), scale, scale);
+                              }
+                          }
+                      },
+                      _retroHandleTap(e) {
+                          const R = this._retro;
+                          if (!R.running) return;
+                          const rect = R.canvas.getBoundingClientRect();
+                          const x = (e.clientX - rect.left) * (R.W / rect.width);
+                          const y = (e.clientY - rect.top) * (R.H / rect.height);
+                          const hudH = 60;
+                          if (y < hudH) return;
+                          const cellW = R.W / R.cols;
+                          const rowH = (R.H - hudH) / R.rows;
+                          const col = Math.floor(x / cellW);
+                          const row = Math.floor((y - hudH) / rowH);
+                          const isTop = row < R.rows / 2;
+                          const idx = R.cells.findIndex(c => c.col === col && c.row === row);
+                          if (idx === -1) return;
+                          const cell = R.cells[idx];
+                          const P = this._retroPalette;
+                          let color = P.gold;
+                          if (cell.type === 'heartPink') {
+                              if (isTop) { R.score.me += 1; color = P.pink; } else { R.score.partner -= 1; color = P.muted; }
+                          } else if (cell.type === 'heartBlue') {
+                              if (!isTop) { R.score.partner += 1; color = P.blue; } else { R.score.me -= 1; color = P.muted; }
+                          } else if (cell.type === 'star') {
+                              if (isTop) R.score.me += 3; else R.score.partner += 3; color = P.gold;
+                          } else if (cell.type === 'skull') {
+                              if (isTop) R.score.me -= 2; else R.score.partner -= 2; color = P.skull;
+                          }
+                          R.score.me = Math.max(0, R.score.me);
+                          R.score.partner = Math.max(0, R.score.partner);
+                          // particles burst
+                          const px = col * cellW + cellW / 2;
+                          const py = hudH + row * rowH + rowH / 2;
+                          for (let i = 0; i < 6; i++) {
+                              R.particles.push({ x: px, y: py, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, color, bornAt: performance.now() });
+                          }
+                          R.cells.splice(idx, 1);
+                      },
+                      _retroEnd() {
+                          const R = this._retro;
+                          R.running = false;
+                          if (R.rafId) { cancelAnimationFrame(R.rafId); R.rafId = null; }
+                          const me = App.State.userName || 'אני';
+                          const pa = App.State.partnerName || 'שותפ/ה';
+                          let title, sub;
+                          if (R.score.me > R.score.partner) { title = `🏆 ${me} מנצח/ת!`; sub = `${R.score.me} מול ${R.score.partner}`; }
+                          else if (R.score.partner > R.score.me) { title = `🏆 ${pa} מנצח/ת!`; sub = `${R.score.partner} מול ${R.score.me}`; }
+                          else { title = `🤝 תיקו!`; sub = `${R.score.me} - ${R.score.partner}`; }
+                          if (!R.rewardGiven) { R.rewardGiven = true; App.State.addXP(20); }
+                          const host = document.getElementById('retro-game-overlay');
+                          if (!host) return;
+                          host.innerHTML = `
+                              <button onclick="App.Actions.exitRetroGame()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white border-2 border-stone-700 text-stone-700 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                              <div class="bg-white border-[3px] border-stone-800 rounded-2xl p-6 max-w-xs text-center" style="box-shadow: 6px 6px 0 #1c1917; font-family: ui-monospace, monospace;" dir="rtl">
+                                  <div class="text-[10px] text-stone-500 tracking-widest mb-1">GAME OVER</div>
+                                  <h2 class="text-2xl font-extrabold text-stone-800 mb-3">${title}</h2>
+                                  <div class="bg-stone-50 border-2 border-stone-300 rounded-lg p-3 mb-3 text-stone-700 text-sm font-bold">${sub}</div>
+                                  <div class="bg-amber-50 border-2 border-amber-300 rounded-lg p-2 mb-4 text-amber-700 text-xs font-bold tracking-widest">+20 XP לגינה 🌱</div>
+                                  <div class="grid grid-cols-2 gap-2">
+                                      <button onclick="App.Actions._retro.rewardGiven=true; App.Actions._retroBeginRound()" class="bg-stone-800 text-white py-2.5 rounded-lg font-extrabold tracking-widest text-xs active:scale-95" style="box-shadow: 0 3px 0 #57534e;">REPLAY</button>
+                                      <button onclick="App.Actions.exitRetroGame()" class="bg-white border-2 border-stone-800 text-stone-800 py-2.5 rounded-lg font-extrabold tracking-widest text-xs active:scale-95">EXIT</button>
+                                  </div>
+                              </div>`;
+                      },
+
+                      // ===== דגל לבן 🤍 — מרחב בטוח לפתרון קונפליקטים =====
+                      _wf: { breathInterval: null, breathSecondsLeft: 60, breathReady: { me: false, partner: false }, selectedTemplate: 'nvc', messages: [] },
+                      _wfTemplates: {
+                          nvc: { label: "תקשורת מקרבת", fields: [
+                              { id: 'x', label: 'כאשר קרה...', placeholder: 'הסיטואציה, בלי פרשנות' },
+                              { id: 'y', label: 'הרגשתי...', placeholder: 'רגש אחד או שניים' },
+                              { id: 'z', label: 'הייתי צריך/ה ש...', placeholder: 'בקשה קטנה וברורה' }
+                          ], render: (p) => `כאשר קרה ${p.x}, הרגשתי ${p.y}, והייתי צריך/ה ש-${p.z}.` },
+                          listen: { label: "בקשת הקשבה", fields: [
+                              { id: 'x', label: 'אני רוצה לשתף ב...', placeholder: 'הנושא' },
+                              { id: 'y', label: 'אני מרגיש/ה...', placeholder: 'איך זה יושב אצלי' }
+                          ], render: (p) => `אני רוצה לשתף ב-${p.x} בלי שתפתור/י. אני מרגיש/ה ${p.y}.` },
+                          appreciate: { label: "הערכה ותיקון", fields: [
+                              { id: 'x', label: 'אני מעריך/ה ש...', placeholder: 'מה עבד טוב' },
+                              { id: 'y', label: 'בפעם הבאה אשמח אם...', placeholder: 'בקשה רכה לעתיד' }
+                          ], render: (p) => `אני מעריך/ה ש-${p.x}. בפעם הבאה אשמח אם ${p.y}.` }
+                      },
+                      startConflictResolution() {
+                          this._wf.breathSecondsLeft = 60;
+                          this._wf.breathReady = { me: false, partner: false };
+                          this._wf.selectedTemplate = 'nvc';
+                          this._wf.messages = [];
+                          let host = document.getElementById('white-flag-overlay');
+                          if (!host) {
+                              host = document.createElement('div');
+                              host.id = 'white-flag-overlay';
+                              host.className = 'fixed inset-0 z-[60] bg-stone-100/95 backdrop-blur-md overflow-y-auto';
+                              host.style.fontFamily = 'inherit';
+                              document.body.appendChild(host);
+                          }
+                          this._renderWhiteFlag('breathing');
+                          this._startBreathTimer();
+                      },
+                      exitConflictResolution() {
+                          if (this._wf.breathInterval) { clearInterval(this._wf.breathInterval); this._wf.breathInterval = null; }
+                          const host = document.getElementById('white-flag-overlay');
+                          if (host) host.remove();
+                      },
+                      _startBreathTimer() {
+                          if (this._wf.breathInterval) clearInterval(this._wf.breathInterval);
+                          this._wf.breathInterval = setInterval(() => {
+                              this._wf.breathSecondsLeft = Math.max(0, this._wf.breathSecondsLeft - 1);
+                              const el = document.getElementById('wf-countdown');
+                              if (el) el.textContent = this._wf.breathSecondsLeft;
+                              if (this._wf.breathSecondsLeft === 0) {
+                                  clearInterval(this._wf.breathInterval);
+                                  this._wf.breathInterval = null;
+                                  this._renderWhiteFlag('breathing');
+                              }
+                          }, 1000);
+                      },
+                      markBreathReady(side) {
+                          this._wf.breathReady[side] = true;
+                          if (this._wf.breathReady.me && this._wf.breathReady.partner) {
+                              this._renderWhiteFlag('chat');
+                          } else {
+                              this._renderWhiteFlag('breathing');
+                          }
+                      },
+                      selectConflictTemplate(id) {
+                          this._wf.selectedTemplate = id;
+                          this._renderWhiteFlag('chat');
+                      },
+                      sendConflictMessage(author) {
+                          const tpl = this._wfTemplates[this._wf.selectedTemplate];
+                          const parts = {};
+                          for (const f of tpl.fields) {
+                              const inp = document.getElementById('wf-input-' + f.id);
+                              if (!inp) return;
+                              let v = (inp.value || '').trim();
+                              if (!v) { App.UI.showToast('בבקשה מלאו את כל השדות בתבנית', 'info'); return; }
+                              if (v.length > 150) v = v.slice(0, 150);
+                              if (/[<>]/.test(v)) { App.UI.showToast('בלי תווי < > בבקשה — טקסט בלבד', 'info'); return; }
+                              parts[f.id] = v;
+                          }
+                          this._wf.messages.push({
+                              id: Date.now(), author, templateId: this._wf.selectedTemplate, parts,
+                              ts: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                          });
+                          this._renderWhiteFlag('chat');
+                      },
+                      clearConflictSession() {
+                          this._wf.messages = [];
+                          this._renderWhiteFlag('chat');
+                      },
+                      _renderWhiteFlag(view) {
+                          const host = document.getElementById('white-flag-overlay');
+                          if (!host) return;
+                          const wf = this._wf;
+                          const closeBtn = `<button onclick="App.Actions.exitConflictResolution()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white border border-stone-200 text-stone-400 hover:text-stone-600 flex items-center justify-center transition active:scale-90 shadow-sm" title="סגירה"><i class="fa-solid fa-xmark"></i></button>`;
+                          const styleBlock = `<style>
+                              .wf-breath-circle { animation: wfBreath 8s ease-in-out infinite; transition: all 300ms ease; }
+                              @keyframes wfBreath { 0%, 100% { transform: scale(0.65); } 50% { transform: scale(1.35); } }
+                              .wf-fade { animation: wfFade 300ms ease-out; }
+                              @keyframes wfFade { from { opacity: 0; } to { opacity: 1; } }
+                          </style>`;
+                          if (view === 'breathing') {
+                              const finished = wf.breathSecondsLeft === 0;
+                              host.innerHTML = `${styleBlock}
+                                  <div class="relative min-h-full p-6 pt-20 pb-12 flex flex-col items-center justify-center text-stone-700 wf-fade" dir="rtl">
+                                      ${closeBtn}
+                                      <div class="text-center mb-10 max-w-xs">
+                                          <div class="text-3xl mb-3">🤍</div>
+                                          <h2 class="text-xl font-semibold tracking-wide text-stone-700">מרחב בטוח</h2>
+                                          <p class="text-xs text-stone-500 mt-3 leading-relaxed">${finished ? 'סמנו שניכם שהגעתם לנשימה רגועה, ואז נמשיך.' : 'נשמו 60 שניות יחד. שאיפה איטית, נשיפה ארוכה.'}</p>
+                                      </div>
+                                      <div class="w-60 h-60 rounded-full bg-white/60 border border-stone-200 flex items-center justify-center mb-10 shadow-inner">
+                                          <div class="wf-breath-circle w-32 h-32 rounded-full bg-stone-200/70 flex items-center justify-center text-stone-500 text-sm font-medium">${finished ? 'מוכנים?' : 'נשמו'}</div>
+                                      </div>
+                                      ${finished ? `
+                                          <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
+                                              <button onclick="App.Actions.markBreathReady('me')" ${wf.breathReady.me ? 'disabled' : ''} class="py-3 rounded-2xl border ${wf.breathReady.me ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'} text-sm font-medium transition">${wf.breathReady.me ? '✓ אני מוכן/ה' : 'אני מוכן/ה'}</button>
+                                              <button onclick="App.Actions.markBreathReady('partner')" ${wf.breathReady.partner ? 'disabled' : ''} class="py-3 rounded-2xl border ${wf.breathReady.partner ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'} text-sm font-medium transition">${wf.breathReady.partner ? '✓ שותפ/ה מוכן/ה' : 'שותפ/ה מוכן/ה'}</button>
+                                          </div>
+                                      ` : `
+                                          <div class="text-stone-400 text-sm">נותרו <span id="wf-countdown" class="font-semibold text-stone-600">${wf.breathSecondsLeft}</span> שניות</div>
+                                      `}
+                                  </div>`;
+                              return;
+                          }
+                          if (view === 'chat') {
+                              const tpl = this._wfTemplates[wf.selectedTemplate];
+                              const escape = (s) => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+                              const messagesHTML = wf.messages.length === 0
+                                  ? `<div class="text-center text-stone-400 text-xs py-10">השיחה עוד לא התחילה. בחרו תבנית, מלאו, שלחו.</div>`
+                                  : wf.messages.map(m => {
+                                      const t = this._wfTemplates[m.templateId];
+                                      const text = t.render(m.parts);
+                                      const mine = m.author === 'me';
+                                      const who = mine ? (App.State.userName || 'אני') : (App.State.partnerName || 'שותפ/ה');
+                                      return `<div class="flex ${mine ? 'justify-start' : 'justify-end'}">
+                                          <div class="max-w-[82%] rounded-2xl px-4 py-3 border ${mine ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-200'} text-stone-700">
+                                              <div class="text-[10px] font-semibold text-stone-400 mb-1">${escape(who)} · ${m.ts} · ${t.label}</div>
+                                              <div class="text-sm leading-relaxed">${escape(text)}</div>
+                                          </div>
+                                      </div>`;
+                                  }).join('');
+                              const templateBtns = Object.entries(this._wfTemplates).map(([id, t]) => `
+                                  <button onclick="App.Actions.selectConflictTemplate('${id}')" class="px-3 py-1.5 rounded-xl text-[11px] font-medium border transition ${wf.selectedTemplate === id ? 'bg-stone-700 text-white border-stone-700' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}">${t.label}</button>
+                              `).join('');
+                              const fieldsHTML = tpl.fields.map(f => `
+                                  <div class="space-y-1">
+                                      <label class="text-[11px] font-semibold text-stone-500">${f.label}</label>
+                                      <input id="wf-input-${f.id}" type="text" maxlength="150" placeholder="${f.placeholder}" oninput="var c=document.getElementById('wf-count-${f.id}'); if(c) c.textContent=this.value.length" class="w-full px-3 py-2.5 rounded-xl bg-white border border-stone-200 text-sm text-stone-700 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 transition" />
+                                      <div class="text-[10px] text-stone-400 text-left"><span id="wf-count-${f.id}">0</span>/150</div>
+                                  </div>
+                              `).join('');
+                              host.innerHTML = `${styleBlock}
+                                  <div class="relative min-h-full p-5 pt-16 pb-8 flex flex-col gap-5 max-w-xl mx-auto text-stone-700 wf-fade" dir="rtl">
+                                      ${closeBtn}
+                                      <div class="text-center">
+                                          <div class="text-2xl mb-1">🤍</div>
+                                          <h2 class="text-base font-semibold text-stone-700">מרחב הדגל הלבן</h2>
+                                          <p class="text-[11px] text-stone-400 mt-1">תקשורת בתבניות בלבד · עד 150 תווים לשדה</p>
+                                      </div>
+                                      <div class="bg-white/70 border border-stone-200 rounded-2xl p-4 min-h-[200px] max-h-[40vh] overflow-y-auto space-y-2">
+                                          ${messagesHTML}
+                                      </div>
+                                      <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-4">
+                                          <div class="flex flex-wrap gap-2 justify-center">${templateBtns}</div>
+                                          <div class="space-y-3">${fieldsHTML}</div>
+                                          <div class="grid grid-cols-2 gap-2 pt-1">
+                                              <button onclick="App.Actions.sendConflictMessage('me')" class="py-2.5 rounded-xl bg-stone-700 text-white text-sm font-medium hover:bg-stone-800 active:scale-95 transition">שלח כ-${(App.State.userName || 'אני')}</button>
+                                              <button onclick="App.Actions.sendConflictMessage('partner')" class="py-2.5 rounded-xl bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-200 active:scale-95 transition">שלח כ-${(App.State.partnerName || 'שותפ/ה')}</button>
+                                          </div>
+                                      </div>
+                                      <button onclick="App.Actions.clearConflictSession()" class="text-[11px] text-stone-400 hover:text-stone-600 transition self-center">סיימנו · נקה שיחה</button>
+                                  </div>`;
+                          }
+                      },
+
                       toggleSplashForm(mode) {
                           if(mode === 'join') {
                               document.getElementById('splash-register-form').classList.add('hidden');
@@ -2199,6 +3095,157 @@
                       toggleBucketItem(id) { let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if (list[idx].completed) { list[idx].completed = false; App.State.subtractXP(50); App.UI.showToast("החלום חזר לרשימה (-50 XP)", "info"); } else { list[idx].completed = true; App.State.addXP(50); App.UI.showToast("מזל טוב! החלום הוגשם 🎉 +50 XP", "success"); } App.State.save('bucketList', list); App.Navigation.navigate('garden'); } },
                       deleteBucketItem(id) { if(!confirm("למחוק את החלום מהרשימה?")) return; let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if(list[idx].completed) App.State.subtractXP(50); list.splice(idx, 1); App.State.save('bucketList', list); App.UI.showToast("החלום נמחק", "info"); App.Navigation.navigate('garden'); } },
                       promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.Navigation.navigate('garden'); } },
+
+                      openTripPlanner() {
+                          App.State.save('gardenView', 'trips');
+                          App.State.save('activeTripId', null);
+                          App.Navigation.navigate('garden');
+                      },
+
+                      closeTripPlanner() {
+                          // Clean up map instances
+                          Object.values(App.State._tripMapInstances || {}).forEach(m => { try { m.remove(); } catch(e){} });
+                          App.State._tripMapInstances = {};
+                          App.State.save('gardenView', 'main');
+                          App.State.save('activeTripId', null);
+                          App.Navigation.navigate('garden');
+                      },
+
+                      _saveTrips() {
+                          localStorage.setItem('duet_trips', JSON.stringify(App.State.trips));
+                      },
+
+                      createTrip() {
+                          const title = prompt("איך נקרא לטיול החדש?");
+                          if (!title || !title.trim()) return;
+                          const startDate = prompt("תאריך התחלה (YYYY-MM-DD):", new Date().toISOString().slice(0,10)) || '';
+                          const endDate = prompt("תאריך סיום (YYYY-MM-DD):", startDate) || '';
+                          const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
+                          const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
+                          const trip = {
+                              id: Date.now(),
+                              title: title.trim(),
+                              emoji: "🧳",
+                              icon: icons[Math.floor(Math.random()*icons.length)],
+                              startDate, endDate,
+                              gradient: gradients[App.State.trips.length % gradients.length],
+                              checklist: [
+                                  { id: Date.now()+1, text: "מטען לטלפון", packed: false },
+                                  { id: Date.now()+2, text: "תיק רחצה אישי", packed: false },
+                                  { id: Date.now()+3, text: "תרופות אישיות", packed: false }
+                              ],
+                              pins: []
+                          };
+                          App.State.save('trips', [...App.State.trips, trip]);
+                          this._saveTrips();
+                          App.State.save('activeTripId', trip.id);
+                          App.UI.showToast("טיול חדש נוצר! ✈️", "success");
+                          App.Navigation.navigate('garden');
+                      },
+
+                      toggleTrip(id) {
+                          const newId = App.State.activeTripId === id ? null : id;
+                          // Clean up all map instances before re-render
+                          Object.values(App.State._tripMapInstances || {}).forEach(m => { try { m.remove(); } catch(e){} });
+                          App.State._tripMapInstances = {};
+                          App.State.save('activeTripId', newId);
+                          App.Navigation.navigate('garden');
+                      },
+
+                      addChecklistItem(tripId) {
+                          const text = prompt("מה נוסיף לרשימת האריזה?");
+                          if (!text || !text.trim()) return;
+                          const trips = App.State.trips.map(t => t.id === tripId
+                              ? { ...t, checklist: [...t.checklist, { id: Date.now(), text: text.trim(), packed: false }] }
+                              : t);
+                          App.State.save('trips', trips);
+                          this._saveTrips();
+                          App.Navigation.navigate('garden');
+                      },
+
+                      toggleChecklistItem(tripId, itemId) {
+                          const trips = App.State.trips.map(t => t.id === tripId
+                              ? { ...t, checklist: t.checklist.map(i => i.id === itemId ? { ...i, packed: !i.packed } : i) }
+                              : t);
+                          App.State.save('trips', trips);
+                          this._saveTrips();
+                          App.Navigation.navigate('garden');
+                      },
+
+                      deleteChecklistItem(tripId, itemId) {
+                          const trips = App.State.trips.map(t => t.id === tripId
+                              ? { ...t, checklist: t.checklist.filter(i => i.id !== itemId) }
+                              : t);
+                          App.State.save('trips', trips);
+                          this._saveTrips();
+                          App.Navigation.navigate('garden');
+                      },
+
+                      deleteTrip(id) {
+                          if (!confirm("למחוק את הטיול לצמיתות?")) return;
+                          if (App.State._tripMapInstances && App.State._tripMapInstances[id]) {
+                              try { App.State._tripMapInstances[id].remove(); } catch(e){}
+                              delete App.State._tripMapInstances[id];
+                          }
+                          App.State.save('trips', App.State.trips.filter(t => t.id !== id));
+                          this._saveTrips();
+                          if (App.State.activeTripId === id) App.State.save('activeTripId', null);
+                          App.UI.showToast("הטיול נמחק", "info");
+                          App.Navigation.navigate('garden');
+                      },
+
+                      initTripMap(tripId) {
+                          if (typeof L === 'undefined') return;
+                          const trip = App.State.trips.find(t => t.id === tripId);
+                          if (!trip) return;
+                          const el = document.getElementById('trip-map-' + tripId);
+                          if (!el) return;
+                          // Reuse instance if mounted on same element
+                          if (App.State._tripMapInstances[tripId]) {
+                              try { App.State._tripMapInstances[tripId].remove(); } catch(e){}
+                          }
+                          const defaultCenter = trip.pins.length
+                              ? [trip.pins[0].lat, trip.pins[0].lng]
+                              : [31.5, 34.8];
+                          const defaultZoom = trip.pins.length ? 12 : 7;
+                          const map = L.map(el).setView(defaultCenter, defaultZoom);
+                          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                              attribution: '© OpenStreetMap', maxZoom: 19
+                          }).addTo(map);
+                          const markers = [];
+                          trip.pins.forEach(p => {
+                              const m = L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.label}</b>`);
+                              markers.push(m);
+                          });
+                          if (markers.length > 1) {
+                              const group = L.featureGroup(markers);
+                              map.fitBounds(group.getBounds(), { padding: [30, 30], maxZoom: 13 });
+                          }
+                          // Click-to-add pin if pending
+                          map.on('click', (e) => {
+                              if (App.State._tripPinPending && App.State._tripPinPending.tripId === tripId) {
+                                  const { label } = App.State._tripPinPending;
+                                  App.State._tripPinPending = null;
+                                  const trips = App.State.trips.map(t => t.id === tripId
+                                      ? { ...t, pins: [...t.pins, { id: Date.now(), lat: e.latlng.lat, lng: e.latlng.lng, label }] }
+                                      : t);
+                                  App.State.save('trips', trips);
+                                  App.Actions._saveTrips();
+                                  App.UI.showToast(`הנעץ "${label}" נוסף למפה 📍`, "success");
+                                  App.Navigation.navigate('garden');
+                              }
+                          });
+                          App.State._tripMapInstances[tripId] = map;
+                          setTimeout(() => map.invalidateSize(), 50);
+                      },
+
+                      startAddTripPin(tripId) {
+                          const label = prompt("איך נקרא לנעץ? (לדוגמה: מלון, חוף, מסעדה)");
+                          if (!label || !label.trim()) return;
+                          App.State._tripPinPending = { tripId, label: label.trim() };
+                          App.UI.showToast("עכשיו לחצו על המפה כדי לקבע את הנעץ 📌", "info");
+                      },
+
                       insertWritingPrompt() { const prompts = App.Data.writingPrompts; const random = prompts[Math.floor(Math.random() * prompts.length)]; const el = document.getElementById('journal-input'); if(el) { el.value = random; el.focus(); } },
 
                       buyStoreItem(id) {
@@ -2837,6 +3884,51 @@
                           localStorage.setItem('duet_board_notes', JSON.stringify(notes));
                           App.Navigation.navigate('board');
                       },
+
+                      openChefsCorner() {
+                          App.State.save('chefsModalRecipeId', null);
+                          App.State.save('intimacyMode', 'chefs');
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      closeChefsCorner() {
+                          App.State.save('chefsModalRecipeId', null);
+                          App.State.save('intimacyMode', 'qa');
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      openRecipe(id) {
+                          App.State.save('chefsModalRecipeId', id);
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      closeRecipe() {
+                          App.State.save('chefsModalRecipeId', null);
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      cookTonight(id) {
+                          const recipe = (App.Data.recipes || []).find(r => r.id === id);
+                          if (!recipe) return;
+                          const text = `🍳 מבשלים הערב: ${recipe.name}\n\nרשימת קניות:\n` + recipe.ingredients.map(i => `• ${i}`).join('\n');
+                          const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
+                          notes.unshift({
+                              id: Date.now(),
+                              text: text,
+                              author: App.State.userName,
+                              color: 'bg-emerald-100',
+                              magnet: '🍳',
+                              type: 'text',
+                              image: null,
+                              rot: Math.floor(Math.random() * 6) - 3
+                          });
+                          localStorage.setItem('duet_board_notes', JSON.stringify(notes));
+                          App.State.save('chefsModalRecipeId', null);
+                          App.State.save('intimacyMode', 'qa');
+                          App.UI.showToast(`רשימת הקניות של "${recipe.name}" נדבקה למקרר! 🧲`, "success");
+                          App.Navigation.navigate('board');
+                      },
+
 
                       async handleBoardPhoto(event) {
                           const file = event.target.files[0];
