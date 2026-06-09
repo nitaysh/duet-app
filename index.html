@@ -1264,12 +1264,12 @@
                                           <div class="flex flex-wrap gap-1.5 mt-3">${pinsListHTML}</div>
                                       </div>
 
-                                      <div class="flex justify-between items-center mt-4 border-t border-white/40 pt-3">
-                                          <div class="flex gap-3">
-                                              <button onclick="App.Actions.deleteTrip(${trip.id})" class="text-[11px] font-bold text-stone-500 hover:text-red-500 transition"><i class="fa-regular fa-trash-can ml-1"></i>מחק</button>
-                                              <button onclick="App.Actions.openEditTripModal(${trip.id})" class="text-[11px] font-bold text-stone-500 hover:text-orange-500 transition"><i class="fa-solid fa-pen ml-1"></i>ערוך</button>
+                                      <div class="flex justify-between items-center">
+                                          <div class="flex items-center gap-3">
+                                              <button onclick="App.Actions.deleteTrip(${trip.id})" class="text-[11px] font-bold text-stone-400 hover:text-red-500 transition"><i class="fa-regular fa-trash-can ml-1"></i> מחק טיול</button>
+                                              <button onclick="App.Actions.openEditTripModal(${trip.id})" class="text-[11px] font-bold text-stone-400 hover:text-sky-500 transition"><i class="fa-solid fa-pen ml-1"></i> ערוך</button>
                                           </div>
-                                          <button onclick="App.Actions.toggleTrip(${trip.id})" class="text-[11px] font-bold text-sky-600 bg-white border border-sky-100 px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition">סגור ↑</button>
+                                          <button onclick="App.Actions.toggleTrip(${trip.id})" class="text-[11px] font-bold text-sky-600 bg-white border border-sky-100 px-3 py-1.5 rounded-lg shadow-sm">סגור תיקייה ↑</button>
                                       </div>
                                   </div>
                               ` : '';
@@ -1300,7 +1300,7 @@
 
                           return `
                               <div class="space-y-5 px-1">
-                              <div class="flex items-center justify-between">
+                                  <div class="flex items-center justify-between">
                                       <button onclick="App.Actions.closeTripPlanner()" class="w-9 h-9 rounded-full bg-white/70 border border-white text-stone-500 hover:text-sky-500 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fa-solid fa-arrow-right"></i></button>
                                       <div class="text-center flex-1">
                                           <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider">המסעות שלנו ✈️</h2>
@@ -1321,6 +1321,8 @@
                           const mode = App.State.journalViewMode;
 
                           let toggleHeaderHTML = `<div class="flex justify-center mb-4"><div class="bg-stone-100 p-1 rounded-xl inline-flex shadow-inner"><button onclick="App.Actions.setJournalView('calendar')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'calendar' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">לוח שנה</button><button onclick="App.Actions.setJournalView('feed')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'feed' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">פיד חוויות</button><button onclick="App.Actions.setJournalView('map')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition ${mode === 'map' ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-400'}">מפה</button></div></div>`;
+                          const newEventBtnHTML = `<div class="flex justify-center"><button onclick="App.Actions.openNewJournalEvent()" class="inline-flex items-center gap-2 bg-gradient-to-br from-orange-500 to-rose-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-2xl shadow-md active:scale-95 transition"><i class="fa-solid fa-plus"></i> אירוע חדש ביומן</button></div>`;
+                          toggleHeaderHTML += newEventBtnHTML;
 
                           if (mode === 'map') {
                               setTimeout(() => App.UI.renderMap(), 100);
@@ -3342,132 +3344,145 @@
                           localStorage.setItem('duet_trips', JSON.stringify(App.State.trips));
                       },
 
-                      openCreateTripModal() {
+                      _tripModalHTML(opts) {
+                          const isEdit = !!opts.tripId;
                           const today = new Date().toISOString().slice(0,10);
-                          App.UI.showModal(`
-                              <div class="text-right space-y-4" dir="rtl">
-                                  <div class="flex justify-between items-center mb-2">
-                                      <h3 class="text-xl font-extrabold text-stone-800 font-hand tracking-wider"><i class="fa-solid fa-plane-departure text-sky-500 ml-2"></i>תכנון טיול חדש</h3>
-                                      <button onclick="App.UI.closeModal()" class="text-stone-400 hover:text-stone-600 active:scale-90 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
-                                  </div>
-                                  <div>
-                                      <label class="text-xs font-bold text-stone-500 block mb-1">לאן נוסעים?</label>
-                                      <input type="text" id="new-trip-title" placeholder="למשל: סופ״ש בכינרת..." class="w-full bg-stone-50 border border-stone-200 rounded-xl py-3 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
-                                  </div>
-                                  <div class="flex gap-3">
-                                      <div class="flex-1">
-                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך התחלה</label>
-                                          <input type="date" id="new-trip-start" value="${today}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                          const title = (opts.title || '').replace(/"/g, '&quot;');
+                          const start = opts.startDate || today;
+                          const end = opts.endDate || today;
+                          const submitCall = isEdit
+                              ? `App.Actions.executeEditTrip(${opts.tripId})`
+                              : `App.Actions.executeCreateTrip()`;
+                          const heading = isEdit ? 'עריכת טיול' : 'טיול חדש';
+                          const subheading = isEdit ? 'עדכנו את פרטי המסע' : 'תכננו את המסע הבא יחד ✈️';
+                          const submitText = isEdit ? 'שמור שינויים' : 'צור טיול';
+                          return `
+                              <div class="text-right">
+                                  <div class="-mx-6 -mt-6 mb-4 px-6 py-5 rounded-t-3xl bg-gradient-to-br from-sky-500 to-cyan-500 text-white">
+                                      <div class="flex items-center gap-3">
+                                          <div class="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center text-xl"><i class="fa-solid fa-plane"></i></div>
+                                          <div>
+                                              <h3 class="text-lg font-extrabold font-hand tracking-wider">${heading}</h3>
+                                              <p class="text-white/80 text-xs font-bold">${subheading}</p>
+                                          </div>
                                       </div>
-                                      <div class="flex-1">
-                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך סיום</label>
-                                          <input type="date" id="new-trip-end" value="${today}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                  </div>
+                                  <div class="space-y-3">
+                                      <div>
+                                          <label class="block text-[11px] font-extrabold text-stone-500 mb-1 mr-1">שם הטיול</label>
+                                          <input id="trip-modal-title" maxlength="80" type="text" value="${title}" placeholder="לדוגמה: סופ״ש בצפון" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:outline-none focus:border-sky-400 transition" />
+                                      </div>
+                                      <div class="grid grid-cols-2 gap-3">
+                                          <div>
+                                              <label class="block text-[11px] font-extrabold text-stone-500 mb-1 mr-1">תאריך התחלה</label>
+                                              <input id="trip-modal-start" type="date" value="${start}" class="w-full px-3 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:outline-none focus:border-sky-400 transition" />
+                                          </div>
+                                          <div>
+                                              <label class="block text-[11px] font-extrabold text-stone-500 mb-1 mr-1">תאריך סיום</label>
+                                              <input id="trip-modal-end" type="date" value="${end}" class="w-full px-3 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:outline-none focus:border-sky-400 transition" />
+                                          </div>
                                       </div>
                                   </div>
-                                  <button onclick="App.Actions.executeCreateTrip()" class="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white py-3.5 rounded-xl font-bold active:scale-95 transition shadow-md mt-2">יצירת טיול</button>
+                                  <div class="flex gap-3 mt-5">
+                                      <button onclick="App.UI.closeModal()" class="flex-1 bg-stone-100 text-stone-600 py-3 rounded-xl font-bold shadow-sm active:scale-95 transition">ביטול</button>
+                                      <button onclick="${submitCall}" class="flex-1 bg-gradient-to-br from-sky-500 to-cyan-500 text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition">${submitText}</button>
+                                  </div>
                               </div>
-                          `);
+                          `;
                       },
 
-                      executeCreateTrip() {
-                          const title = document.getElementById('new-trip-title').value.trim();
-                          const startDate = document.getElementById('new-trip-start').value;
-                          const endDate = document.getElementById('new-trip-end').value;
-
-                          if (!title) return App.UI.showToast("חובה להזין שם לטיול", "info");
-                          if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) return App.UI.showToast("נא לבחור תאריכים תקינים", "info");
-
-                          const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
-                          const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
-                          const trip = {
-                              id: Date.now(),
-                              title: title,
-                              emoji: "🧳",
-                              icon: icons[Math.floor(Math.random()*icons.length)],
-                              startDate, endDate,
-                              gradient: gradients[App.State.trips.length % gradients.length],
-                              checklist: [
-                                  { id: Date.now()+1, text: "מטען לטלפון", packed: false },
-                                  { id: Date.now()+2, text: "תיק רחצה אישי", packed: false },
-                                  { id: Date.now()+3, text: "תרופות אישיות", packed: false }
-                              ],
-                              pins: []
-                          };
-
-                          App.State.save('trips', [...App.State.trips, trip]);
-                          this._saveTrips();
-                          App.State.save('activeTripId', trip.id);
-
-                          const notes = {...(App.State.journalNotes || {})};
-                          const tags = {...(App.State.journalTags || {})};
-                          
-                          let currDate = new Date(startDate);
-                          const end = new Date(endDate);
-                          while (currDate <= end) {
-                              const pad = n => String(n).padStart(2, '0');
-                              const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
-                              tags[dKey] = 'trip';
-                              if (!notes[dKey]) {
-                                  notes[dKey] = `${trip.title} ${trip.emoji}`;
-                              }
-                              currDate.setDate(currDate.getDate() + 1);
-                          }
-                          App.State.save('journalNotes', notes);
-                          App.State.save('journalTags', tags);
-
-                          App.UI.closeModal();
-                          App.UI.showToast("טיול חדש נוצר ונרשם ביומן! ✈️", "success");
-                          App.Navigation.navigate('garden');
+                      openCreateTripModal() {
+                          App.UI.showModal(this._tripModalHTML({}));
                       },
 
                       openEditTripModal(tripId) {
                           const trip = App.State.trips.find(t => t.id === tripId);
                           if (!trip) return;
-                          App.UI.showModal(`
-                              <div class="text-right space-y-4" dir="rtl">
-                                  <div class="flex justify-between items-center mb-2">
-                                      <h3 class="text-xl font-extrabold text-stone-800 font-hand tracking-wider"><i class="fa-solid fa-pen text-sky-500 ml-2"></i>עריכת טיול</h3>
-                                      <button onclick="App.UI.closeModal()" class="text-stone-400 hover:text-stone-600 active:scale-90 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
-                                  </div>
-                                  <div>
-                                      <label class="text-xs font-bold text-stone-500 block mb-1">שם הטיול</label>
-                                      <input type="text" id="edit-trip-title" value="${trip.title}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-3 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
-                                  </div>
-                                  <div class="flex gap-3">
-                                      <div class="flex-1">
-                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך התחלה</label>
-                                          <input type="date" id="edit-trip-start" value="${trip.startDate}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
-                                      </div>
-                                      <div class="flex-1">
-                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך סיום</label>
-                                          <input type="date" id="edit-trip-end" value="${trip.endDate}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
-                                      </div>
-                                  </div>
-                                  <button onclick="App.Actions.executeEditTrip(${trip.id})" class="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white py-3.5 rounded-xl font-bold active:scale-95 transition shadow-md mt-2">שמור שינויים</button>
-                              </div>
-                          `);
+                          App.UI.showModal(this._tripModalHTML({
+                              tripId: trip.id,
+                              title: trip.title,
+                              startDate: trip.startDate,
+                              endDate: trip.endDate
+                          }));
+                      },
+
+                      _readTripModal() {
+                          const titleEl = document.getElementById('trip-modal-title');
+                          const startEl = document.getElementById('trip-modal-start');
+                          const endEl = document.getElementById('trip-modal-end');
+                          if (!titleEl || !startEl || !endEl) return null;
+                          const title = titleEl.value.trim();
+                          const startDate = startEl.value;
+                          let endDate = endEl.value || startDate;
+                          if (!title) { App.UI.showToast("נדרש שם לטיול", "info"); return null; }
+                          if (!startDate) { App.UI.showToast("נדרש תאריך התחלה", "info"); return null; }
+                          if (new Date(endDate) < new Date(startDate)) endDate = startDate;
+                          return { title, startDate, endDate };
+                      },
+
+                      _autoJournalForTrip(trip) {
+                          const allTags = {...(App.Data.journalTags || {}), ...(App.State.customTags || {})};
+                          const tagKey = allTags.trip ? 'trip' : Object.keys(allTags)[0];
+                          if (!tagKey) return;
+                          const tags = {...(App.State.journalTags || {})};
+                          const notes = {...(App.State.journalNotes || {})};
+                          const startParts = trip.startDate.split('-');
+                          const endParts = trip.endDate.split('-');
+                          const startDate = new Date(+startParts[0], +startParts[1]-1, +startParts[2]);
+                          const endDate = new Date(+endParts[0], +endParts[1]-1, +endParts[2]);
+                          const curr = new Date(startDate);
+                          while (curr <= endDate) {
+                              const dKey = `${curr.getFullYear()}-${curr.getMonth()+1}-${curr.getDate()}`;
+                              tags[dKey] = tagKey;
+                              if (!notes[dKey] || !notes[dKey].trim()) {
+                                  notes[dKey] = `${trip.emoji} ${trip.title}`;
+                              }
+                              curr.setDate(curr.getDate() + 1);
+                          }
+                          App.State.save('journalTags', tags);
+                          App.State.save('journalNotes', notes);
+                      },
+
+                      executeCreateTrip() {
+                          const data = this._readTripModal();
+                          if (!data) return;
+                          const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
+                          const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
+                          const now = Date.now();
+                          const trip = {
+                              id: now,
+                              title: data.title,
+                              emoji: "🧳",
+                              icon: icons[Math.floor(Math.random()*icons.length)],
+                              startDate: data.startDate,
+                              endDate: data.endDate,
+                              gradient: gradients[App.State.trips.length % gradients.length],
+                              checklist: [
+                                  { id: now+1, text: "מטען לטלפון", packed: false },
+                                  { id: now+2, text: "תיק רחצה אישי", packed: false },
+                                  { id: now+3, text: "תרופות אישיות", packed: false }
+                              ],
+                              pins: []
+                          };
+                          App.State.save('trips', [...App.State.trips, trip]);
+                          this._saveTrips();
+                          this._autoJournalForTrip(trip);
+                          App.State.save('activeTripId', trip.id);
+                          App.UI.closeModal();
+                          App.UI.showToast("טיול חדש נוצר! ✈️", "success");
+                          App.Navigation.navigate('garden');
                       },
 
                       executeEditTrip(tripId) {
-                          const title = document.getElementById('edit-trip-title').value.trim();
-                          const startDate = document.getElementById('edit-trip-start').value;
-                          const endDate = document.getElementById('edit-trip-end').value;
-
-                          if (!title) return App.UI.showToast("חובה להזין שם לטיול", "info");
-                          if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) return App.UI.showToast("נא לבחור תאריכים תקינים", "info");
-
-                          const tripIndex = App.State.trips.findIndex(t => t.id === tripId);
-                          if (tripIndex === -1) return;
-
-                          App.State.trips[tripIndex].title = title;
-                          App.State.trips[tripIndex].startDate = startDate;
-                          App.State.trips[tripIndex].endDate = endDate;
-
-                          App.State.save('trips', App.State.trips);
+                          const data = this._readTripModal();
+                          if (!data) return;
+                          const trips = App.State.trips.map(t => t.id === tripId
+                              ? { ...t, title: data.title, startDate: data.startDate, endDate: data.endDate }
+                              : t);
+                          App.State.save('trips', trips);
                           this._saveTrips();
-                          
                           App.UI.closeModal();
-                          App.UI.showToast("הטיול עודכן בהצלחה! ✏️", "success");
+                          App.UI.showToast("הטיול עודכן בהצלחה ✨", "success");
                           App.Navigation.navigate('garden');
                       },
 
@@ -3737,8 +3752,12 @@
                               </div>
 
                               <div class="flex gap-2 pt-2 border-t border-stone-100">
-                                  ${(hasExistingNote || savedPhoto) ? `<button onclick="App.Actions.deleteJournalDay('${dateKey}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 rounded-xl text-sm font-bold transition-all border border-red-100 active:scale-95 shadow-sm" title="מחק רשומה"><i class="fa-regular fa-trash-can"></i></button>` : ''}
-                                  <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="flex-1 bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">שמור ביומן</button>
+                                  ${(() => {
+                                      const S = App.State;
+                                      const hasAny = (S.journalNotes||{})[dateKey] || (S.journalPartnerNotes||{})[dateKey] || ((S.journalPhotos||{})[dateKey] && (S.journalPhotos||{})[dateKey].length) || (S.journalTags||{})[dateKey] || (S.journalLocations||{})[dateKey] || (S.journalMoods||{})[dateKey] || (S.journalHighlights||{})[dateKey];
+                                      return hasAny ? `<button onclick="App.Actions.deleteJournalDay('${dateKey}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 rounded-xl text-sm font-bold transition-all border border-red-100 active:scale-95 shadow-sm" title="מחק רשומה"><i class="fa-regular fa-trash-can"></i></button>` : '';
+                                  })()}
+                                  <button onclick="App.Actions.saveJournalEntryExtended('${dateKey}')" class="flex-1 bg-stone-800 text-white py-3.5 rounded-xl text-sm font-bold active:scale-95 transition-all shadow-sm">${(App.State.journalNotes||{})[dateKey] || ((App.State.journalPhotos||{})[dateKey] && (App.State.journalPhotos||{})[dateKey].length) ? 'עדכן רשומה ✏️' : 'שמור ביומן'}</button>
                               </div>
                           </div>`;
                           document.getElementById('journal-input').focus();
@@ -3786,17 +3805,12 @@
                               const startDate = new Date(startParts[0], startParts[1]-1, startParts[2]);
                               const endDate = new Date(endDateInput);
                               if (endDate > startDate) {
-                                let currDate = new Date(startDate);
-                          const end = new Date(endDate);
-                          while (currDate <= end) {
-                              const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
-                              tags[dKey] = 'trip'; // תיוג כטיול
-                              // יצירת כותרת בסיסית ביומן אם ריק
-                              if (!notes[dKey]) {
-                                  notes[dKey] = `${trip.title} ${trip.emoji}`;
-                              }
-                              currDate.setDate(currDate.getDate() + 1);
-                          }
+                                  let currDate = new Date(startDate);
+                                  datesToUpdate = [];
+                                  while (currDate <= endDate) {
+                                      datesToUpdate.push(`${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`);
+                                      currDate.setDate(currDate.getDate() + 1);
+                                  }
                               }
                           }
 
@@ -3815,78 +3829,6 @@
                                   if (moodVal) moods[dKey] = moodVal; else delete moods[dKey];
                               });
 
-                              if (currentTag === 'trip') {
-                                  const startParts = dateKey.split('-');
-                                  const sDateObj = new Date(startParts[0], startParts[1]-1, startParts[2]);
-                                  const pad = n => String(n).padStart(2, '0');
-                                  const fStart = `${sDateObj.getFullYear()}-${pad(sDateObj.getMonth()+1)}-${pad(sDateObj.getDate())}`;
-                                  let fEnd = fStart;
-                                  if (endDateInput) {
-                                      const eDateObj = new Date(endDateInput);
-                                      fEnd = `${eDateObj.getFullYear()}-${pad(eDateObj.getMonth()+1)}-${pad(eDateObj.getDate())}`;
-                                  }
-                                  
-                                  const tripExists = App.State.trips.some(t => t.startDate === fStart);
-                                  if (!tripExists) {
-                                      const title = locationVal ? `טיול ל${locationVal}` : (val ? val.split(' ').slice(0,3).join(' ') + '...' : 'טיול מהיומן');
-                                      const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
-                                      const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
-                                      const newTrip = {
-                                          id: Date.now() + 50,
-                                          title: title,
-                                          emoji: "🧳",
-                                          icon: icons[Math.floor(Math.random()*icons.length)],
-                                          startDate: fStart, 
-                                          endDate: fEnd,
-                                          gradient: gradients[App.State.trips.length % gradients.length],
-                                          checklist: [
-                                              { id: Date.now()+1, text: "מטען לטלפון", packed: false },
-                                              { id: Date.now()+2, text: "תיק רחצה אישי", packed: false },
-                                              { id: Date.now()+3, text: "תרופות אישיות", packed: false }
-                                          ],
-                                          pins: locationVal ? [{ id: Date.now()+4, lat: 31.5, lng: 34.8, label: locationVal }] : []
-                                      };
-                                      App.State.trips.push(newTrip);
-                                      App.Actions._saveTrips();
-                                  }
-                              }
-
-                              if (currentTag === 'trip') {
-                                  const startParts = dateKey.split('-');
-                                  const sDateObj = new Date(startParts[0], startParts[1]-1, startParts[2]);
-                                  const pad = n => String(n).padStart(2, '0');
-                                  const fStart = `${sDateObj.getFullYear()}-${pad(sDateObj.getMonth()+1)}-${pad(sDateObj.getDate())}`;
-                                  let fEnd = fStart;
-                                  if (endDateInput) {
-                                      const eDateObj = new Date(endDateInput);
-                                      fEnd = `${eDateObj.getFullYear()}-${pad(eDateObj.getMonth()+1)}-${pad(eDateObj.getDate())}`;
-                                  }
-                                  
-                                  const tripExists = App.State.trips.some(t => t.startDate === fStart);
-                                  if (!tripExists) {
-                                      const title = locationVal ? `טיול ל${locationVal}` : (val ? val.split(' ').slice(0,3).join(' ') + '...' : 'טיול מהיומן');
-                                      const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
-                                      const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
-                                      const newTrip = {
-                                          id: Date.now() + 50,
-                                          title: title,
-                                          emoji: "🧳",
-                                          icon: icons[Math.floor(Math.random()*icons.length)],
-                                          startDate: fStart, 
-                                          endDate: fEnd,
-                                          gradient: gradients[App.State.trips.length % gradients.length],
-                                          checklist: [
-                                              { id: Date.now()+1, text: "מטען לטלפון", packed: false },
-                                              { id: Date.now()+2, text: "תיק רחצה אישי", packed: false },
-                                              { id: Date.now()+3, text: "תרופות אישיות", packed: false }
-                                          ],
-                                          pins: locationVal ? [{ id: Date.now()+4, lat: 31.5, lng: 34.8, label: locationVal }] : []
-                                      };
-                                      App.State.trips.push(newTrip);
-                                      App.Actions._saveTrips();
-                                  }
-                              }
-
                               if(!hadExistingContent && (val || partnerVal || photoVals.length > 0)) {
                                   App.State.addXP(20);
                                   App.UI.showToast(datesToUpdate.length > 1 ? "אירוע מתמשך נשמר! +20 XP 📝" : "היומן עודכן! +20 XP 📝", "success");
@@ -3901,6 +3843,47 @@
                           }
 
                           App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
+
+                          if (hasContentNow && currentTag === 'trip') {
+                              const sp = dateKey.split('-');
+                              const sY = +sp[0], sM = +sp[1], sD = +sp[2];
+                              const pad = (n) => String(n).padStart(2, '0');
+                              const startDateISO = `${sY}-${pad(sM)}-${pad(sD)}`;
+                              let endDateISO = startDateISO;
+                              if (endDateInput) {
+                                  const ep = endDateInput.split('-');
+                                  if (ep.length === 3) {
+                                      endDateISO = `${ep[0]}-${pad(+ep[1])}-${pad(+ep[2])}`;
+                                  }
+                              }
+                              const snippet = (val || partnerVal || '').trim();
+                              const tripTitle = locationVal || (snippet ? snippet.slice(0, 40) : 'טיול חדש');
+                              const exists = (App.State.trips || []).some(t => t.title === tripTitle && t.startDate === startDateISO);
+                              if (!exists) {
+                                  const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
+                                  const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
+                                  const now = Date.now();
+                                  const newTrip = {
+                                      id: now,
+                                      title: tripTitle,
+                                      emoji: "🧳",
+                                      icon: icons[Math.floor(Math.random()*icons.length)],
+                                      startDate: startDateISO,
+                                      endDate: endDateISO,
+                                      gradient: gradients[App.State.trips.length % gradients.length],
+                                      checklist: [
+                                          { id: now+1, text: "מטען לטלפון", packed: false },
+                                          { id: now+2, text: "תיק רחצה אישי", packed: false },
+                                          { id: now+3, text: "תרופות אישיות", packed: false }
+                                      ],
+                                      pins: []
+                                  };
+                                  App.State.save('trips', [...App.State.trips, newTrip]);
+                                  App.Actions._saveTrips();
+                                  App.UI.showToast("נוצר טיול חדש מהיומן ✈️", "success");
+                              }
+                          }
+
                           App.Navigation.navigate('journal');
                       },
 
@@ -3928,6 +3911,15 @@
                       journalModes: ['calendar', 'feed', 'map'],
 
       setJournalView(mode) { App.State.save('journalViewMode', mode); App.Navigation.navigate('journal'); },
+      openNewJournalEvent() {
+          const now = new Date();
+          const dateKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+          App.State.save('journalViewMode', 'calendar');
+          App.State.save('journalViewYear', now.getFullYear());
+          App.State.save('journalViewMonth', now.getMonth());
+          App.Navigation.navigate('journal');
+          setTimeout(() => App.Actions.openJournalDay(dateKey, now.getDate()), 80);
+      },
       swipeJournalView(direction) {
           const modes = App.Actions.journalModes;
           const current = modes.indexOf(App.State.journalViewMode);
