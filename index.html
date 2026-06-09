@@ -685,20 +685,22 @@
                       },
 
                       addXP(amount) {
-                          let currentXP = this.gardenXP + amount; let currentLevel = this.gardenLevel; let leveledUp = false;
-                          while (currentXP >= 100) { currentXP -= 100; currentLevel++; leveledUp = true; }
-                          this.save('gardenXP', currentXP); this.save('gardenLevel', currentLevel);
+                          const MAX_XP = 20000;
+                          const prevLevel = Math.floor(this.gardenXP / 100) + 1;
+                          let newXP = Math.min(this.gardenXP + amount, MAX_XP);
+                          let newLevel = Math.min(Math.floor(newXP / 100) + 1, Math.floor(MAX_XP / 100) + 1);
+                          const leveledUp = newLevel > prevLevel;
+                          this.save('gardenXP', newXP); this.save('gardenLevel', newLevel);
                           if (leveledUp) {
-                              const decoration = App.Data.decorations[currentLevel] || "אלמנט עיצובי קסום 🌸";
-                              App.UI.showModal(`<div class="text-center space-y-4"><span class="text-6xl">🎉</span><h3 class="text-xl font-bold text-stone-800">הגינה עלתה לשלב ${currentLevel}!</h3><p class="text-stone-500 text-sm">פתחתם פריט חדש לעיצוב הגן:</p><div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 font-bold text-orange-700 text-base">${decoration}</div><button onclick="App.UI.closeModal(); App.Navigation.navigate('${this.activeTab}');" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition">איזה יופי, נמשיך!</button></div>`);
+                              const decoration = App.Data.decorations[newLevel] || "אלמנט עיצובי קסום 🌸";
+                              App.UI.showModal(`<div class="text-center space-y-4"><span class="text-6xl">🎉</span><h3 class="text-xl font-bold text-stone-800">הגינה עלתה לשלב ${newLevel}!</h3><p class="text-stone-500 text-sm">פתחתם פריט חדש לעיצוב הגן:</p><div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 font-bold text-orange-700 text-base">${decoration}</div><button onclick="App.UI.closeModal(); App.Navigation.navigate('${this.activeTab}');" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition">איזה יופי, נמשיך!</button></div>`);
                           }
                       },
 
                       subtractXP(amount) {
-                          let currentXP = this.gardenXP - amount; let currentLevel = this.gardenLevel;
-                          while (currentXP < 0 && currentLevel > 1) { currentXP += 100; currentLevel--; }
-                          if (currentXP < 0) currentXP = 0;
-                          this.save('gardenXP', currentXP); this.save('gardenLevel', currentLevel);
+                          let newXP = Math.max(this.gardenXP - amount, 0);
+                          let newLevel = Math.max(Math.floor(newXP / 100) + 1, 1);
+                          this.save('gardenXP', newXP); this.save('gardenLevel', newLevel);
                       }
                   },
 
@@ -1120,9 +1122,9 @@
                                       </div>
                                       <h2 class="text-2xl font-bold text-stone-800 mb-1">${evolution} (שלב ${App.State.gardenLevel})</h2>
                                       <div class="w-full bg-stone-100 h-3 rounded-full mt-3 overflow-hidden">
-                                          <div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full transition-all duration-700" style="width: ${App.State.gardenXP}%"></div>
+                                          <div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full transition-all duration-700" style="width: ${App.State.gardenXP % 100}%"></div>
                                       </div>
-                                      <div class="flex justify-between text-[10px] text-stone-400 font-bold mt-1.5 px-1"><span>${App.State.gardenXP} / 100 XP</span><span>לשלב הבא</span></div>
+                                      <div class="flex justify-between text-[10px] text-stone-400 font-bold mt-1.5 px-1"><span>${App.State.gardenXP % 100} / 100 XP לשלב הבא</span><span>סה"כ ${App.State.gardenXP} / 20000 XP</span></div>
                                   </div>
 
                                   <div class="space-y-3 px-1">
