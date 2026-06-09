@@ -2206,22 +2206,26 @@
                           if (notes.length === 0) {
                               notesHTML = `<div class="text-center text-stone-400 font-bold mt-10 w-full col-span-2">המקרר ריק... השאירו פתק ראשון! 📝</div>`;
                           } else {
-                                notes.forEach(n => {
+                                notes.forEach(n => {
                                   let contentHTML = '';
                                   if (n.type === 'photo' || n.type === 'doodle') {
                                       contentHTML = `<img src="${n.image}" class="w-full rounded-lg mb-2 object-cover border border-black/5 ${n.type === 'doodle' ? 'mix-blend-multiply' : ''}">`;
                                   }
                                   if (n.text) {
-                                      contentHTML += `<p class="font-hand text-2xl leading-tight text-center text-stone-800">${n.text}</p>`;
+                                      contentHTML += `<p id="board-note-text-${n.id}" class="font-hand text-2xl leading-tight text-center text-stone-800">${n.text}</p>`;
                                   }
 
                                   notesHTML += `
-                                      <div class="relative p-4 rounded-2xl shadow-md border-2 border-white ${n.color || 'bg-yellow-100'} mb-4 transform transition-transform hover:scale-105 break-inside-avoid" style="transform: rotate(${n.rot || 0}deg)">
+                                      <div class="relative p-4 rounded-2xl shadow-md border-2 border-white ${n.color || 'bg-yellow-100'} mb-4 transform transition-transform hover:scale-105 break-inside-avoid" style="transform: rotate(${n.rot || 0}deg)" id="board-note-${n.id}">
                                           <div class="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl z-10 drop-shadow-md">${n.magnet || '📌'}</div>
-                                          ${contentHTML}
+                                          <div id="board-note-content-${n.id}">${contentHTML}</div>
                                           <div class="flex justify-between items-end mt-3 pt-2 border-t border-black/10">
                                               <span class="text-[10px] font-bold opacity-70 text-stone-800">${n.author}</span>
-                                              <button onclick="App.Actions.deleteBoardNote(${n.id})" class="opacity-50 hover:opacity-100 text-red-500 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                                              <div class="flex gap-2.5 items-center">
+                                                  ${n.text ? `<button onclick="App.Actions.editBoardNote('${n.id}')" class="opacity-50 hover:opacity-100 text-stone-700 transition" title="ערוך"><i class="fa-solid fa-pen text-xs"></i></button>` : ''}
+                                                  <button onclick="App.Actions.shareBoardNoteWhatsApp('${n.id}')" class="opacity-60 hover:opacity-100 text-green-600 transition" title="שלח לוואטסאפ"><i class="fa-brands fa-whatsapp text-sm"></i></button>
+                                                  <button onclick="App.Actions.deleteBoardNote(${n.id})" class="opacity-50 hover:opacity-100 text-red-500 transition" title="מחק"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                                              </div>
                                           </div>
                                       </div>
                                   `;
@@ -2283,30 +2287,108 @@
                           const cardsHTML = recipes.map(r => `
                               <div onclick="App.Actions.openRecipe('${r.id}')" class="category-card glass-panel rounded-[32px] p-5 text-right cursor-pointer transition shadow-sm border border-white hover:scale-[1.02] active:scale-95 relative overflow-hidden bg-gradient-to-br ${r.accent}">
                                   <div class="absolute -left-3 -top-3 text-7xl opacity-25 select-none">${r.emoji}</div>
+                                  ${r.isLink ? `<div class="absolute top-2 left-2 bg-white/90 text-stone-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-white shadow-sm z-20"><i class="fa-solid fa-link ml-1"></i>לינק</div>` : ''}
                                   <div class="relative z-10 flex flex-col gap-2 min-h-[140px]">
                                       <div class="text-3xl">${r.emoji}</div>
                                       <h3 class="font-extrabold text-stone-800 text-base leading-tight font-hand tracking-wide">${r.name}</h3>
                                       <p class="text-[11px] text-stone-600 font-bold">${r.mood}</p>
                                       <div class="mt-auto flex flex-wrap gap-1.5 pt-2">
-                                          <span class="bg-white/70 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${r.time}</span>
-                                          <span class="bg-white/70 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/80">${r.difficulty}</span>
+                                          ${r.time ? `<span class="bg-white/70 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${r.time}</span>` : ''}
+                                          ${r.difficulty ? `<span class="bg-white/70 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/80">${r.difficulty}</span>` : ''}
                                       </div>
                                   </div>
                               </div>
                           `).join('');
 
+                          const addLinkBtn = `
+                              <div class="grid grid-cols-2 gap-2 mb-3">
+                                  <button onclick="App.Actions.openAddRecipe()" class="py-3 rounded-2xl border-2 border-dashed border-rose-300 bg-white/40 text-rose-600 font-extrabold text-sm hover:bg-white/70 active:scale-[0.98] transition flex items-center justify-center gap-2">
+                                      <i class="fa-solid fa-pen-to-square"></i> מתכון חדש
+                                  </button>
+                                  <button onclick="App.Actions.openAddLinkRecipe()" class="py-3 rounded-2xl border-2 border-dashed border-orange-300 bg-white/40 text-orange-600 font-extrabold text-sm hover:bg-white/70 active:scale-[0.98] transition flex items-center justify-center gap-2">
+                                      <i class="fa-solid fa-link"></i> שמירת לינק
+                                  </button>
+                              </div>`;
+
+                          const showAddModal = App.State.showAddLinkRecipe;
+                          const addModalHTML = showAddModal ? `
+                              <div onclick="App.Actions.closeAddLinkRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-page-entry">
+                                  <div onclick="event.stopPropagation()" class="glass-panel rounded-[28px] shadow-xl border border-white w-full max-w-sm p-6 relative">
+                                      <button onclick="App.Actions.closeAddLinkRecipe()" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/80 text-stone-600 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                      <h3 class="text-xl font-extrabold text-stone-800 font-hand text-center mb-1">🔗 לינק למתכון</h3>
+                                      <p class="text-center text-xs text-stone-500 mb-4">שמרו מתכון מהאינטרנט בפינת השף</p>
+                                      <div class="space-y-3 text-right">
+                                          <input id="lr-name" type="text" maxlength="80" placeholder="שם המתכון" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-orange-400">
+                                          <input id="lr-url" type="url" maxlength="500" placeholder="https://..." dir="ltr" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
+                                          <div class="flex gap-2">
+                                              <input id="lr-emoji" type="text" maxlength="2" placeholder="🍝" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-orange-400">
+                                              <input id="lr-mood" type="text" maxlength="40" placeholder="אווירה / טעימה (לא חובה)" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
+                                          </div>
+                                          <button onclick="App.Actions.saveLinkRecipe()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-2xl font-extrabold text-sm active:scale-95 transition shadow">שמור מתכון</button>
+                                      </div>
+                                  </div>
+                              </div>` : '';
+
+                          const newRecipeModalHTML = App.State.showAddRecipe ? `
+                              <div onclick="App.Actions.closeAddRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
+                                  <div onclick="event.stopPropagation()" class="glass-panel rounded-[28px] shadow-xl border border-white w-full max-w-md max-h-[88vh] overflow-y-auto p-6 relative">
+                                      <button onclick="App.Actions.closeAddRecipe()" class="sticky top-0 float-left z-20 w-9 h-9 rounded-full bg-white/90 text-stone-600 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                      <h3 class="text-2xl font-extrabold text-stone-800 font-hand text-center mb-1">✍️ מתכון חדש</h3>
+                                      <p class="text-center text-xs text-stone-500 mb-4">צרו מתכון אישי שלכם</p>
+                                      <div class="space-y-3 text-right">
+                                          <input id="nr-name" type="text" maxlength="80" placeholder="שם המתכון *" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-rose-400">
+                                          <div class="flex gap-2">
+                                              <input id="nr-emoji" type="text" maxlength="2" placeholder="🍽️" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-rose-400">
+                                              <input id="nr-mood" type="text" maxlength="40" placeholder="אווירה / תיאור קצר" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
+                                          </div>
+                                          <div class="flex gap-2">
+                                              <input id="nr-time" type="text" maxlength="20" placeholder="זמן (45 דק')" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
+                                              <select id="nr-difficulty" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-rose-400">
+                                                  <option value="קל">קל</option>
+                                                  <option value="בינוני" selected>בינוני</option>
+                                                  <option value="מאתגר">מאתגר</option>
+                                              </select>
+                                          </div>
+                                          <div>
+                                              <label class="text-xs font-extrabold text-orange-600 block mb-1">מצרכים * <span class="font-medium text-stone-400">(שורה לכל מצרך)</span></label>
+                                              <textarea id="nr-ingredients" rows="5" maxlength="1500" placeholder="2 כוסות קמח\n3 ביצים\n..." class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400 leading-relaxed"></textarea>
+                                          </div>
+                                          <div>
+                                              <label class="text-xs font-extrabold text-orange-600 block mb-1">שלבי הכנה * <span class="font-medium text-stone-400">(שורה לכל שלב)</span></label>
+                                              <textarea id="nr-steps" rows="5" maxlength="2500" placeholder="לחמם תנור ל-180°C\nלערבב ביצים וסוכר\n..." class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400 leading-relaxed"></textarea>
+                                          </div>
+                                          <div>
+                                              <label class="text-xs font-extrabold text-orange-600 block mb-2">צבע הכרטיס</label>
+                                              <div class="flex gap-2 flex-wrap">
+                                                  ${[
+                                                    'from-rose-200 to-orange-200',
+                                                    'from-amber-200 to-yellow-200',
+                                                    'from-emerald-200 to-teal-200',
+                                                    'from-sky-200 to-indigo-200',
+                                                    'from-pink-200 to-rose-200'
+                                                  ].map((g, i) => `<button type="button" onclick="document.querySelectorAll('.nr-accent').forEach(b=>b.classList.remove('ring-2','ring-stone-800')); this.classList.add('ring-2','ring-stone-800'); document.getElementById('nr-accent-val').value='${g}'" class="nr-accent w-10 h-10 rounded-full bg-gradient-to-br ${g} shadow ${i===0?'ring-2 ring-stone-800':''}"></button>`).join('')}
+                                              </div>
+                                              <input type="hidden" id="nr-accent-val" value="from-rose-200 to-orange-200">
+                                          </div>
+                                          <button onclick="App.Actions.saveNewRecipe()" class="w-full bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white py-4 rounded-2xl font-extrabold text-base active:scale-95 transition shadow-lg mt-2">💾 שמור מתכון</button>
+                                      </div>
+                                  </div>
+                              </div>` : '';
+
                           const modalHTML = modalRecipe ? `
                               <div onclick="App.Actions.closeRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
                                   <div onclick="event.stopPropagation()" class="glass-panel rounded-[32px] shadow-xl border border-white w-full max-w-md max-h-[88vh] overflow-y-auto relative">
                                       <div class="relative bg-gradient-to-br ${modalRecipe.accent} p-6 pb-8 rounded-t-[32px]">
-                                          <button onclick="App.Actions.closeRecipe()" class="absolute top-6 left-4 w-9 h-9 rounded-full bg-white/70 hover:bg-white text-stone-600 flex items-center justify-center shadow-sm transition active:scale-90"><i class="fa-solid fa-xmark"></i></button>
-                                          <button onclick="App.Actions.deleteRecipe('${modalRecipe.id}')" class="absolute top-6 right-4 w-9 h-9 rounded-full bg-white/70 hover:bg-rose-100 text-rose-500 flex items-center justify-center shadow-sm transition active:scale-90" title="מחק מתכון"><i class="fa-solid fa-trash"></i></button>
-                                          <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
-                                          <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
-                                          <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
-                                          <div class="flex justify-center gap-2 mt-3">
-                                              <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${modalRecipe.time}</span>
-                                              <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-solid fa-gauge-simple ml-1"></i>${modalRecipe.difficulty}</span>
+                                          <button onclick="event.stopPropagation(); App.Actions.closeRecipe()" class="absolute top-4 left-4 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-stone-700 flex items-center justify-center shadow-md transition active:scale-90"><i class="fa-solid fa-xmark text-base"></i></button>
+                                          <button onclick="event.stopPropagation(); App.Actions.deleteRecipe('${modalRecipe.id}')" class="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-rose-100 text-rose-500 flex items-center justify-center shadow-md transition active:scale-90" title="מחק מתכון"><i class="fa-solid fa-trash text-sm"></i></button>
+                                          <div class="pointer-events-none pt-4">
+                                              <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
+                                              <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
+                                              <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
+                                              <div class="flex justify-center gap-2 mt-3">
+                                                  <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${modalRecipe.time}</span>
+                                                  <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-solid fa-gauge-simple ml-1"></i>${modalRecipe.difficulty}</span>
+                                              </div>
                                           </div>
                                       </div>
                                       <div class="p-6 space-y-5 text-right">
@@ -2341,10 +2423,13 @@
                                       </div>
                                       <div class="w-9"></div>
                                   </div>
+                                  ${addLinkBtn}
                                   <div class="grid grid-cols-2 gap-4">
                                       ${cardsHTML}
                                   </div>
                                   ${modalHTML}
+                                  ${addModalHTML}
+                                  ${newRecipeModalHTML}
                               </div>
                           `;
                       }
@@ -3991,10 +4076,58 @@
 
                       deleteBoardNote(id) {
                           let notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
-                          notes = notes.filter(n => n.id !== id);
+                          notes = notes.filter(n => String(n.id) !== String(id));
                           localStorage.setItem('duet_board_notes', JSON.stringify(notes));
                           App.Navigation.navigate('board');
                       },
+
+                      editBoardNote(id) {
+                          const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
+                          const note = notes.find(n => String(n.id) === String(id));
+                          if (!note) return;
+                          const textEl = document.getElementById(`board-note-text-${id}`);
+                          if (!textEl) return;
+                          const safe = (note.text || '').replace(/"/g, '&quot;');
+                          textEl.outerHTML = `
+                              <div id="board-note-text-${id}" class="flex flex-col gap-2">
+                                  <textarea id="board-note-edit-${id}" class="w-full bg-white/70 border border-stone-300 rounded-lg p-2 text-base font-hand text-stone-800 focus:outline-none focus:border-orange-400" rows="3">${safe}</textarea>
+                                  <div class="flex gap-2 justify-center">
+                                      <button onclick="App.Actions.saveEditedBoardNote('${id}')" class="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-lg active:scale-95">שמור</button>
+                                      <button onclick="App.Navigation.navigate('board')" class="bg-stone-200 text-stone-700 text-xs font-bold px-3 py-1 rounded-lg active:scale-95">בטל</button>
+                                  </div>
+                              </div>`;
+                          const ta = document.getElementById(`board-note-edit-${id}`);
+                          if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+                      },
+
+                      saveEditedBoardNote(id) {
+                          const ta = document.getElementById(`board-note-edit-${id}`);
+                          if (!ta) return;
+                          const newText = ta.value.trim();
+                          if (!newText) return App.UI.showToast("הפתק לא יכול להיות ריק", "info");
+                          const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
+                          const idx = notes.findIndex(n => String(n.id) === String(id));
+                          if (idx === -1) return;
+                          notes[idx].text = newText;
+                          localStorage.setItem('duet_board_notes', JSON.stringify(notes));
+                          App.UI.showToast("הפתק עודכן ✨", "success");
+                          App.Navigation.navigate('board');
+                      },
+
+                      shareBoardNoteWhatsApp(id) {
+                          const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
+                          const note = notes.find(n => String(n.id) === String(id));
+                          if (!note) return;
+                          const body = note.text ? note.text : (note.type === 'photo' ? '📷 תמונה מהמקרר שלנו' : '🎨 ציור מהמקרר שלנו');
+                          const msg = `💌 פתק מהמקרר שלנו\n\n${body}\n\n— ${note.author || ''}`;
+                          const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                          window.open(url, '_blank');
+                          if ((note.type === 'photo' || note.type === 'doodle') && !note.text) {
+                              App.UI.showToast("טקסט נשלח — לתמונה צרפו ידנית 🖼️", "info");
+                          }
+                      },
+
+
 
                       openChefsCorner() {
                           App.State.save('chefsModalRecipeId', null);
@@ -4009,12 +4142,96 @@
                       },
 
                       openRecipe(id) {
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const base = App.Data.recipes || [];
+                          const all = [...base, ...stored];
+                          const recipe = all.find(r => String(r.id) === String(id));
+                          if (recipe && recipe.isLink && recipe.url) {
+                              window.open(recipe.url, '_blank', 'noopener,noreferrer');
+                              return;
+                          }
                           App.State.save('chefsModalRecipeId', id);
                           App.Navigation.navigate('intimacy');
                       },
 
                       closeRecipe() {
                           App.State.save('chefsModalRecipeId', null);
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      openAddLinkRecipe() {
+                          App.State.showAddLinkRecipe = true;
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      closeAddLinkRecipe() {
+                          App.State.showAddLinkRecipe = false;
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      saveLinkRecipe() {
+                          const nameEl = document.getElementById('lr-name');
+                          const urlEl = document.getElementById('lr-url');
+                          const emojiEl = document.getElementById('lr-emoji');
+                          const moodEl = document.getElementById('lr-mood');
+                          const name = (nameEl?.value || '').trim().slice(0, 80);
+                          let url = (urlEl?.value || '').trim().slice(0, 500);
+                          const emoji = (emojiEl?.value || '').trim().slice(0, 2) || '🔗';
+                          const mood = (moodEl?.value || '').trim().slice(0, 40) || 'מתכון שמור';
+                          if (!name) return App.UI.showToast('צריך שם למתכון', 'info');
+                          if (!url) return App.UI.showToast('צריך להדביק לינק', 'info');
+                          if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+                          try { new URL(url); } catch { return App.UI.showToast('הלינק לא תקין', 'error'); }
+                          const accents = ['from-rose-200 to-orange-200', 'from-amber-200 to-yellow-200', 'from-emerald-200 to-teal-200', 'from-sky-200 to-indigo-200', 'from-pink-200 to-rose-200'];
+                          const accent = accents[Math.floor(Math.random() * accents.length)];
+                          const recipe = {
+                              id: 'link-' + Date.now(),
+                              name, emoji, mood, accent, url,
+                              isLink: true,
+                              time: '', difficulty: '',
+                              ingredients: [], steps: []
+                          };
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          stored.unshift(recipe);
+                          localStorage.setItem('duet_recipes', JSON.stringify(stored));
+                          App.State.showAddLinkRecipe = false;
+                          App.UI.showToast('המתכון נשמר! 🔗', 'success');
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      openAddRecipe() {
+                          App.State.showAddRecipe = true;
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      closeAddRecipe() {
+                          App.State.showAddRecipe = false;
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      saveNewRecipe() {
+                          const $ = (id) => document.getElementById(id);
+                          const name = ($('nr-name')?.value || '').trim().slice(0, 80);
+                          const emoji = ($('nr-emoji')?.value || '').trim().slice(0, 2) || '🍽️';
+                          const mood = ($('nr-mood')?.value || '').trim().slice(0, 40) || 'מתכון אישי';
+                          const time = ($('nr-time')?.value || '').trim().slice(0, 20) || '30 דק׳';
+                          const difficulty = ($('nr-difficulty')?.value || 'בינוני').slice(0, 10);
+                          const accent = ($('nr-accent-val')?.value || 'from-rose-200 to-orange-200');
+                          const ingredients = ($('nr-ingredients')?.value || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 30).map(s => s.slice(0, 120));
+                          const steps = ($('nr-steps')?.value || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 20).map(s => s.slice(0, 300));
+                          if (!name) return App.UI.showToast('צריך שם למתכון', 'info');
+                          if (ingredients.length === 0) return App.UI.showToast('הוסיפו לפחות מצרך אחד', 'info');
+                          if (steps.length === 0) return App.UI.showToast('הוסיפו לפחות שלב הכנה אחד', 'info');
+                          const recipe = {
+                              id: 'r-' + Date.now(),
+                              name, emoji, mood, time, difficulty, accent,
+                              ingredients, steps
+                          };
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          stored.unshift(recipe);
+                          localStorage.setItem('duet_recipes', JSON.stringify(stored));
+                          App.State.showAddRecipe = false;
+                          App.UI.showToast('המתכון נוסף לפינת השף! 🍳', 'success');
                           App.Navigation.navigate('intimacy');
                       },
 
