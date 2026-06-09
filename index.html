@@ -526,6 +526,8 @@
                       intimacyStreak: parseInt(localStorage.getItem('duet_intimacy_streak')) || 0,
                       intimacyMode: localStorage.getItem('duet_intimacy_mode') || 'qa',
                       chefsModalRecipeId: null,
+                      linkActionsId: null,
+                      editingLinkId: null,
                       gameQuestions: JSON.parse(localStorage.getItem('duet_game_questions')) || [],
                       gameAnswers: JSON.parse(localStorage.getItem('duet_game_answers')) || {},
                       questionsAnsweredCountToday: parseInt(localStorage.getItem('duet_questions_answered_count_today')) || parseInt(localStorage.getItem('duet_q_count_today')) || 0,
@@ -2376,12 +2378,15 @@
                               </div>` : '';
 
                           const modalHTML = modalRecipe ? `
-                              <div onclick="App.Actions.closeRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
-                                  <div onclick="event.stopPropagation()" class="glass-panel rounded-[32px] shadow-xl border border-white w-full max-w-md max-h-[88vh] overflow-y-auto relative">
-                                      <div class="relative bg-gradient-to-br ${modalRecipe.accent} p-6 pb-8 rounded-t-[32px]">
-                                          <button onclick="event.stopPropagation(); App.Actions.closeRecipe()" class="absolute top-4 left-4 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-stone-700 flex items-center justify-center shadow-md transition active:scale-90"><i class="fa-solid fa-xmark text-base"></i></button>
-                                          <button onclick="event.stopPropagation(); App.Actions.deleteRecipe('${modalRecipe.id}')" class="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-rose-100 text-rose-500 flex items-center justify-center shadow-md transition active:scale-90" title="מחק מתכון"><i class="fa-solid fa-trash text-sm"></i></button>
-                                          <div class="pointer-events-none pt-4">
+                              <div onclick="App.Actions.closeRecipe()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-start justify-center p-3 pt-6 sm:pt-10 animate-page-entry overflow-y-auto">
+                                  <div onclick="event.stopPropagation()" class="glass-panel rounded-[32px] shadow-xl border border-white w-full max-w-md max-h-[92vh] overflow-y-auto relative my-auto">
+                                      <div class="sticky top-0 z-30 flex items-center justify-between px-4 pt-3 pb-2 bg-gradient-to-b from-white/95 to-white/60 backdrop-blur-sm">
+                                          <button onclick="event.stopPropagation(); App.Actions.closeRecipe()" class="w-10 h-10 rounded-full bg-white/95 hover:bg-white text-stone-700 flex items-center justify-center shadow-md transition active:scale-90"><i class="fa-solid fa-xmark text-base"></i></button>
+                                          <button onclick="event.stopPropagation(); App.Actions.deleteRecipe('${modalRecipe.id}')" class="w-10 h-10 rounded-full bg-white/95 hover:bg-rose-100 text-rose-500 flex items-center justify-center shadow-md transition active:scale-90" title="מחק מתכון"><i class="fa-solid fa-trash text-sm"></i></button>
+                                      </div>
+                                      <div class="relative bg-gradient-to-br ${modalRecipe.accent} px-6 pt-2 pb-8">
+                                          <div class="pointer-events-none pt-2">
+
                                               <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
                                               <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
                                               <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
@@ -2430,6 +2435,29 @@
                                   ${modalHTML}
                                   ${addModalHTML}
                                   ${newRecipeModalHTML}
+                                  ${(() => {
+                                      const lid = App.State.linkActionsId;
+                                      if (!lid) return '';
+                                      const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                                      const lr = stored.find(r => String(r.id) === String(lid));
+                                      if (!lr) return '';
+                                      return `
+                                      <div onclick="App.Actions.closeLinkActions()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-center justify-center p-4 animate-page-entry">
+                                          <div onclick="event.stopPropagation()" class="glass-panel rounded-[28px] shadow-xl border border-white w-full max-w-xs p-5 relative">
+                                              <button onclick="App.Actions.closeLinkActions()" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/80 text-stone-600 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                              <div class="text-center mb-4 pt-2">
+                                                  <div class="text-4xl">${lr.emoji || '🔗'}</div>
+                                                  <h3 class="font-extrabold text-stone-800 font-hand text-lg mt-1">${lr.name}</h3>
+                                                  <p class="text-[10px] text-stone-500 break-all mt-1 px-2" dir="ltr">${lr.url}</p>
+                                              </div>
+                                              <div class="space-y-2">
+                                                  <button onclick="App.Actions.openLinkUrl('${lr.id}')" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-2xl font-extrabold text-sm active:scale-95 transition shadow"><i class="fa-solid fa-arrow-up-right-from-square ml-1"></i> פתח לינק</button>
+                                                  <button onclick="App.Actions.editLinkRecipe('${lr.id}')" class="w-full bg-white/80 hover:bg-white text-stone-700 py-3 rounded-2xl font-extrabold text-sm border border-stone-200 active:scale-95 transition"><i class="fa-solid fa-pen ml-1"></i> ערוך</button>
+                                                  <button onclick="App.Actions.deleteLinkRecipe('${lr.id}')" class="w-full bg-rose-50 hover:bg-rose-100 text-rose-600 py-3 rounded-2xl font-extrabold text-sm border border-rose-200 active:scale-95 transition"><i class="fa-solid fa-trash ml-1"></i> מחק</button>
+                                              </div>
+                                          </div>
+                                      </div>`;
+                                  })()}
                               </div>
                           `;
                       }
@@ -4147,7 +4175,8 @@
                           const all = [...base, ...stored];
                           const recipe = all.find(r => String(r.id) === String(id));
                           if (recipe && recipe.isLink && recipe.url) {
-                              window.open(recipe.url, '_blank', 'noopener,noreferrer');
+                              App.State.linkActionsId = String(id);
+                              App.Navigation.navigate('intimacy');
                               return;
                           }
                           App.State.save('chefsModalRecipeId', id);
@@ -4159,13 +4188,57 @@
                           App.Navigation.navigate('intimacy');
                       },
 
+                      closeLinkActions() {
+                          App.State.linkActionsId = null;
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      openLinkUrl(id) {
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const recipe = stored.find(r => String(r.id) === String(id));
+                          if (recipe && recipe.url) {
+                              window.open(recipe.url, '_blank', 'noopener,noreferrer');
+                          }
+                          App.State.linkActionsId = null;
+                          App.Navigation.navigate('intimacy');
+                      },
+
+                      editLinkRecipe(id) {
+                          App.State.linkActionsId = null;
+                          App.State.editingLinkId = String(id);
+                          App.State.showAddLinkRecipe = true;
+                          App.Navigation.navigate('intimacy');
+                          // Populate fields after render
+                          setTimeout(() => {
+                              const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                              const r = stored.find(x => String(x.id) === String(id));
+                              if (!r) return;
+                              const n = document.getElementById('lr-name'); if (n) n.value = r.name || '';
+                              const u = document.getElementById('lr-url'); if (u) u.value = r.url || '';
+                              const e = document.getElementById('lr-emoji'); if (e) e.value = r.emoji || '';
+                              const m = document.getElementById('lr-mood'); if (m) m.value = r.mood || '';
+                          }, 50);
+                      },
+
+                      deleteLinkRecipe(id) {
+                          if (!confirm('למחוק את הלינק?')) return;
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const filtered = stored.filter(r => String(r.id) !== String(id));
+                          localStorage.setItem('duet_recipes', JSON.stringify(filtered));
+                          App.State.linkActionsId = null;
+                          App.UI.showToast('הלינק נמחק 🗑️', 'success');
+                          App.Navigation.navigate('intimacy');
+                      },
+
                       openAddLinkRecipe() {
+                          App.State.editingLinkId = null;
                           App.State.showAddLinkRecipe = true;
                           App.Navigation.navigate('intimacy');
                       },
 
                       closeAddLinkRecipe() {
                           App.State.showAddLinkRecipe = false;
+                          App.State.editingLinkId = null;
                           App.Navigation.navigate('intimacy');
                       },
 
@@ -4182,6 +4255,20 @@
                           if (!url) return App.UI.showToast('צריך להדביק לינק', 'info');
                           if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
                           try { new URL(url); } catch { return App.UI.showToast('הלינק לא תקין', 'error'); }
+                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+                          const editId = App.State.editingLinkId;
+                          if (editId) {
+                              const idx = stored.findIndex(r => String(r.id) === String(editId));
+                              if (idx !== -1) {
+                                  stored[idx] = { ...stored[idx], name, url, emoji, mood };
+                              }
+                              localStorage.setItem('duet_recipes', JSON.stringify(stored));
+                              App.State.editingLinkId = null;
+                              App.State.showAddLinkRecipe = false;
+                              App.UI.showToast('הלינק עודכן ✨', 'success');
+                              App.Navigation.navigate('intimacy');
+                              return;
+                          }
                           const accents = ['from-rose-200 to-orange-200', 'from-amber-200 to-yellow-200', 'from-emerald-200 to-teal-200', 'from-sky-200 to-indigo-200', 'from-pink-200 to-rose-200'];
                           const accent = accents[Math.floor(Math.random() * accents.length)];
                           const recipe = {
@@ -4191,7 +4278,6 @@
                               time: '', difficulty: '',
                               ingredients: [], steps: []
                           };
-                          const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
                           stored.unshift(recipe);
                           localStorage.setItem('duet_recipes', JSON.stringify(stored));
                           App.State.showAddLinkRecipe = false;
