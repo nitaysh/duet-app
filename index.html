@@ -1297,13 +1297,13 @@
 
                           return `
                               <div class="space-y-5 px-1">
-                                  <div class="flex items-center justify-between">
+                              <div class="flex items-center justify-between">
                                       <button onclick="App.Actions.closeTripPlanner()" class="w-9 h-9 rounded-full bg-white/70 border border-white text-stone-500 hover:text-sky-500 flex items-center justify-center shadow-sm active:scale-90 transition"><i class="fa-solid fa-arrow-right"></i></button>
                                       <div class="text-center flex-1">
                                           <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider">המסעות שלנו ✈️</h2>
                                           <p class="text-stone-500 text-xs font-bold">תיקיות מסע, אריזות חכמות ונעצים על המפה</p>
                                       </div>
-                                      <button onclick="App.Actions.createTrip()" title="טיול חדש" class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white flex items-center justify-center shadow-md active:scale-90 transition"><i class="fa-solid fa-plus text-xs"></i></button>
+                                      <button onclick="App.Actions.openCreateTripModal()" title="טיול חדש" class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 text-white flex items-center justify-center shadow-md active:scale-90 transition"><i class="fa-solid fa-plus text-xs"></i></button>
                                   </div>
                                   <div class="space-y-4">${cardsHTML}</div>
                               </div>
@@ -3339,16 +3339,46 @@
                           localStorage.setItem('duet_trips', JSON.stringify(App.State.trips));
                       },
 
-                      createTrip() {
-                          const title = prompt("איך נקרא לטיול החדש?");
-                          if (!title || !title.trim()) return;
-                          const startDate = prompt("תאריך התחלה (YYYY-MM-DD):", new Date().toISOString().slice(0,10)) || '';
-                          const endDate = prompt("תאריך סיום (YYYY-MM-DD):", startDate) || '';
+                      openCreateTripModal() {
+                          const today = new Date().toISOString().slice(0,10);
+                          App.UI.showModal(`
+                              <div class="text-right space-y-4" dir="rtl">
+                                  <div class="flex justify-between items-center mb-2">
+                                      <h3 class="text-xl font-extrabold text-stone-800 font-hand tracking-wider"><i class="fa-solid fa-plane-departure text-sky-500 ml-2"></i>תכנון טיול חדש</h3>
+                                      <button onclick="App.UI.closeModal()" class="text-stone-400 hover:text-stone-600 active:scale-90 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+                                  </div>
+                                  <div>
+                                      <label class="text-xs font-bold text-stone-500 block mb-1">לאן נוסעים?</label>
+                                      <input type="text" id="new-trip-title" placeholder="למשל: סופ״ש בכינרת..." class="w-full bg-stone-50 border border-stone-200 rounded-xl py-3 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                  </div>
+                                  <div class="flex gap-3">
+                                      <div class="flex-1">
+                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך התחלה</label>
+                                          <input type="date" id="new-trip-start" value="${today}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                      </div>
+                                      <div class="flex-1">
+                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך סיום</label>
+                                          <input type="date" id="new-trip-end" value="${today}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                      </div>
+                                  </div>
+                                  <button onclick="App.Actions.executeCreateTrip()" class="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white py-3.5 rounded-xl font-bold active:scale-95 transition shadow-md mt-2">יצירת טיול</button>
+                              </div>
+                          `);
+                      },
+
+                      executeCreateTrip() {
+                          const title = document.getElementById('new-trip-title').value.trim();
+                          const startDate = document.getElementById('new-trip-start').value;
+                          const endDate = document.getElementById('new-trip-end').value;
+
+                          if (!title) return App.UI.showToast("חובה להזין שם לטיול", "info");
+                          if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) return App.UI.showToast("נא לבחור תאריכים תקינים", "info");
+
                           const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
                           const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
                           const trip = {
                               id: Date.now(),
-                              title: title.trim(),
+                              title: title,
                               emoji: "🧳",
                               icon: icons[Math.floor(Math.random()*icons.length)],
                               startDate, endDate,
@@ -3360,10 +3390,30 @@
                               ],
                               pins: []
                           };
+
                           App.State.save('trips', [...App.State.trips, trip]);
                           this._saveTrips();
                           App.State.save('activeTripId', trip.id);
-                          App.UI.showToast("טיול חדש נוצר! ✈️", "success");
+
+                          const notes = {...(App.State.journalNotes || {})};
+                          const tags = {...(App.State.journalTags || {})};
+                          
+                          let currDate = new Date(startDate);
+                          const end = new Date(endDate);
+                          while (currDate <= end) {
+                              const pad = n => String(n).padStart(2, '0');
+                              const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
+                              tags[dKey] = 'trip';
+                              if (!notes[dKey]) {
+                                  notes[dKey] = `${trip.title} ${trip.emoji}`;
+                              }
+                              currDate.setDate(currDate.getDate() + 1);
+                          }
+                          App.State.save('journalNotes', notes);
+                          App.State.save('journalTags', tags);
+
+                          App.UI.closeModal();
+                          App.UI.showToast("טיול חדש נוצר ונרשם ביומן! ✈️", "success");
                           App.Navigation.navigate('garden');
                       },
 
@@ -3682,12 +3732,17 @@
                               const startDate = new Date(startParts[0], startParts[1]-1, startParts[2]);
                               const endDate = new Date(endDateInput);
                               if (endDate > startDate) {
-                                  let currDate = new Date(startDate);
-                                  datesToUpdate = [];
-                                  while (currDate <= endDate) {
-                                      datesToUpdate.push(`${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`);
-                                      currDate.setDate(currDate.getDate() + 1);
-                                  }
+                                let currDate = new Date(startDate);
+                          const end = new Date(endDate);
+                          while (currDate <= end) {
+                              const dKey = `${currDate.getFullYear()}-${currDate.getMonth()+1}-${currDate.getDate()}`;
+                              tags[dKey] = 'trip'; // תיוג כטיול
+                              // יצירת כותרת בסיסית ביומן אם ריק
+                              if (!notes[dKey]) {
+                                  notes[dKey] = `${trip.title} ${trip.emoji}`;
+                              }
+                              currDate.setDate(currDate.getDate() + 1);
+                          }
                               }
                           }
 
@@ -3705,6 +3760,78 @@
                                   if (locationVal) locs[dKey] = locationVal; else delete locs[dKey];
                                   if (moodVal) moods[dKey] = moodVal; else delete moods[dKey];
                               });
+
+                              if (currentTag === 'trip') {
+                                  const startParts = dateKey.split('-');
+                                  const sDateObj = new Date(startParts[0], startParts[1]-1, startParts[2]);
+                                  const pad = n => String(n).padStart(2, '0');
+                                  const fStart = `${sDateObj.getFullYear()}-${pad(sDateObj.getMonth()+1)}-${pad(sDateObj.getDate())}`;
+                                  let fEnd = fStart;
+                                  if (endDateInput) {
+                                      const eDateObj = new Date(endDateInput);
+                                      fEnd = `${eDateObj.getFullYear()}-${pad(eDateObj.getMonth()+1)}-${pad(eDateObj.getDate())}`;
+                                  }
+                                  
+                                  const tripExists = App.State.trips.some(t => t.startDate === fStart);
+                                  if (!tripExists) {
+                                      const title = locationVal ? `טיול ל${locationVal}` : (val ? val.split(' ').slice(0,3).join(' ') + '...' : 'טיול מהיומן');
+                                      const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
+                                      const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
+                                      const newTrip = {
+                                          id: Date.now() + 50,
+                                          title: title,
+                                          emoji: "🧳",
+                                          icon: icons[Math.floor(Math.random()*icons.length)],
+                                          startDate: fStart, 
+                                          endDate: fEnd,
+                                          gradient: gradients[App.State.trips.length % gradients.length],
+                                          checklist: [
+                                              { id: Date.now()+1, text: "מטען לטלפון", packed: false },
+                                              { id: Date.now()+2, text: "תיק רחצה אישי", packed: false },
+                                              { id: Date.now()+3, text: "תרופות אישיות", packed: false }
+                                          ],
+                                          pins: locationVal ? [{ id: Date.now()+4, lat: 31.5, lng: 34.8, label: locationVal }] : []
+                                      };
+                                      App.State.trips.push(newTrip);
+                                      App.Actions._saveTrips();
+                                  }
+                              }
+
+                              if (currentTag === 'trip') {
+                                  const startParts = dateKey.split('-');
+                                  const sDateObj = new Date(startParts[0], startParts[1]-1, startParts[2]);
+                                  const pad = n => String(n).padStart(2, '0');
+                                  const fStart = `${sDateObj.getFullYear()}-${pad(sDateObj.getMonth()+1)}-${pad(sDateObj.getDate())}`;
+                                  let fEnd = fStart;
+                                  if (endDateInput) {
+                                      const eDateObj = new Date(endDateInput);
+                                      fEnd = `${eDateObj.getFullYear()}-${pad(eDateObj.getMonth()+1)}-${pad(eDateObj.getDate())}`;
+                                  }
+                                  
+                                  const tripExists = App.State.trips.some(t => t.startDate === fStart);
+                                  if (!tripExists) {
+                                      const title = locationVal ? `טיול ל${locationVal}` : (val ? val.split(' ').slice(0,3).join(' ') + '...' : 'טיול מהיומן');
+                                      const gradients = ["from-sky-200/70 to-blue-200/70", "from-cyan-200/70 to-teal-200/70", "from-indigo-200/70 to-sky-200/70", "from-blue-200/70 to-violet-200/70"];
+                                      const icons = ["fa-plane", "fa-tent", "fa-umbrella-beach", "fa-mountain-sun", "fa-suitcase-rolling"];
+                                      const newTrip = {
+                                          id: Date.now() + 50,
+                                          title: title,
+                                          emoji: "🧳",
+                                          icon: icons[Math.floor(Math.random()*icons.length)],
+                                          startDate: fStart, 
+                                          endDate: fEnd,
+                                          gradient: gradients[App.State.trips.length % gradients.length],
+                                          checklist: [
+                                              { id: Date.now()+1, text: "מטען לטלפון", packed: false },
+                                              { id: Date.now()+2, text: "תיק רחצה אישי", packed: false },
+                                              { id: Date.now()+3, text: "תרופות אישיות", packed: false }
+                                          ],
+                                          pins: locationVal ? [{ id: Date.now()+4, lat: 31.5, lng: 34.8, label: locationVal }] : []
+                                      };
+                                      App.State.trips.push(newTrip);
+                                      App.Actions._saveTrips();
+                                  }
+                              }
 
                               if(!hadExistingContent && (val || partnerVal || photoVals.length > 0)) {
                                   App.State.addXP(20);
