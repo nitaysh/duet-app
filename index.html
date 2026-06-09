@@ -1264,9 +1264,12 @@
                                           <div class="flex flex-wrap gap-1.5 mt-3">${pinsListHTML}</div>
                                       </div>
 
-                                      <div class="flex justify-between">
-                                          <button onclick="App.Actions.deleteTrip(${trip.id})" class="text-[11px] font-bold text-stone-400 hover:text-red-500 transition"><i class="fa-regular fa-trash-can ml-1"></i> מחק טיול</button>
-                                          <button onclick="App.Actions.toggleTrip(${trip.id})" class="text-[11px] font-bold text-sky-600 bg-white border border-sky-100 px-3 py-1.5 rounded-lg shadow-sm">סגור תיקייה ↑</button>
+                                      <div class="flex justify-between items-center mt-4 border-t border-white/40 pt-3">
+                                          <div class="flex gap-3">
+                                              <button onclick="App.Actions.deleteTrip(${trip.id})" class="text-[11px] font-bold text-stone-500 hover:text-red-500 transition"><i class="fa-regular fa-trash-can ml-1"></i>מחק</button>
+                                              <button onclick="App.Actions.openEditTripModal(${trip.id})" class="text-[11px] font-bold text-stone-500 hover:text-orange-500 transition"><i class="fa-solid fa-pen ml-1"></i>ערוך</button>
+                                          </div>
+                                          <button onclick="App.Actions.toggleTrip(${trip.id})" class="text-[11px] font-bold text-sky-600 bg-white border border-sky-100 px-3 py-1.5 rounded-lg shadow-sm active:scale-95 transition">סגור ↑</button>
                                       </div>
                                   </div>
                               ` : '';
@@ -3414,6 +3417,57 @@
 
                           App.UI.closeModal();
                           App.UI.showToast("טיול חדש נוצר ונרשם ביומן! ✈️", "success");
+                          App.Navigation.navigate('garden');
+                      },
+
+                      openEditTripModal(tripId) {
+                          const trip = App.State.trips.find(t => t.id === tripId);
+                          if (!trip) return;
+                          App.UI.showModal(`
+                              <div class="text-right space-y-4" dir="rtl">
+                                  <div class="flex justify-between items-center mb-2">
+                                      <h3 class="text-xl font-extrabold text-stone-800 font-hand tracking-wider"><i class="fa-solid fa-pen text-sky-500 ml-2"></i>עריכת טיול</h3>
+                                      <button onclick="App.UI.closeModal()" class="text-stone-400 hover:text-stone-600 active:scale-90 transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+                                  </div>
+                                  <div>
+                                      <label class="text-xs font-bold text-stone-500 block mb-1">שם הטיול</label>
+                                      <input type="text" id="edit-trip-title" value="${trip.title}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-3 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                  </div>
+                                  <div class="flex gap-3">
+                                      <div class="flex-1">
+                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך התחלה</label>
+                                          <input type="date" id="edit-trip-start" value="${trip.startDate}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                      </div>
+                                      <div class="flex-1">
+                                          <label class="text-xs font-bold text-stone-500 block mb-1">תאריך סיום</label>
+                                          <input type="date" id="edit-trip-end" value="${trip.endDate}" class="w-full bg-stone-50 border border-stone-200 rounded-xl py-2 px-3 text-sm font-bold text-stone-800 focus:outline-none focus:border-sky-400 transition">
+                                      </div>
+                                  </div>
+                                  <button onclick="App.Actions.executeEditTrip(${trip.id})" class="w-full bg-gradient-to-r from-sky-500 to-cyan-500 text-white py-3.5 rounded-xl font-bold active:scale-95 transition shadow-md mt-2">שמור שינויים</button>
+                              </div>
+                          `);
+                      },
+
+                      executeEditTrip(tripId) {
+                          const title = document.getElementById('edit-trip-title').value.trim();
+                          const startDate = document.getElementById('edit-trip-start').value;
+                          const endDate = document.getElementById('edit-trip-end').value;
+
+                          if (!title) return App.UI.showToast("חובה להזין שם לטיול", "info");
+                          if (!startDate || !endDate || new Date(endDate) < new Date(startDate)) return App.UI.showToast("נא לבחור תאריכים תקינים", "info");
+
+                          const tripIndex = App.State.trips.findIndex(t => t.id === tripId);
+                          if (tripIndex === -1) return;
+
+                          App.State.trips[tripIndex].title = title;
+                          App.State.trips[tripIndex].startDate = startDate;
+                          App.State.trips[tripIndex].endDate = endDate;
+
+                          App.State.save('trips', App.State.trips);
+                          this._saveTrips();
+                          
+                          App.UI.closeModal();
+                          App.UI.showToast("הטיול עודכן בהצלחה! ✏️", "success");
                           App.Navigation.navigate('garden');
                       },
 
