@@ -3470,7 +3470,8 @@
                           this._autoJournalForTrip(trip);
                           App.State.save('activeTripId', trip.id);
                           App.UI.closeModal();
-                          App.UI.showToast("טיול חדש נוצר! ✈️", "success");
+                          App.State.addXP(20);
+                          App.UI.showToast("טיול חדש נוצר! ✈️ +20 XP", "success");
                           App.Navigation.navigate('garden');
                       },
 
@@ -3889,23 +3890,51 @@
                       },
 
       deleteJournalDay(dateKey) {
-                          if (!confirm("למחוק לחלוטין את הרשומה, התמונה והתיוגים של יום זה? 🗑️")) return;
+                          if (!confirm("למחוק לחלוטין את האירוע על כל הימים שלו, התמונות והתיוגים? 🗑️")) return;
 
                           const notes = {...App.State.journalNotes}; const pNotes = {...App.State.journalPartnerNotes}; const photos = {...App.State.journalPhotos}; const styles = {...App.State.journalStyles}; const highlights = {...App.State.journalHighlights}; const tags = {...App.State.journalTags}; const locs = {...App.State.journalLocations}; const moods = {...App.State.journalMoods};
 
-                          // בודקים אם היה תוכן שמזכה בנקודות לפני שמוחקים
-                          const hadContent = !!(notes[dateKey] || (photos[dateKey] && photos[dateKey].length > 0));
+                          // helpers
+                          const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+                          const parseKey = (k) => { const p = k.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); };
+                          const photosSig = (k) => JSON.stringify(photos[k] || []);
+                          const sameEvent = (a, b) => {
+                              const noteA = notes[a] || '', noteB = notes[b] || '';
+                              const tagA = tags[a] || '', tagB = tags[b] || '';
+                              if (!noteA && !noteB && photosSig(a) === '[]' && photosSig(b) === '[]') return false;
+                              return noteA === noteB && tagA === tagB && photosSig(a) === photosSig(b);
+                          };
 
-                          delete notes[dateKey]; delete pNotes[dateKey]; delete photos[dateKey]; delete styles[dateKey]; delete highlights[dateKey]; delete tags[dateKey]; delete locs[dateKey]; delete moods[dateKey];
+                          // find event start by walking backward
+                          let startDate = parseKey(dateKey);
+                          while (true) {
+                              const prev = new Date(startDate); prev.setDate(prev.getDate() - 1);
+                              const prevKey = keyOf(prev);
+                              if (sameEvent(prevKey, dateKey)) { startDate = prev; } else break;
+                          }
+
+                          // walk forward collecting all event days
+                          const eventKeys = [];
+                          let cur = new Date(startDate);
+                          while (true) {
+                              const cKey = keyOf(cur);
+                              if (sameEvent(cKey, dateKey) || cKey === dateKey) {
+                                  eventKeys.push(cKey);
+                                  cur.setDate(cur.getDate() + 1);
+                              } else break;
+                          }
+
+                          const hadContent = eventKeys.some(k => !!(notes[k] || (photos[k] && photos[k].length > 0)));
+
+                          eventKeys.forEach(k => {
+                              delete notes[k]; delete pNotes[k]; delete photos[k]; delete styles[k]; delete highlights[k]; delete tags[k]; delete locs[k]; delete moods[k];
+                          });
 
                           App.State.save('journalNotes', notes); App.State.save('journalPartnerNotes', pNotes); App.State.save('journalPhotos', photos); App.State.save('journalStyles', styles); App.State.save('journalHighlights', highlights); App.State.save('journalTags', tags); App.State.save('journalLocations', locs); App.State.save('journalMoods', moods);
 
-                          // מורידים חזרה את ה-XP אם נמחק אירוע ממשי
-                          if (hadContent) {
-                              App.State.subtractXP(20);
-                          }
+                          if (hadContent) App.State.subtractXP(20);
 
-                          App.UI.showToast("הרשומה נמחקה", "info");
+                          App.UI.showToast(eventKeys.length > 1 ? `האירוע נמחק (${eventKeys.length} ימים) -20 XP` : (hadContent ? "הרשומה נמחקה -20 XP" : "הרשומה נמחקה"), "info");
                           App.Navigation.navigate('journal');
                       },
 
