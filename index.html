@@ -1268,58 +1268,119 @@
 
                                   ${wallOfFameHTML}
 
-                                 <div class="bg-white/40 border border-white rounded-[32px] p-4 shadow-sm mb-4" style="margin-top: 8px;">
-                                      <div class="space-y-3 px-1">
-                                          <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                              <span><i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}</span>
-                                              <button onclick="App.Actions.addNewStoreItem()" class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-lg border border-purple-100 shadow-sm">+ הוסף מתנה</button>
-                                          </h3>
-                                          <div class="bg-white/80 border border-stone-100 rounded-2xl p-4 shadow-sm">
-                                              <div class="flex justify-between items-center mb-4">
-                                                  <div class="text-xs font-bold text-stone-500">היתרה שלך: <span class="text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">${App.State.gardenXP} XP</span></div>
-                                                  <button onclick="App.Actions.buyMysteryBox()" class="text-[10px] font-bold bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white px-2.5 py-1.5 rounded-lg shadow-sm hover:scale-105 transition flex items-center gap-1.5"><i class="fa-solid fa-box-open"></i> הפתעה (70 XP)</button>
-                                              </div>
-                                              <div class="space-y-3">
-                                                  ${App.State.storeItems.map(item => {
-                                                      const isFlashSale = App.State.flashSale && App.State.flashSale.itemId === item.id;
-                                                      const finalCost = isFlashSale ? Math.floor(item.cost * App.State.flashSale.discount) : item.cost;
-                                                      const canAfford = App.State.gardenXP >= finalCost;
-                                                      return `
-                                                      <div class="flex items-center justify-between bg-white border border-stone-100 p-3 rounded-xl shadow-sm relative overflow-hidden">
-                                                          ${isFlashSale ? '<div class="absolute -left-5 top-2 bg-red-500 text-white text-[8px] font-extrabold px-6 py-0.5 -rotate-45 shadow-sm">מבצע פתע!</div>' : ''}
-                                                          <div class="flex items-center gap-3 pr-2">
-                                                              <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
-                                                              <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
-                                                          </div>
-                                                          <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition flex flex-col items-center leading-none gap-1">
-                                                              ${isFlashSale ? `<span class="line-through text-[9px] opacity-70">${item.cost}</span>` : ''}
-                                                              <span>${finalCost} XP</span>
-                                                          </button>
-                                                      </div>
-                                                  `}).join('')}
-                                              </div>
-                                             
-                                              ${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
-                                              <div class="mt-6 pt-4 border-t border-stone-100">
-                                                  <h4 class="text-[11px] font-bold text-stone-400 mb-3 uppercase tracking-wider">שוברים שממתינים למימוש</h4>
-                                                  <div class="flex flex-col gap-3">
-                                                      ${App.State.purchasedRewards.filter(r => !r.used).map(r => `
-                                                          <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden transition-all duration-500">
-                                                              <div class="flex-1 p-3 border-l-2 border-dashed border-orange-300 flex items-center">
-                                                                  <span class="text-xs font-extrabold text-stone-700">${r.text}</span>
-                                                              </div>
-                                                              <button onclick="App.Actions.useReward(${r.id})" class="w-16 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold text-[10px] flex flex-col items-center justify-center transition active:bg-orange-300 shrink-0">
-                                                                  <i class="fa-solid fa-scissors mb-1 text-sm opacity-50"></i>
-                                                                  <span>תלוש</span>
-                                                              </button>
-                                                          </div>
-                                                      `).join('')}
+                                  <div class="rounded-[32px] overflow-hidden shadow-sm mb-4" style="margin-top: 8px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+                                      <div class="p-5">
+                                          <div class="flex items-center justify-between mb-1">
+                                              <div class="flex items-center gap-2">
+                                                  <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center"><i class="fa-solid fa-store text-amber-300 text-base"></i></div>
+                                                  <div>
+                                                      <h3 class="text-base font-extrabold text-white tracking-wide">חנות חוויות זוגיות ✨</h3>
+                                                      <p class="text-[10px] text-white/60 font-bold">קנו שובר, הוסיפו לרשימת המתנות</p>
                                                   </div>
                                               </div>
-                                              ` : ''}
-                                          </div>
-                                      </div>
-                                  </div>
+                                              <div class="text-left">
+                                                  <div class="text-[9px] font-bold text-white/50 uppercase tracking-wider">היתרה</div>
+                                                  <div class="text-base font-extrabold text-amber-300">${App.State.gardenXP} XP</div>
+                                              </div>
+                                          </div>
+
+                                          <div class="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
+                                              ${[
+                                                  { key: 'restaurants', label: 'מסעדות ובתי קפה', icon: 'fa-utensils', color: 'bg-rose-500/20 border-rose-400/30 text-rose-300' },
+                                                  { key: 'spa', label: 'ספא ועיסויים', icon: 'fa-spa', color: 'bg-purple-500/20 border-purple-400/30 text-purple-300' },
+                                                  { key: 'trips', label: 'חופשות וצימרים', icon: 'fa-tent', color: 'bg-sky-500/20 border-sky-400/30 text-sky-300' },
+                                                  { key: 'adventures', label: 'חוויות והרפתקאות', icon: 'fa-bolt', color: 'bg-amber-500/20 border-amber-400/30 text-amber-300' }
+                                              ].map(cat => {
+                                                  const isActive = (App.State.voucherCategory || 'restaurants') === cat.key;
+                                                  return `<button onclick="App.Actions.setVoucherCategory('${cat.key}')" class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition active:scale-95 ${isActive ? 'bg-white text-stone-800 border-white shadow-sm' : cat.color + ' border'}">
+                                                      <i class="fa-solid ${cat.icon} text-[10px]"></i>${cat.label}
+                                                  </button>`;
+                                              }).join('')}
+                                          </div>
+                                      </div>
+
+                                      <div class="px-4 pb-5 space-y-2">
+                                          ${(() => {
+                                              const cat = App.State.voucherCategory || 'restaurants';
+                                              const vouchers = {
+                                                  restaurants: [
+                                                      { id: 'v1', name: 'ארוחת ערב זוגית במסעדה רומנטית', desc: 'לשניים כולל יין ✨', xp: 800, emoji: '🍷' },
+                                                      { id: 'v2', name: 'בוקר קפה ועוגה לשניים', desc: 'בית קפה בוטיק', xp: 250, emoji: '☕' },
+                                                      { id: 'v3', name: 'ארוחת שף פרמיום', desc: 'תפריט טעימות לשניים', xp: 1500, emoji: '👨‍🍳' },
+                                                      { id: 'v4', name: 'פיקניק רומנטי מוכן', desc: 'סל פיקניק מלא לשניים', xp: 500, emoji: '🧺' },
+                                                      { id: 'v5', name: 'ערב יין וגבינות', desc: 'טעימות מובחרות לשניים', xp: 600, emoji: '🧀' },
+                                                      { id: 'v6', name: 'ארוחת בוקר מפנקת במלון', desc: 'בופה פרמיום לשניים', xp: 700, emoji: '🥞' },
+                                                  ],
+                                                  spa: [
+                                                      { id: 'v7', name: 'עיסוי זוגי 60 דקות', desc: 'עיסוי שוודי מרגיע', xp: 1200, emoji: '💆' },
+                                                      { id: 'v8', name: 'יום ספא מלא לשניים', desc: 'כולל ג׳קוזי וסאונה', xp: 2500, emoji: '🧖' },
+                                                      { id: 'v9', name: 'טיפול פנים זוגי', desc: 'שעה עם מוצרי פרמיום', xp: 900, emoji: '✨' },
+                                                      { id: 'v10', name: 'מניקור ופדיקור לשניים', desc: 'טיפול ידיים ורגליים', xp: 600, emoji: '💅' },
+                                                      { id: 'v11', name: 'אמבטיית בועות זוגית', desc: 'עם שמנים ארומטיים', xp: 400, emoji: '🛁' },
+                                                      { id: 'v12', name: 'ריטריט ספא יומי', desc: 'חבילת VIP לשניים', xp: 4000, emoji: '🌸' },
+                                                  ],
+                                                  trips: [
+                                                      { id: 'v13', name: 'לילה בצימר רומנטי', desc: 'כולל ארוחת בוקר', xp: 3000, emoji: '🏡' },
+                                                      { id: 'v14', name: 'סופ״ש בצפון הארץ', desc: 'שני לילות בגליל', xp: 5000, emoji: '⛰️' },
+                                                      { id: 'v15', name: 'לילה בבוטיק אורבני', desc: 'במרכז העיר', xp: 2200, emoji: '🏨' },
+                                                      { id: 'v16', name: 'טיול יום לים המלח', desc: 'כולל כניסה לספא', xp: 800, emoji: '🌊' },
+                                                      { id: 'v17', name: 'קמפינג רומנטי', desc: 'אוהל זוגי עם ציוד', xp: 1000, emoji: '⛺' },
+                                                      { id: 'v18', name: 'חופשת שבוע בחו״ל', desc: 'טיסה + מלון לשניים', xp: 7000, emoji: '✈️' },
+                                                  ],
+                                                  adventures: [
+                                                      { id: 'v19', name: 'שיעור בישול זוגי', desc: 'סדנת שף מקצועי', xp: 700, emoji: '🍳' },
+                                                      { id: 'v20', name: 'טיסת אווירון קל', desc: 'חוויית טיסה לשניים', xp: 3500, emoji: '🛩️' },
+                                                      { id: 'v21', name: 'ערב קומדי סטנד-אפ', desc: 'כרטיסים לשניים', xp: 500, emoji: '🎤' },
+                                                      { id: 'v22', name: 'שיעור ריקוד זוגי', desc: 'סלסה / טנגו / וואלס', xp: 400, emoji: '💃' },
+                                                      { id: 'v23', name: 'טיול ג׳יפים', desc: 'שטח ואדרנלין לשניים', xp: 1800, emoji: '🚙' },
+                                                      { id: 'v24', name: 'צלילה חופשית', desc: 'קורס + ציוד לשניים', xp: 2000, emoji: '🤿' },
+                                                  ]
+                                              };
+                                              const list = vouchers[cat] || [];
+                                              return list.map(v => {
+                                                  const canAfford = App.State.gardenXP >= v.xp;
+                                                  const purchased = (App.State.purchasedRewards || []).some(r => r.voucherId === v.id && !r.used);
+                                                  return `
+                                                  <div class="flex items-center justify-between p-3 rounded-2xl border transition ${purchased ? 'bg-emerald-900/30 border-emerald-500/30' : 'bg-white/5 border-white/10'}">
+                                                      <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl shrink-0">${v.emoji}</div>
+                                                          <div class="min-w-0">
+                                                              <div class="text-sm font-bold text-white leading-tight truncate">${v.name}</div>
+                                                              <div class="text-[10px] text-white/50 font-bold mt-0.5">${v.desc}</div>
+                                                          </div>
+                                                      </div>
+                                                      <div class="flex items-center gap-2 shrink-0 mr-2">
+                                                          ${purchased ? `<span class="text-[10px] font-bold text-emerald-300 bg-emerald-900/40 px-2 py-1 rounded-lg border border-emerald-500/30">✓ נרכש</span>` : ''}
+                                                          <button onclick="App.Actions.buyVoucher('${v.id}','${v.name.replace(/'/g,"\\'")}','${v.emoji}',${v.xp})" class="text-[11px] font-bold px-3 py-2 rounded-xl transition active:scale-95 flex flex-col items-center leading-none ${canAfford ? 'bg-amber-400 text-stone-900 shadow-sm hover:bg-amber-300' : 'bg-white/10 text-white/30 pointer-events-none'}">
+                                                              <span>${v.xp.toLocaleString()}</span>
+                                                              <span class="text-[9px] opacity-70">XP</span>
+                                                          </button>
+                                                      </div>
+                                                  </div>`;
+                                              }).join('');
+                                          })()}
+                                      </div>
+
+                                      ${(App.State.purchasedRewards || []).filter(r => !r.used).length > 0 ? `
+                                      <div class="mx-4 mb-5 rounded-2xl border border-amber-400/20 bg-amber-900/20 p-4">
+                                          <h4 class="text-[11px] font-bold text-amber-300 mb-3 uppercase tracking-wider flex items-center gap-1.5">
+                                              <i class="fa-solid fa-ticket text-amber-400"></i> השוברים שלך ממתינים למימוש
+                                          </h4>
+                                          <div class="space-y-2">
+                                              ${(App.State.purchasedRewards || []).filter(r => !r.used).map(r => `
+                                                  <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-3">
+                                                      <div class="flex items-center gap-2 flex-1 min-w-0">
+                                                          <span class="text-lg">${r.emoji || '🎁'}</span>
+                                                          <span class="text-xs font-bold text-white truncate">${r.text}</span>
+                                                      </div>
+                                                      <button onclick="App.Actions.useReward(${r.id})" class="shrink-0 text-[10px] font-bold bg-amber-400 text-stone-900 px-3 py-1.5 rounded-lg active:scale-95 transition flex items-center gap-1">
+                                                          <i class="fa-solid fa-scissors text-[9px]"></i> מימוש
+                                                      </button>
+                                                  </div>
+                                              `).join('')}
+                                          </div>
+                                      </div>` : ''}
+                                  </div>
                               </div>`;
                       },
 
@@ -3698,17 +3759,53 @@
 
                       insertWritingPrompt() { const prompts = App.Data.writingPrompts; const random = prompts[Math.floor(Math.random() * prompts.length)]; const el = document.getElementById('journal-input'); if(el) { el.value = random; el.focus(); } },
 
-                      buyStoreItem(id) {
-                          const item = App.State.storeItems.find(i => i.id === id);
-                          if (!item) return;
-                          if (App.State.gardenXP < item.cost) return App.UI.showToast("אין מספיק XP לרכישה זו", "info");
-                          App.State.subtractXP(item.cost);
-                          let purchased = [...App.State.purchasedRewards];
-                          purchased.push({ id: Date.now(), text: item.text, used: false });
-                          App.State.save('purchasedRewards', purchased);
-                          App.UI.showToast("רכשתם פרס בהצלחה! 🎉", "success");
-                          App.Navigation.navigate('garden');
-                      },
+                                      setVoucherCategory(cat) {
+                          App.State.voucherCategory = cat;
+                          App.Navigation.navigate('garden');
+                      },
+
+                      buyVoucher(id, name, emoji, xp) {
+                          if (App.State.gardenXP < xp) return App.UI.showToast("אין מספיק XP לרכישת השובר הזה", "info");
+                          App.UI.showModal(`
+                              <div class="text-center space-y-4">
+                                  <div class="text-5xl mb-2">${emoji}</div>
+                                  <h3 class="text-lg font-bold text-stone-800">${name}</h3>
+                                  <div class="bg-amber-50 border border-amber-100 rounded-2xl p-3">
+                                      <p class="text-xs text-stone-600 leading-relaxed">רכישת השובר תנכה <span class="font-extrabold text-amber-600">${xp.toLocaleString()} XP</span> מהגינה ותוסיף את השובר לרשימת המתנות שלכם.</p>
+                                      <p class="text-xs font-bold text-emerald-600 mt-1.5">+ תקבלו 50 XP בונוס על הרכישה!</p>
+                                  </div>
+                                  <div class="flex gap-3 pt-1">
+                                      <button onclick="App.UI.closeModal()" class="flex-1 bg-stone-100 text-stone-600 py-3 rounded-xl font-bold active:scale-95 transition">ביטול</button>
+                                      <button onclick="App.Actions.confirmBuyVoucher('${id}','${name.replace(/'/g,"\\'")}','${emoji}',${xp})" class="flex-1 bg-gradient-to-r from-amber-400 to-orange-400 text-stone-900 py-3 rounded-xl font-bold active:scale-95 transition shadow-sm">אישור רכישה</button>
+                                  </div>
+                              </div>
+                          `);
+                      },
+
+                      confirmBuyVoucher(id, name, emoji, xp) {
+                          App.State.subtractXP(xp);
+                          App.State.addXP(50);
+                          let purchased = [...(App.State.purchasedRewards || [])];
+                          purchased.push({ id: Date.now(), voucherId: id, text: name, emoji: emoji, used: false });
+                          App.State.save('purchasedRewards', purchased);
+                          App.UI.closeModal();
+                          App.UI.throwPetals();
+                          App.UI.showToast(`השובר "${name}" נוסף לרשימת המתנות! +50 XP 🎉`, "success");
+                          App.Navigation.navigate('garden');
+                      },
+
+                      buyStoreItem(id, cost) {
+                          const item = (App.State.storeItems || []).find(i => i.id === id);
+                          if (!item) return;
+                          const finalCost = cost || item.cost;
+                          if (App.State.gardenXP < finalCost) return App.UI.showToast("אין מספיק XP לרכישה זו", "info");
+                          App.State.subtractXP(finalCost);
+                          let purchased = [...(App.State.purchasedRewards || [])];
+                          purchased.push({ id: Date.now(), text: item.text, emoji: '🎁', used: false });
+                          App.State.save('purchasedRewards', purchased);
+                          App.UI.showToast("רכשתם פרס בהצלחה! 🎉", "success");
+                          App.Navigation.navigate('garden');
+                      },
 
                       useReward(id) {
                           let purchased = [...App.State.purchasedRewards];
