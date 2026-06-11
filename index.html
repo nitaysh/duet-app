@@ -1258,6 +1258,52 @@
                                       </h3>
                                       <div class="space-y-2">${activeListHTML}</div>
                                   </div>
+                                  <!-- StoreRow -->
+<div class="flex items-center justify-between mb-2 px-1">
+    <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
+        <i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}
+    </span>
+    <span class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-xl">${App.State.gardenXP} <span class="text-[9px]">XP</span></span>
+</div>
+<div class="flex flex-col gap-3">
+    ${App.State.storeItems.map(item => {
+        const isFlashSale = App.State.flashSale && App.State.flashSale.active && App.State.flashSale.itemId === item.id;
+        const finalCost = isFlashSale ? Math.floor(item.cost * App.State.flashSale.discount) : item.cost;
+        const canAfford = App.State.gardenXP >= finalCost;
+        return `
+        <div class="flex items-center justify-between bg-white border border-stone-100 p-3 rounded-xl shadow-sm relative overflow-hidden">
+            ${isFlashSale ? '<div class="absolute -left-5 top-2 bg-red-500 text-white text-[8px] font-extrabold px-6 py-0.5 -rotate-45 shadow-sm">מבצע פתע!</div>' : ''}
+            <div class="flex items-center gap-3 pr-2">
+                <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
+                <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
+            </div>
+            <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition flex flex-col items-center leading-none gap-1">
+                ${isFlashSale ? `<span class="line-through text-[9px] opacity-70">${item.cost}</span>` : ''}
+                <span>${finalCost} XP</span>
+            </button>
+        </div>
+        `}).join('')}
+</div>
+
+<!-- שוברים שממתינים למימוש -->
+${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
+<div class="mt-6 pt-4 border-t border-stone-100">
+    <h4 class="text-[11px] font-bold text-stone-400 mb-3 uppercase tracking-wider">שוברים שממתינים למימוש</h4>
+    <div class="flex flex-col gap-3">
+        ${App.State.purchasedRewards.filter(r => !r.used).map(r => `
+            <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden transition-all duration-500">
+                <div class="flex-1 p-3 border-l-2 border-dashed border-orange-300 flex items-center">
+                    <span class="text-xs font-extrabold text-stone-700">${r.text}</span>
+                </div>
+                <button onclick="App.Actions.useReward(${r.id})" class="w-16 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold text-[10px] flex flex-col items-center justify-center transition active:bg-orange-300 shrink-0">
+                    <i class="fa-solid fa-scissors mb-1 text-sm opacity-50"></i>
+                    <span>תלוש</span>
+                </button>
+            </div>
+        `).join('')}
+    </div>
+</div>
+` : ''}
 
                                   <div class="mb-0" style="margin-top: 8px;">
                                       <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
@@ -1478,6 +1524,7 @@
                                   </div>
                                   <div class="space-y-4">${cardsHTML}</div>
                               </div>
+                              
                           `;
                       },
 
