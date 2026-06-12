@@ -1251,31 +1251,61 @@
                     });
                 }
 
-                // יצירת הקוד של בנק הרעיונות המקורי כדי למנוע קריסה
+                // בניית שוברים וסינון קטגוריות לחנות (ספא, מסעדות וכו')
+                const activeCat = App.State.voucherCategory || 'all';
+                const categories = [
+                    { key: 'all', name: 'הכל', emoji: '🛍️' },
+                    { key: 'דייטים', name: 'דייטים', emoji: '🍷' },
+                    { key: 'פינוק', name: 'ספא ופינוק', emoji: '💆‍♂️' },
+                    { key: 'יצירה', name: 'חוויה ויצירה', emoji: '🎨' },
+                    { key: 'טיולים', name: 'טיולים', emoji: '🏕️' }
+                ];
+
+                let categoriesHTML = `<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1">`;
+                categories.forEach(c => {
+                    const isSel = activeCat === c.key;
+                    categoriesHTML += `<button onclick="App.Actions.setVoucherCategory('${c.key}')" class="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition border ${isSel ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}">${c.emoji} ${c.name}</button>`;
+                });
+                categoriesHTML += `</div>`;
+
+                let filteredWishes = App.Data.wishesBank;
+                if (activeCat !== 'all') {
+                    filteredWishes = filteredWishes.filter(w => w.category === activeCat);
+                }
+
                 let bankItems = [];
-                App.Data.wishesBank.forEach((wish, idx) => {
+                filteredWishes.forEach((wish, idx) => {
+                    // מוצא את האינדקס המקורי בבנק הכללי בשביל הפעולה
+                    const originalIdx = App.Data.wishesBank.findIndex(w => w.text === wish.text);
                     const alreadyAdded = App.State.bucketList.some(b => b.text === wish.text);
+                    
                     if (!alreadyAdded) {
+                        // עלות מחושבת לפי סוג קטגוריה ליצירת עניין בחנות
+                        let cost = 150;
+                        if (wish.category === 'פינוק') cost = 250;
+                        if (wish.category === 'טיולים') cost = 400;
+                        if (wish.category === 'דייטים') cost = 200;
+
+                        const canAfford = App.State.gardenXP >= cost;
+
                         bankItems.push(`
-                            <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 h-full p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between">
-                                <span class="text-xs font-bold text-stone-700 block line-clamp-2 mb-3">${wish.text}</span>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
-                                    <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
+                            <div class="flex-shrink-0 w-44 p-4 bg-white border border-stone-100 rounded-2xl text-right transition shadow-sm flex flex-col justify-between min-h-[155px]">
+                                <div class="space-y-1">
+                                    <span class="text-xs font-bold text-stone-700 block line-clamp-2 leading-tight">${wish.text}</span>
+                                    <span class="text-[9px] font-bold text-purple-400 uppercase tracking-wider block">${wish.category}</span>
                                 </div>
+                                <button onclick="App.Actions.buyVoucher('${originalIdx}', '${wish.text.replace(/'/g, "\\'")}', '${wish.text.slice(-2)}', ${cost})" class="w-full text-[11px] font-extrabold py-2 rounded-xl transition ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-md' : 'bg-stone-100 text-stone-400'}" >
+                                    ${cost} XP
+                                </button>
                             </div>`);
                     }
                 });
 
                 let bankHTML = '';
                 if (bankItems.length === 0) {
-                    bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
+                    bankHTML = `<div class="text-xs font-bold text-stone-400 py-6 w-full text-center bg-white/50 rounded-2xl border border-dashed border-stone-200">אין פריטים זמינים בקטגוריה זו 🔮</div>`;
                 } else {
-                    const half = Math.ceil(bankItems.length / 2);
-                    bankHTML = `<div class="flex flex-col gap-3 w-max">
-                                    <div class="flex gap-3">${bankItems.slice(0, half).join('')}</div>
-                                    <div class="flex gap-3">${bankItems.slice(half).join('')}</div>
-                                </div>`;
+                    bankHTML = `<div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 px-0.5">${bankItems.join('')}</div>`;
                 }
 
                 // יצירת קוד היכל התהילה המקורי למניעת קריסה
@@ -1309,7 +1339,7 @@
                             </div>
 
                             <div class="p-5 text-center z-20 bg-gradient-to-t from-white/90 via-white/75 to-transparent pt-12 rounded-b-[30px] border-t border-white/20">
-                                <h2 class="text-xl font-extrabold text-stone-800 leading-none">${evo.name}</h2>
+                                <h2 class="text-xl font-extrabold text-stone-800 tracking-tight leading-none">${evo.name}</h2>
                                 <div class="w-full bg-stone-200/60 h-2.5 rounded-full mt-3 overflow-hidden p-0.5 shadow-inner">
                                     <div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-700" style="width: ${App.State.gardenXP % 100}%"></div>
                                 </div>
@@ -1345,11 +1375,21 @@
                             <div class="space-y-2">${activeListHTML}</div>
                         </div>
 
-                        <div class="flex items-center justify-between mb-2 px-1">
+                        <div class="space-y-3 px-1 pt-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
+                                    <i class="fa-solid fa-store ml-1 text-purple-500"></i> שוברי חוויה ופינוק זוגיים
+                                </span>
+                                <span class="text-xs font-black text-purple-600 bg-purple-50 border border-purple-100 px-2.5 py-0.5 rounded-xl shadow-inner">${App.State.gardenXP} XP זמין</span>
+                            </div>
+                            ${categoriesHTML}
+                            ${bankHTML}
+                        </div>
+
+                        <div class="flex items-center justify-between mb-2 px-1 pt-2">
                             <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
-                                <i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}
+                                <i class="fa-solid fa-gift ml-1 text-emerald-500"></i> פינוקים קטנים מהחנות
                             </span>
-                            <span class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-xl">${App.State.gardenXP} <span class="text-[9px]">XP</span></span>
                         </div>
                         <div class="flex flex-col gap-3">
                             ${App.State.storeItems.map(item => {
@@ -1387,12 +1427,6 @@
                         </div>
                         ` : ''}
 
-                        <div class="mb-0" style="margin-top: 8px;">
-                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
-                            <div class="overflow-x-auto no-scrollbar pb-2 px-1">
-                                ${bankHTML}
-                            </div>
-                        </div>
                         ${wallOfFameHTML}
                     </div>
                 `;
