@@ -4155,62 +4155,88 @@
                                 App.Navigation.navigate('journal');
                             },
 
-            sendEventInviteEmail(dateKey) {
-                const email = (App.State.userEmail || '').trim();
-                if (!email) {
-                    App.UI.showToast("יש להגדיר כתובת מייל בפרופיל ✉️", "info");
-                    App.Navigation.navigate('profile');
-                    return;
-                }
-                const S = App.State;
-                const notes = S.journalNotes || {}; const pNotes = S.journalPartnerNotes || {}; const photos = S.journalPhotos || {}; const tags = S.journalTags || {};
-                const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
-                const parseKey = (k) => { const p = k.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); };
-                const photosSig = (k) => JSON.stringify(photos[k] || []);
-                const sameEvent = (a, b) => {
-                    const noteA = notes[a] || '', noteB = notes[b] || '';
-                    const tagA = tags[a] || '', tagB = tags[b] || '';
-                    if (!noteA && !noteB && photosSig(a) === '[]' && photosSig(b) === '[]') return false;
-                    return noteA === noteB && tagA === tagB && photosSig(a) === photosSig(b);
-                };
-                let startDate = parseKey(dateKey);
-                while (true) {
-                    const prev = new Date(startDate); prev.setDate(prev.getDate() - 1);
-                    if (sameEvent(keyOf(prev), dateKey)) startDate = prev; else break;
-                }
-                const eventKeys = [];
-                let cur = new Date(startDate);
-                while (true) {
-                    const cKey = keyOf(cur);
-                    if (sameEvent(cKey, dateKey) || cKey === dateKey) { eventKeys.push(cKey); cur.setDate(cur.getDate()+1); } else break;
-                }
-                const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-                const startStr = fmt(startDate);
-                const endStr = fmt(parseKey(eventKeys[eventKeys.length-1]));
-                const dateLine = eventKeys.length > 1 ? `${startStr} – ${endStr} (${eventKeys.length} ימים)` : startStr;
-                const note = notes[dateKey] || '';
-                const pNote = pNotes[dateKey] || '';
-                const tagKey = tags[dateKey];
-                const tagName = tagKey ? ((App.Data.journalTags[tagKey] && App.Data.journalTags[tagKey].name) || (S.customTags && S.customTags[tagKey] && S.customTags[tagKey].name) || '') : '';
-                const couple = `${S.userName || 'אני'} ו${S.partnerName || 'השותפ/ה'}`;
-                const title = tagName ? `${tagName} – ${dateLine}` : `אירוע ביומן – ${dateLine}`;
-                const lines = [
-                    `הזמנה לאירוע מהיומן של ${couple} 💞`,
-                    ``,
-                    `📅 תאריך: ${dateLine}`,
-                ];
-                if (tagName) lines.push(`🏷️ קטגוריה: ${tagName}`);
-                if (note) lines.push(``, `📝 ${S.userName || 'אני'}:`, note);
-                if (pNote) lines.push(``, `📝 ${S.partnerName || 'השותפ/ה'}:`, pNote);
-                lines.push(``, `—`, `נשלח מ-Duet 💞`);
-                const subject = encodeURIComponent(title);
-                const body = encodeURIComponent(lines.join('\n'));
-                window.location.href = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
-                const invites = {...(App.State.journalInvitesSent || {})};
-                invites[dateKey] = new Date().toISOString();
-                App.State.save('journalInvitesSent', invites);
-                App.UI.showToast(`נפתחה הזמנה במייל ל-${email} ✉️`, "success");
-            },
+                            sendEventInviteEmail(dateKey) {
+    const S = App.State;
+    const notes = S.journalNotes || {}; const pNotes = S.journalPartnerNotes || {}; const photos = S.journalPhotos || {}; const tags = S.journalTags || {};
+    const keyOf = (d) => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    const parseKey = (k) => { const p = k.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); };
+    const photosSig = (k) => JSON.stringify(photos[k] || []);
+    const sameEvent = (a, b) => {
+        const noteA = notes[a] || '', noteB = notes[b] || '';
+        const tagA = tags[a] || '', tagB = tags[b] || '';
+        if (!noteA && !noteB && photosSig(a) === '[]' && photosSig(b) === '[]') return false;
+        return noteA === noteB && tagA === tagB && photosSig(a) === photosSig(b);
+    };
+    let startDate = parseKey(dateKey);
+    while (true) {
+        const prev = new Date(startDate); prev.setDate(prev.getDate() - 1);
+        if (sameEvent(keyOf(prev), dateKey)) startDate = prev; else break;
+    }
+    const eventKeys = [];
+    let cur = new Date(startDate);
+    while (true) {
+        const cKey = keyOf(cur);
+        if (sameEvent(cKey, dateKey) || cKey === dateKey) { eventKeys.push(cKey); cur.setDate(cur.getDate()+1); } else break;
+    }
+    const endDate = parseKey(eventKeys[eventKeys.length-1]);
+    // ICS DTEND is exclusive, so add one day to the last day of the event
+    const icsEndDate = new Date(endDate); icsEndDate.setDate(icsEndDate.getDate() + 1);
+
+    const note = notes[dateKey] || '';
+    const pNote = pNotes[dateKey] || '';
+    const tagKey = tags[dateKey];
+    const tagName = tagKey ? ((App.Data.journalTags[tagKey] && App.Data.journalTags[tagKey].name) || (S.customTags && S.customTags[tagKey] && S.customTags[tagKey].name) || '') : '';
+    const couple = `${S.userName || 'אני'} ו${S.partnerName || 'השותפ/ה'}`;
+    const title = tagName ? `${tagName} — ${couple}` : `אירוע מהיומן — ${couple}`;
+
+    const descLines = [];
+    if (note) descLines.push(`${S.userName || 'אני'}: ${note}`);
+    if (pNote) descLines.push(`${S.partnerName || 'השותפ/ה'}: ${pNote}`);
+    descLines.push('', 'נשלח מ-Duet 💞');
+    const description = descLines.join('\\n');
+
+    const fmtICSDate = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}${m}${day}`;
+    };
+    const escapeICS = (s) => String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+    const now = new Date();
+    const dtstamp = now.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+    const uid = `duet-${dateKey}-${Date.now()}@duet.app`;
+
+    const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Duet//Couple Journal//HE',
+        'CALSCALE:GREGORIAN',
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${dtstamp}`,
+        `DTSTART;VALUE=DATE:${fmtICSDate(startDate)}`,
+        `DTEND;VALUE=DATE:${fmtICSDate(icsEndDate)}`,
+        `SUMMARY:${escapeICS(title)}`,
+        `DESCRIPTION:${escapeICS(description)}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Duet_${dateKey}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    const invites = {...(App.State.journalInvitesSent || {})};
+    invites[dateKey] = new Date().toISOString();
+    App.State.save('journalInvitesSent', invites);
+    App.UI.showToast("קובץ אירוע ליומן נוצר! פתחו אותו כדי להוסיף ליומן 📅", "success");
+},
 
             deleteJournalDay(dateKey) {
                                 if (!confirm("למחוק לחלוטין את האירוע על כל הימים שלו, התמונות והתיוגים? 🗑️")) return;
