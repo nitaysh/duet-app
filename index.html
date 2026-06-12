@@ -1160,7 +1160,7 @@
                               `;
                           },
 
-                           Garden() {
+                          Garden() {
                 if (App.State.gardenView === 'trips') return this.TripPlanner();
 
                 const todayStr = new Date().toDateString();
@@ -1249,6 +1249,49 @@
                                 </div>
                             </div>`;
                     });
+                }
+
+                // יצירת הקוד של בנק הרעיונות המקורי כדי למנוע קריסה
+                let bankItems = [];
+                App.Data.wishesBank.forEach((wish, idx) => {
+                    const alreadyAdded = App.State.bucketList.some(b => b.text === wish.text);
+                    if (!alreadyAdded) {
+                        bankItems.push(`
+                            <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 h-full p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between">
+                                <span class="text-xs font-bold text-stone-700 block line-clamp-2 mb-3">${wish.text}</span>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
+                                    <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
+                                </div>
+                            </div>`);
+                    }
+                });
+
+                let bankHTML = '';
+                if (bankItems.length === 0) {
+                    bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
+                } else {
+                    const half = Math.ceil(bankItems.length / 2);
+                    bankHTML = `<div class="flex flex-col gap-3 w-max">
+                                    <div class="flex gap-3">${bankItems.slice(0, half).join('')}</div>
+                                    <div class="flex gap-3">${bankItems.slice(half).join('')}</div>
+                                </div>`;
+                }
+
+                // יצירת קוד היכל התהילה המקורי למניעת קריסה
+                const completedWishes = App.State.bucketList.filter(i => i.completed);
+                let wallOfFameHTML = '';
+                if (completedWishes.length > 0) {
+                    wallOfFameHTML = `<div class="space-y-3 px-1" style="margin-top: 8px;"><h3 class="text-sm font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-trophy ml-1"></i> היכל התהילה</h3><div class="grid grid-cols-2 gap-2">`;
+                    completedWishes.forEach(item => {
+                        wallOfFameHTML += `<div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-3 rounded-2xl text-center shadow-sm relative overflow-hidden group">
+                            <i class="fa-solid fa-star text-amber-200 text-3xl absolute -right-2 -top-2 opacity-30"></i>
+                            <span class="text-xs font-bold text-stone-700 block relative z-10 px-4">${item.text}</span>
+                            <button onclick="App.Actions.deleteBucketItem(${item.id})" class="absolute top-1.5 left-1.5 w-6 h-6 bg-white/40 hover:bg-red-50 text-stone-400 hover:text-red-500 rounded-full flex items-center justify-center transition z-20 shadow-sm"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                            <button onclick="App.Actions.toggleBucketItem(${item.id})" class="absolute top-1.5 right-1.5 w-6 h-6 bg-white/40 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-full flex items-center justify-center transition z-20 shadow-sm"><i class="fa-solid fa-rotate-left text-[10px]"></i></button>
+                        </div>`;
+                    });
+                    wallOfFameHTML += `</div></div>`;
                 }
 
                 return `
@@ -1347,9 +1390,7 @@
                         <div class="mb-0" style="margin-top: 8px;">
                             <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
                             <div class="overflow-x-auto no-scrollbar pb-2 px-1">
-                                <div class="overflow-x-auto no-scrollbar pb-2 px-1">
-                                    ${bankHTML}
-                                </div>
+                                ${bankHTML}
                             </div>
                         </div>
                         ${wallOfFameHTML}
