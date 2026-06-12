@@ -698,23 +698,35 @@
                             },
 
                             addXP(amount) {
-                                const MAX_XP = 20000;
-                                const prevLevel = Math.floor(this.gardenXP / 100) + 1;
-                                let newXP = Math.min(this.gardenXP + amount, MAX_XP);
-                                let newLevel = Math.min(Math.floor(newXP / 100) + 1, Math.floor(MAX_XP / 100) + 1);
-                                const leveledUp = newLevel > prevLevel;
-                                this.save('gardenXP', newXP); this.save('gardenLevel', newLevel);
-                                if (leveledUp) {
-                                    const decoration = App.Data.decorations[newLevel] || "אלמנט עיצובי קסום 🌸";
-                                    App.UI.showModal(`<div class="text-center space-y-4"><span class="text-6xl">🎉</span><h3 class="text-xl font-bold text-stone-800">הגינה עלתה לשלב ${newLevel}!</h3><p class="text-stone-500 text-sm">פתחתם פריט חדש לעיצוב הגן:</p><div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 font-bold text-orange-700 text-base">${decoration}</div><button onclick="App.UI.closeModal(); App.Navigation.navigate('${this.activeTab}');" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition">איזה יופי, נמשיך!</button></div>`);
-                                }
-                            },
+                const MAX_XP = 10000; // 100 שלבים כפול 100 XP לשלב
+                const prevLevel = Math.floor(this.gardenXP / 100) + 1;
+                let newXP = Math.min(this.gardenXP + amount, MAX_XP);
+                let newLevel = Math.min(Math.floor(newXP / 100) + 1, 100);
+                
+                const leveledUp = newLevel > prevLevel;
+                this.save('gardenXP', newXP); 
+                this.save('gardenLevel', newLevel);
+                
+                if (leveledUp) {
+                    const decoration = App.Data.decorations[newLevel] || "אנרגיית אהבה קסומת מראה ✨";
+                    App.UI.showModal(`
+                        <div class="text-center space-y-4">
+                            <span class="text-6xl">🎉</span>
+                            <h3 class="text-xl font-bold text-stone-800">הגינה עלתה לשלב ${newLevel}!</h3>
+                            <p class="text-stone-500 text-sm">המרחב שלכם גדל! פתחתם פריט חדש שמתווסף לגינה באופן קבוע:</p>
+                            <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100 font-bold text-orange-700 text-base">${decoration}</div>
+                            <button onclick="App.UI.closeModal(); App.Navigation.navigate('${this.activeTab}');" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition">איזה יופי, נמשיך!</button>
+                        </div>
+                    `);
+                }
+            },
 
-                            subtractXP(amount) {
-                                let newXP = Math.max(this.gardenXP - amount, 0);
-                                let newLevel = Math.max(Math.floor(newXP / 100) + 1, 1);
-                                this.save('gardenXP', newXP); this.save('gardenLevel', newLevel);
-                            }
+            subtractXP(amount) {
+                let newXP = Math.max(this.gardenXP - amount, 0);
+                let newLevel = Math.max(Math.floor(newXP / 100) + 1, 1);
+                this.save('gardenXP', newXP); 
+                this.save('gardenLevel', newLevel);
+            },
                         },
 
                         Data: {
@@ -725,8 +737,44 @@
                                 ocean: { name: 'בריזה ימית', bg: 'linear-gradient(135deg, #f5f9ff 0%, #e6f0fa 100%)', dot: 'bg-blue-200' },
                                 blossom: { name: 'פריחת דובדבן', bg: 'linear-gradient(135deg, #fff5f8 0%, #fcecf0 100%)', dot: 'bg-rose-200' }
                             },
-                            decorations: { 1: "אדמה פורייה 🌱", 2: "ספסל עץ מוצל 🪑", 3: "תאורת פיות 🌟", 4: "מזרקת מים ⛲", 5: "טאבון אבן 🍕", 6: "נדנדת גינה 🪀", 7: "עץ אהבה גדול 🌳" },
-                            evolutionNames: { 1: "נבט צעיר", 2: "ערוגה מתפתחת", 3: "בוסתן מלבלב", 4: "גן מפואר" },
+                            decorations: {
+                1: "אדמה פורייה ותשתית לגינה 🌱",
+                3: "מזלף מים מנחושת 💧",
+                5: "ערוגת פרחי בר צבעוניים 🌸",
+                10: "גדר עץ לבנה חגיגית 🪵",
+                12: "שביל אבני מדרך קסום 👣",
+                15: "תאורת גן סולארית נעימה 💡",
+                20: "ספסל עץ מוצל למנוחה 🪑",
+                25: "ערוגת תבלינים ריחנית 🌿",
+                30: "תאורת פיות מנצנצת על הענפים 🌟",
+                35: "גזיבו עץ רומנטי 🛖",
+                40: "מזרקת מים מפמפמת ומרגיעה ⛲",
+                45: "בריכת דגי נוי קטנה 🐟",
+                50: "טאבון אבן לארוחות שף זוגיות 🍕",
+                55: "שולחן עץ כפרי וכסאות תואמים 🪟",
+                60: "נדנדת גינה תלויה ומפנקת 🪀",
+                65: "ערסל זוגי בין העצים 🛌",
+                70: "מדורה קטנה לקומזיץ זוגי 🔥",
+                75: "טלסקופ לצפייה בכוכבים בלילה 🌌",
+                80: "חממת זכוכית לפרחים נדירים 🔮",
+                85: "קשת כניסה מעוטרת בוורדים 🌹",
+                90: "זוג אופניים קלאסיים נשענים על הגדר 🚲",
+                95: "תיבת מכתבים זוגית 💌",
+                100: "בית עץ זוגי שלם על הענפים הגבוהים! 🏡🌳"
+            },
+
+            getEvolutionState(level) {
+                if (level <= 10) return { name: "נבט האהבה הראשון", plant: "🌱" };
+                if (level <= 20) return { name: "ערוגה מלבלבת", plant: "🌿" };
+                if (level <= 30) return { name: "בוסתן צעיר", plant: "🌳" };
+                if (level <= 40) return { name: "גן קסום ומואר", plant: "🌳✨" };
+                if (level <= 50) return { name: "נווה מדבר פרטי", plant: "🌴" };
+                if (level <= 60) return { name: "חצר החוויות והטעמים", plant: "🏡" };
+                if (level <= 70) return { name: "גן הרוגע והשלווה", plant: "🏡🌳" };
+                if (level <= 80) return { name: "מרחב הזוהר והכוכבים", plant: "🌌🌱" };
+                if (level <= 90) return { name: "ממלכת הזיכרונות", plant: "🏰" };
+                return { name: "בית על העץ לנצח", plant: "🏡🌳" };
+            },
                             questsBank: [
                                 "שתו קפה יחד בלי מסכים (10 דק')", "תנו חיבוק ארוך של 20 שניות", "שלחו הודעת טקסט מפרגנת באמצע היום",
                                 "תכננו משהו קטן וכיפי לסופ״ש", "החמיאו אחד לשנייה על משהו ספציפי", "שימו שיר ששניכם אוהבים ורקדו בסלון"
@@ -1112,336 +1160,202 @@
                               `;
                           },
 
-                          Garden() {
-                                if (App.State.gardenView === 'trips') return this.TripPlanner();
+                           Garden() {
+                if (App.State.gardenView === 'trips') return this.TripPlanner();
 
-                                const todayStr = new Date().toDateString();
-                                if (App.State.questsDate !== todayStr) {
-                                    const shuffled = [...App.Data.questsBank].sort(() => 0.5 - Math.random());
-                                    App.State.save('quests', [{ text: shuffled[0], completed: false }, { text: shuffled[1], completed: false }]);
-                                    App.State.save('questsDate', todayStr);
-                                }
+                const todayStr = new Date().toDateString();
+                if (App.State.questsDate !== todayStr) {
+                    const shuffled = [...App.Data.questsBank].sort(() => 0.5 - Math.random());
+                    App.State.save('quests', [{ text: shuffled[0], completed: false }, { text: shuffled[1], completed: false }]);
+                    App.State.save('questsDate', todayStr);
+                }
 
-                                const evolution = App.Data.evolutionNames[App.State.gardenLevel] || "גן אהבה נצחי";
+                const currentLevel = App.State.gardenLevel;
+                const evo = App.Data.getEvolutionState(currentLevel);
 
-                                const h = new Date().getHours();
-                                let skyClass = "from-emerald-50 to-teal-50";
-                                let timeIcon = "☀️";
-                                if (h >= 6 && h < 17) { skyClass = "from-sky-200 to-blue-50"; timeIcon = "☀️"; }
-                                else if (h >= 17 && h < 20) { skyClass = "from-orange-200 to-rose-100"; timeIcon = "🌅"; }
-                                else { skyClass = "from-indigo-900 to-slate-800 border-indigo-700 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]"; timeIcon = "🌙"; }
+                const h = new Date().getHours();
+                let skyClass = "from-amber-50 to-orange-100 text-stone-800";
+                let timeIcon = "☀️";
+                if (h >= 6 && h < 17) { skyClass = "from-sky-100 via-blue-50 to-emerald-50 text-stone-800"; timeIcon = "☀️"; }
+                else if (h >= 17 && h < 20) { skyClass = "from-orange-200 via-rose-100 to-slate-100 text-stone-800"; timeIcon = "🌅"; }
+                else { skyClass = "from-slate-900 via-indigo-950 to-stone-900 text-indigo-100 border-indigo-950"; timeIcon = "🌙"; }
 
-                                const positions = ['absolute -bottom-1 -left-2 text-2xl', 'absolute top-4 -right-4 text-3xl', 'absolute -top-3 left-4 text-xl', 'absolute bottom-4 -right-5 text-3xl', 'absolute -bottom-4 left-1/2 -translate-x-1/2 text-3xl', 'absolute top-6 -left-6 text-3xl', 'absolute -top-6 right-2 text-4xl'];
+                const itemsConfig = {
+                    3: { emoji: "💧", style: "bottom: 15%; right: 20%; font-size: 1.5rem;" },
+                    5: { emoji: "🌸", style: "bottom: 8%; left: 15%; font-size: 1.4rem;" },
+                    10: { emoji: "🪵", style: "bottom: 2%; left: 0px; right: 0px; font-size: 1.2rem; text-align:center; letter-spacing: 4px;" },
+                    12: { emoji: "👣", style: "bottom: 5%; left: 40%; font-size: 1.1rem; transform: rotate(-15deg);" },
+                    15: { emoji: "💡", style: "top: 25%; left: 10%; font-size: 1.3rem;" },
+                    20: { emoji: "🪑", style: "bottom: 20%; left: 15%; font-size: 2rem;" },
+                    25: { emoji: "🌿", style: "bottom: 12%; right: 12%; font-size: 1.4rem;" },
+                    30: { emoji: "🌟", style: "top: 15%; right: 25%; font-size: 1.2rem; animation: pulse 2s infinite;" },
+                    35: { emoji: "🛖", style: "top: 30%; right: 10%; font-size: 2.2rem;" },
+                    40: { emoji: "⛲", style: "bottom: 25%; right: 35%; font-size: 2rem;" },
+                    45: { emoji: "🐟", style: "bottom: 20%; right: 45%; font-size: 1rem;" },
+                    50: { emoji: "🍕", style: "bottom: 35%; left: 8%; font-size: 1.8rem;" },
+                    55: { emoji: "🪟", style: "bottom: 30%; left: 22%; font-size: 1.6rem;" },
+                    60: { emoji: "🪀", style: "top: 40%; left: 35%; font-size: 1.8rem;" },
+                    65: { emoji: "🛌", style: "bottom: 45%; right: 15%; font-size: 2rem;" },
+                    70: { emoji: "🔥", style: "bottom: 10%; left: 48%; font-size: 1.5rem; animation: bounce 1s infinite;" },
+                    75: { emoji: "🌌", style: "top: 10%; left: 20%; font-size: 1.6rem;" },
+                    80: { emoji: "🔮", style: "top: 50%; right: 8%; font-size: 1.5rem;" },
+                    85: { emoji: "🌹", style: "bottom: 5%; right: 5%; font-size: 2.2rem;" },
+                    90: { emoji: "🚲", style: "bottom: 6%; left: 30%; font-size: 1.6rem; transform: scaleX(-1);" },
+                    95: { emoji: "💌", style: "bottom: 15%; left: 5%; font-size: 1.3rem;" },
+                    100: { emoji: "🏠", style: "top: 18%; left: 40%; font-size: 2.2rem; z-index: 20;" }
+                };
 
-                                let visualSceneHTML = '';
-                                for (let l = 1; l <= App.State.gardenLevel; l++) {
-                                    if (App.Data.decorations[l]) {
-                                        const emojiOnly = App.Data.decorations[l].split(' ').pop();
-                                        visualSceneHTML += `<span class="${positions[l-1]} drop-shadow-md animate-page-entry transition-all duration-700 hover:scale-110" style="animation-delay: ${l*0.1}s">${emojiOnly}</span>`;
-                                    }
-                                }
+                let decorationsHTML = '';
+                Object.entries(itemsConfig).forEach(([lvl, data]) => {
+                    if (currentLevel >= parseInt(lvl)) {
+                        decorationsHTML += `<span class="absolute drop-shadow-md animate-page-entry transition-all hover:scale-125 z-10 select-none" style="${data.style}">${data.emoji}</span>`;
+                    }
+                });
 
-                                let questsHTML = '<div class="space-y-2">';
-                                App.State.quests.forEach((q, idx) => {
-                                    questsHTML += `
-                                        <div class="flex items-center justify-between p-3 bg-white/60 border ${q.completed ? 'border-emerald-200 bg-emerald-50/50' : 'border-stone-100'} rounded-2xl shadow-sm">
-                                            <span class="text-sm font-bold ${q.completed ? 'text-emerald-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2 transition-all">${q.text}</span>
-                                            <div class="flex items-center gap-1.5">
-                                                <button onclick="App.Actions.replaceQuest(${idx})" class="w-8 h-8 bg-white border border-stone-100 text-stone-300 hover:text-red-400 hover:bg-red-50 hover:border-red-100 rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" title="מחק והבא משימה חדשה">
-                                                    <i class="fa-regular fa-trash-can text-xs"></i>
-                                                </button>
-                                                <button onclick="App.Actions.toggleQuest(${idx})" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white shadow-inner' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0" title="${q.completed ? 'בטל סימון' : 'סמן כבוצע'}">
-                                                    <i class="fa-solid fa-check text-xs"></i>
-                                                </button>
-                                            </div>
-                                        </div>`;
-                                });
-                                questsHTML += '</div>';
+                let questsHTML = '<div class="space-y-2">';
+                App.State.quests.forEach((q, idx) => {
+                    questsHTML += `
+                        <div class="flex items-center justify-between p-3 bg-white/60 border ${q.completed ? 'border-emerald-200 bg-emerald-50/50' : 'border-stone-100'} rounded-2xl shadow-sm">
+                            <span class="text-sm font-bold ${q.completed ? 'text-emerald-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2 transition-all">${q.text}</span>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="App.Actions.replaceQuest(${idx})" class="w-8 h-8 bg-white border border-stone-100 text-stone-300 hover:text-red-400 hover:bg-red-50 hover:border-red-100 rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" title="מחק והבא משימה חדשה">
+                                    <i class="fa-regular fa-trash-can text-xs"></i>
+                                </button>
+                                <button onclick="App.Actions.toggleQuest(${idx})" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white shadow-inner' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0">
+                                    <i class="fa-solid fa-check text-xs"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                });
+                questsHTML += '</div>';
 
-                                const activeWishes = App.State.bucketList.filter(i => !i.completed);
-                                const completedWishes = App.State.bucketList.filter(i => i.completed);
+                const activeWishes = App.State.bucketList.filter(i => !i.completed);
+                let activeListHTML = '';
+                if (activeWishes.length === 0) {
+                    activeListHTML = `<div class="text-center py-5 bg-white/40 border border-stone-100 rounded-2xl border-dashed"><p class="text-xs text-stone-400 font-bold px-4">אין חלומות פעילים. בחרו מהבנק למטה!</p></div>`;
+                } else {
+                    activeWishes.forEach(item => {
+                        activeListHTML += `
+                            <div class="flex items-center justify-between p-3.5 bg-white/60 border border-stone-100 rounded-2xl shadow-sm">
+                                <div class="flex flex-col flex-1 pr-2">
+                                    <span class="text-base font-bold text-stone-800">${item.text}</span>
+                                    <span class="text-[10px] font-bold text-orange-400 uppercase mt-0.5 tracking-wider">${item.category || 'חזון'} • +50 XP</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="App.Actions.deleteBucketItem(${item.id})" class="text-stone-300 hover:text-red-400 px-2 transition"><i class="fa-regular fa-trash-can text-sm"></i></button>
+                                    <button onclick="App.Actions.toggleBucketItem(${item.id})" class="w-9 h-9 bg-stone-100 text-stone-400 hover:bg-emerald-50 rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm">
+                                        <i class="fa-solid fa-check text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>`;
+                    });
+                }
 
-                                let activeListHTML = '';
-                                if (activeWishes.length === 0) {
-                                    activeListHTML = `<div class="text-center py-5 bg-white/40 border border-stone-100 rounded-2xl border-dashed"><p class="text-xs text-stone-400 font-bold px-4">אין חלומות פעילים. בחרו מהבנק למטה!</p></div>`;
-                                } else {
-                                    activeWishes.forEach(item => {
-                                        activeListHTML += `
-                                            <div class="flex items-center justify-between p-3.5 bg-white/60 border border-stone-100 rounded-2xl shadow-sm">
-                                                <div class="flex flex-col flex-1 pr-2">
-                                                    <span class="text-base font-bold text-stone-800">${item.text}</span>
-                                                    <span class="text-[10px] font-bold text-orange-400 uppercase mt-0.5 tracking-wider">${item.category || 'חזון'} • +50 XP</span>
-                                                </div>
-                                                <div class="flex items-center gap-2">
-                                                    <button onclick="App.Actions.deleteBucketItem(${item.id})" class="text-stone-300 hover:text-red-400 px-2 transition"><i class="fa-regular fa-trash-can text-sm"></i></button>
-                                                    <button onclick="App.Actions.toggleBucketItem(${item.id})" class="w-9 h-9 bg-stone-100 text-stone-400 hover:bg-emerald-50 rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm">
-                                                        <i class="fa-solid fa-check text-sm"></i>
-                                                    </button>
-                                                </div>
-                                            </div>`;
-                                    });
-                                }
+                return `
+                    <div class="space-y-6">
+                        <div class="glass-panel rounded-[32px] border-2 border-white shadow-md relative overflow-hidden flex flex-col justify-between ${skyClass}" style="min-height: 290px;">
+                            <div class="p-4 flex justify-between items-center z-20">
+                                <div class="text-xl opacity-80">${timeIcon}</div>
+                                <button onclick="App.Actions.waterPlant()" class="bg-white/80 backdrop-blur-sm text-stone-700 hover:bg-white text-xs font-bold py-1.5 px-3 rounded-full shadow-sm border border-stone-200/50 active:scale-95 transition flex items-center gap-1">🌱 השקה גינה</button>
+                            </div>
 
-                                let wallOfFameHTML = '';
-                                if (completedWishes.length > 0) {
-                                  wallOfFameHTML = `<div class="space-y-3 px-1" style="margin-top: 8px;"><h3 class="text-sm font-bold text-amber-500 uppercase tracking-widest"><i class="fa-solid fa-trophy ml-1"></i> היכל התהילה</h3><div class="grid grid-cols-2 gap-2">`;
-                                  completedWishes.forEach(item => {
-                                        wallOfFameHTML += `<div class="bg-gradient-to-br from-amber-50 to-white border border-amber-100 p-3 rounded-2xl text-center shadow-sm relative overflow-hidden group">
-                                            <i class="fa-solid fa-star text-amber-200 text-3xl absolute -right-2 -top-2 opacity-30"></i>
-                                            <span class="text-xs font-bold text-stone-700 block relative z-10 px-4">${item.text}</span>
+                            <div class="absolute inset-0 top-12 bottom-0 w-full pointer-events-none">
+                                ${decorationsHTML}
+                                <span class="absolute bottom-[12%] left-1/2 -translate-x-1/2 text-7xl z-10 filter drop-shadow-lg transition-all duration-1000 scale-110">${evo.plant}</span>
+                                <div class="absolute bottom-0 left-0 right-0 h-8 bg-emerald-500/10 backdrop-blur-[1px] border-t border-emerald-500/5"></div>
+                            </div>
 
-                                            <button onclick="App.Actions.deleteBucketItem(${item.id})" class="absolute top-1.5 left-1.5 w-6 h-6 bg-white/40 hover:bg-red-50 text-stone-400 hover:text-red-500 rounded-full flex items-center justify-center transition z-20 shadow-sm" title="מחק והחזר לבנק">
-                                                <i class="fa-solid fa-xmark text-[10px]"></i>
-                                            </button>
+                            <div class="p-5 text-center z-20 bg-gradient-to-t from-white/90 via-white/75 to-transparent pt-12 rounded-b-[30px] border-t border-white/20">
+                                <h2 class="text-xl font-extrabold text-stone-800 leading-none">${evo.name}</h2>
+                                <div class="w-full bg-stone-200/60 h-2.5 rounded-full mt-3 overflow-hidden p-0.5 shadow-inner">
+                                    <div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-700" style="width: ${App.State.gardenXP % 100}%"></div>
+                                </div>
+                                <div class="flex justify-between text-[10px] text-stone-500 font-bold mt-1.5 px-1">
+                                    <span>${App.State.gardenXP % 100} / 100 XP לשלב הבא</span>
+                                    <span>שלב <span class="text-xs font-black text-stone-700">${currentLevel}</span> מתוך 100</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                            <button onclick="App.Actions.toggleBucketItem(${item.id})" class="absolute top-1.5 right-1.5 w-6 h-6 bg-white/40 hover:bg-orange-50 text-stone-400 hover:text-orange-500 rounded-full flex items-center justify-center transition z-20 shadow-sm" title="החזר לרשימה הפעילה">
-                                                <i class="fa-solid fa-rotate-left text-[10px]"></i>
-                                            </button>
-                                        </div>`;
-                                    });
-                                    wallOfFameHTML += `</div></div>`;
-                                }
+                        <div class="space-y-3 px-1">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clipboard-check ml-1 text-emerald-500"></i> משימות יומיות לגינה</h3>
+                            ${questsHTML}
+                        </div>
 
-                                let bankItems = [];
-                                App.Data.wishesBank.forEach((wish, idx) => {
-                                    const alreadyAdded = App.State.bucketList.some(b => b.text === wish.text);
-                                    if (!alreadyAdded) {
-                                        bankItems.push(`
-                                            <div onclick="App.Actions.addFromBank(${idx})" class="flex-shrink-0 w-44 h-full p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between">
-                                                <span class="text-xs font-bold text-stone-700 block line-clamp-2 mb-3">${wish.text}</span>
-                                                <div class="flex justify-between items-center">
-                                                    <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
-                                                    <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
-                                                </div>
-                                            </div>`);
-                                    }
-                                });
+                        <div onclick="App.Actions.openTripPlanner()" class="relative overflow-hidden rounded-[32px] p-5 cursor-pointer transition shadow-md active:scale-[0.98] hover:brightness-105 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-500 text-white">
+                            <div class="absolute -left-3 -top-3 text-7xl opacity-25 select-none">✈️</div>
+                            <div class="relative z-10 flex items-center justify-between gap-3">
+                                <div class="text-right">
+                                    <h3 class="font-extrabold text-lg font-hand tracking-wider">מתכנן הטיולים שלנו</h3>
+                                    <p class="text-white/95 text-[11px] font-bold mt-0.5">תיקיות מסע, צ׳ק־ליסטים ומפות אישיות</p>
+                                    <p class="text-white/80 text-[10px] font-bold mt-2"><i class="fa-solid fa-folder-open ml-1"></i> ${App.State.trips.length} טיולים פעילים</p>
+                                </div>
+                                <div class="w-12 h-12 rounded-2xl bg-white/25 flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm"><i class="fa-solid fa-suitcase-rolling"></i></div>
+                            </div>
+                        </div>
 
-                                let bankHTML = '';
-                                if (bankItems.length === 0) {
-                                    bankHTML = `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`;
-                                } else {
-                                    const half = Math.ceil(bankItems.length / 2);
-                                    bankHTML = `<div class="flex flex-col gap-3 w-max">
-                                                    <div class="flex gap-3">${bankItems.slice(0, half).join('')}</div>
-                                                    <div class="flex gap-3">${bankItems.slice(half).join('')}</div>
-                                                </div>`;
-                                }
+                        <div class="space-y-3 px-1 pt-2">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
+                                <span><i class="fa-solid fa-wand-magic-sparkles ml-1 text-amber-400"></i> חלומות משותפים</span>
+                                <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 shadow-sm">+ הוסף חלום</button>
+                            </h3>
+                            <div class="space-y-2">${activeListHTML}</div>
+                        </div>
 
-                                const mainPlant = App.State.gardenLevel >= 4 ? '🏡' : App.State.gardenLevel >= 3 ? '🌳' : App.State.gardenLevel >= 2 ? '🌿' : '🌱';
-
+                        <div class="flex items-center justify-between mb-2 px-1">
+                            <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
+                                <i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}
+                            </span>
+                            <span class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-xl">${App.State.gardenXP} <span class="text-[9px]">XP</span></span>
+                        </div>
+                        <div class="flex flex-col gap-3">
+                            ${App.State.storeItems.map(item => {
+                                const finalCost = item.cost;
+                                const canAfford = App.State.gardenXP >= finalCost;
                                 return `
-                                    <div class="space-y-6">
-                                        <div class="glass-panel rounded-[32px] p-6 text-center shadow-sm border border-white relative overflow-hidden">
-                                            <div class="absolute top-4 left-4 text-lg opacity-80">${timeIcon}</div>
-                                            <div class="w-36 h-36 mx-auto mt-2 flex items-center justify-center bg-gradient-to-b ${skyClass} rounded-full border border-stone-200/30 mb-6 relative transition-colors duration-1000">
-                                                ${visualSceneHTML}
-                                                <span class="text-7xl relative z-10 animate-pulse" style="animation-duration: 3s;">${mainPlant}</span>
-                                            </div>
-                                            <h2 class="text-2xl font-bold text-stone-800 mb-1">${evolution} (שלב ${App.State.gardenLevel})</h2>
-                                            <div class="w-full bg-stone-100 h-3 rounded-full mt-3 overflow-hidden">
-                                                <div class="bg-gradient-to-r from-emerald-400 to-teal-400 h-full transition-all duration-700" style="width: ${App.State.gardenXP % 100}%"></div>
-                                            </div>
-                                            <div class="flex justify-between text-[10px] text-stone-400 font-bold mt-1.5 px-1"><span>${App.State.gardenXP % 100} / 100 XP לשלב הבא</span><span>סה"כ ${App.State.gardenXP} / 20000 XP</span></div>
+                                <div class="flex items-center justify-between bg-white border border-stone-100 p-3 rounded-xl shadow-sm relative overflow-hidden">
+                                    <div class="flex items-center gap-3 pr-2">
+                                        <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
+                                        <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
+                                    </div>
+                                    <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition flex flex-col items-center leading-none gap-1">
+                                        <span>${finalCost} XP</span>
+                                    </button>
+                                </div>
+                            `}).join('')}
+                        </div>
+
+                        ${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
+                        <div class="mt-6 pt-4 border-t border-stone-100">
+                            <h4 class="text-[11px] font-bold text-stone-400 mb-3 uppercase tracking-wider">שוברים שממתינים למימוש</h4>
+                            <div class="flex flex-col gap-3">
+                                ${App.State.purchasedRewards.filter(r => !r.used).map(r => `
+                                    <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden transition-all duration-500">
+                                        <div class="flex-1 p-3 border-l-2 border-dashed border-orange-300 flex items-center">
+                                            <span class="text-xs font-extrabold text-stone-700">${r.text}</span>
                                         </div>
+                                        <button onclick="App.Actions.useReward(${r.id})" class="w-16 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold text-[10px] flex flex-col items-center justify-center transition active:bg-orange-300 shrink-0">
+                                            <i class="fa-solid fa-scissors mb-1 text-sm opacity-50"></i>
+                                            <span>תלוש</span>
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
 
-                                        <div class="space-y-3 px-1">
-                                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clipboard-check ml-1 text-emerald-400"></i> משימות יומיות לגינה</h3>
-                                            ${questsHTML}
-                                        </div>
-
-                                        <div onclick="App.Actions.openTripPlanner()" class="relative overflow-hidden rounded-[32px] p-5 cursor-pointer transition shadow-md active:scale-[0.98] hover:brightness-105 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-500 text-white">
-                                            <div class="absolute -left-3 -top-3 text-7xl opacity-25 select-none">✈️</div>
-                                            <div class="absolute -right-4 -bottom-5 text-6xl opacity-20 select-none">🗺️</div>
-                                            <div class="relative z-10 flex items-center justify-between gap-3">
-                                                <div class="text-right">
-                                                    <h3 class="font-extrabold text-lg font-hand tracking-wider">מתכנן הטיולים שלנו</h3>
-                                                    <p class="text-white/95 text-[11px] font-bold mt-0.5">תיקיות מסע, צ׳ק־ליסטים ומפות אישיות</p>
-                                                    <p class="text-white/80 text-[10px] font-bold mt-2"><i class="fa-solid fa-folder-open ml-1"></i> ${App.State.trips.length} טיולים פעילים</p>
-                                                </div>
-                                                <div class="w-12 h-12 rounded-2xl bg-white/25 flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm"><i class="fa-solid fa-suitcase-rolling"></i></div>
-                                            </div>
-                                        </div>
-
-
-                                        <div class="space-y-3 px-1 pt-2">
-                                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                                <span><i class="fa-solid fa-wand-magic-sparkles ml-1 text-amber-400"></i> חלומות משותפים</span>
-                                                <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 shadow-sm">+ הוסף חלום</button>
-                                            </h3>
-                                            <div class="space-y-2">${activeListHTML}</div>
-                                        </div>
-                                        <!-- StoreRow -->
-      <div class="flex items-center justify-between mb-2 px-1">
-          <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
-              <i class="fa-solid fa-store ml-1 text-purple-400"></i> מתנות ל${App.State.partnerName || 'שותפ/ה'}
-          </span>
-          <span class="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded-xl">${App.State.gardenXP} <span class="text-[9px]">XP</span></span>
-      </div>
-      <div class="flex flex-col gap-3">
-          ${App.State.storeItems.map(item => {
-              const isFlashSale = App.State.flashSale && App.State.flashSale.active && App.State.flashSale.itemId === item.id;
-              const finalCost = isFlashSale ? Math.floor(item.cost * App.State.flashSale.discount) : item.cost;
-              const canAfford = App.State.gardenXP >= finalCost;
-              return `
-              <div class="flex items-center justify-between bg-white border border-stone-100 p-3 rounded-xl shadow-sm relative overflow-hidden">
-                  ${isFlashSale ? '<div class="absolute -left-5 top-2 bg-red-500 text-white text-[8px] font-extrabold px-6 py-0.5 -rotate-45 shadow-sm">מבצע פתע!</div>' : ''}
-                  <div class="flex items-center gap-3 pr-2">
-                      <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
-                      <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
-                  </div>
-                  <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition flex flex-col items-center leading-none gap-1">
-                      ${isFlashSale ? `<span class="line-through text-[9px] opacity-70">${item.cost}</span>` : ''}
-                      <span>${finalCost} XP</span>
-                  </button>
-              </div>
-              `}).join('')}
-      </div>
-
-      <!-- שוברים שממתינים למימוש -->
-      ${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
-      <div class="mt-6 pt-4 border-t border-stone-100">
-          <h4 class="text-[11px] font-bold text-stone-400 mb-3 uppercase tracking-wider">שוברים שממתינים למימוש</h4>
-          <div class="flex flex-col gap-3">
-              ${App.State.purchasedRewards.filter(r => !r.used).map(r => `
-                  <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden transition-all duration-500">
-                      <div class="flex-1 p-3 border-l-2 border-dashed border-orange-300 flex items-center">
-                          <span class="text-xs font-extrabold text-stone-700">${r.text}</span>
-                      </div>
-                      <button onclick="App.Actions.useReward(${r.id})" class="w-16 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold text-[10px] flex flex-col items-center justify-center transition active:bg-orange-300 shrink-0">
-                          <i class="fa-solid fa-scissors mb-1 text-sm opacity-50"></i>
-                          <span>תלוש</span>
-                      </button>
-                  </div>
-              `).join('')}
-          </div>
-      </div>
-      ` : ''}
-
-                                        <div class="mb-0" style="margin-top: 8px;">
-                                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
-                                            <div class="overflow-x-auto no-scrollbar pb-2 px-1">
-                                                ${bankHTML}
-                                            </div>
-                                        </div>
-
-                                        ${wallOfFameHTML}
-
-                                        <div class="rounded-[32px] overflow-hidden shadow-sm mb-4" style="margin-top: 8px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
-                                            <div class="p-5">
-                                                <div class="flex items-center justify-between mb-1">
-                                                    <div class="flex items-center gap-2">
-                                                        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center"><i class="fa-solid fa-store text-amber-300 text-base"></i></div>
-                                                        <div>
-                                                            <h3 class="text-base font-extrabold text-white tracking-wide">חנות חוויות זוגיות ✨</h3>
-                                                            <p class="text-[10px] text-white/60 font-bold">קנו שובר, הוסיפו לרשימת המתנות</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-left">
-                                                        <div class="text-[9px] font-bold text-white/50 uppercase tracking-wider">היתרה</div>
-                                                        <div class="text-base font-extrabold text-amber-300">${App.State.gardenXP} XP</div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
-                                                    ${[
-                                                        { key: 'restaurants', label: 'מסעדות ובתי קפה', icon: 'fa-utensils', color: 'bg-rose-500/20 border-rose-400/30 text-rose-300' },
-                                                        { key: 'spa', label: 'ספא ועיסויים', icon: 'fa-spa', color: 'bg-purple-500/20 border-purple-400/30 text-purple-300' },
-                                                        { key: 'trips', label: 'חופשות וצימרים', icon: 'fa-tent', color: 'bg-sky-500/20 border-sky-400/30 text-sky-300' },
-                                                        { key: 'adventures', label: 'חוויות והרפתקאות', icon: 'fa-bolt', color: 'bg-amber-500/20 border-amber-400/30 text-amber-300' }
-                                                    ].map(cat => {
-                                                        const isActive = (App.State.voucherCategory || 'restaurants') === cat.key;
-                                                        return `<button onclick="App.Actions.setVoucherCategory('${cat.key}')" class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition active:scale-95 ${isActive ? 'bg-white text-stone-800 border-white shadow-sm' : cat.color + ' border'}">
-                                                            <i class="fa-solid ${cat.icon} text-[10px]"></i>${cat.label}
-                                                        </button>`;
-                                                    }).join('')}
-                                                </div>
-                                            </div>
-
-                                            <div class="px-4 pb-5 space-y-2">
-                                                ${(() => {
-                                                    const cat = App.State.voucherCategory || 'restaurants';
-                                                    const vouchers = {
-                                                        restaurants: [
-                                                            { id: 'v1', name: 'ארוחת ערב זוגית במסעדה רומנטית', desc: 'לשניים כולל יין ✨', xp: 800, emoji: '🍷' },
-                                                            { id: 'v2', name: 'בוקר קפה ועוגה לשניים', desc: 'בית קפה בוטיק', xp: 250, emoji: '☕' },
-                                                            { id: 'v3', name: 'ארוחת שף פרמיום', desc: 'תפריט טעימות לשניים', xp: 1500, emoji: '👨‍🍳' },
-                                                            { id: 'v4', name: 'פיקניק רומנטי מוכן', desc: 'סל פיקניק מלא לשניים', xp: 500, emoji: '🧺' },
-                                                            { id: 'v5', name: 'ערב יין וגבינות', desc: 'טעימות מובחרות לשניים', xp: 600, emoji: '🧀' },
-                                                            { id: 'v6', name: 'ארוחת בוקר מפנקת במלון', desc: 'בופה פרמיום לשניים', xp: 700, emoji: '🥞' },
-                                                        ],
-                                                        spa: [
-                                                            { id: 'v7', name: 'עיסוי זוגי 60 דקות', desc: 'עיסוי שוודי מרגיע', xp: 1200, emoji: '💆' },
-                                                            { id: 'v8', name: 'יום ספא מלא לשניים', desc: 'כולל ג׳קוזי וסאונה', xp: 2500, emoji: '🧖' },
-                                                            { id: 'v9', name: 'טיפול פנים זוגי', desc: 'שעה עם מוצרי פרמיום', xp: 900, emoji: '✨' },
-                                                            { id: 'v10', name: 'מניקור ופדיקור לשניים', desc: 'טיפול ידיים ורגליים', xp: 600, emoji: '💅' },
-                                                            { id: 'v11', name: 'אמבטיית בועות זוגית', desc: 'עם שמנים ארומטיים', xp: 400, emoji: '🛁' },
-                                                            { id: 'v12', name: 'ריטריט ספא יומי', desc: 'חבילת VIP לשניים', xp: 4000, emoji: '🌸' },
-                                                        ],
-                                                        trips: [
-                                                            { id: 'v13', name: 'לילה בצימר רומנטי', desc: 'כולל ארוחת בוקר', xp: 3000, emoji: '🏡' },
-                                                            { id: 'v14', name: 'סופ״ש בצפון הארץ', desc: 'שני לילות בגליל', xp: 5000, emoji: '⛰️' },
-                                                            { id: 'v15', name: 'לילה בבוטיק אורבני', desc: 'במרכז העיר', xp: 2200, emoji: '🏨' },
-                                                            { id: 'v16', name: 'טיול יום לים המלח', desc: 'כולל כניסה לספא', xp: 800, emoji: '🌊' },
-                                                            { id: 'v17', name: 'קמפינג רומנטי', desc: 'אוהל זוגי עם ציוד', xp: 1000, emoji: '⛺' },
-                                                            { id: 'v18', name: 'חופשת שבוע בחו״ל', desc: 'טיסה + מלון לשניים', xp: 7000, emoji: '✈️' },
-                                                        ],
-                                                        adventures: [
-                                                            { id: 'v19', name: 'שיעור בישול זוגי', desc: 'סדנת שף מקצועי', xp: 700, emoji: '🍳' },
-                                                            { id: 'v20', name: 'טיסת אווירון קל', desc: 'חוויית טיסה לשניים', xp: 3500, emoji: '🛩️' },
-                                                            { id: 'v21', name: 'ערב קומדי סטנד-אפ', desc: 'כרטיסים לשניים', xp: 500, emoji: '🎤' },
-                                                            { id: 'v22', name: 'שיעור ריקוד זוגי', desc: 'סלסה / טנגו / וואלס', xp: 400, emoji: '💃' },
-                                                            { id: 'v23', name: 'טיול ג׳יפים', desc: 'שטח ואדרנלין לשניים', xp: 1800, emoji: '🚙' },
-                                                            { id: 'v24', name: 'צלילה חופשית', desc: 'קורס + ציוד לשניים', xp: 2000, emoji: '🤿' },
-                                                        ]
-                                                    };
-                                                    const list = vouchers[cat] || [];
-                                                    return list.map(v => {
-                                                        const canAfford = App.State.gardenXP >= v.xp;
-                                                        const purchased = (App.State.purchasedRewards || []).some(r => r.voucherId === v.id && !r.used);
-                                                        return `
-                                                        <div class="flex items-center justify-between p-3 rounded-2xl border transition ${purchased ? 'bg-emerald-900/30 border-emerald-500/30' : 'bg-white/5 border-white/10'}">
-                                                            <div class="flex items-center gap-3 flex-1 min-w-0">
-                                                                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl shrink-0">${v.emoji}</div>
-                                                                <div class="min-w-0">
-                                                                    <div class="text-sm font-bold text-white leading-tight truncate">${v.name}</div>
-                                                                    <div class="text-[10px] text-white/50 font-bold mt-0.5">${v.desc}</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="flex items-center gap-2 shrink-0 mr-2">
-                                                                ${purchased ? `<span class="text-[10px] font-bold text-emerald-300 bg-emerald-900/40 px-2 py-1 rounded-lg border border-emerald-500/30">✓ נרכש</span>` : ''}
-                                                                <button onclick="App.Actions.buyVoucher('${v.id}','${v.name.replace(/'/g,"\\'")}','${v.emoji}',${v.xp})" class="text-[11px] font-bold px-3 py-2 rounded-xl transition active:scale-95 flex flex-col items-center leading-none ${canAfford ? 'bg-amber-400 text-stone-900 shadow-sm hover:bg-amber-300' : 'bg-white/10 text-white/30 pointer-events-none'}">
-                                                                    <span>${v.xp.toLocaleString()}</span>
-                                                                    <span class="text-[9px] opacity-70">XP</span>
-                                                                </button>
-                                                            </div>
-                                                        </div>`;
-                                                    }).join('');
-                                                })()}
-                                            </div>
-
-                                            ${(App.State.purchasedRewards || []).filter(r => !r.used).length > 0 ? `
-                                            <div class="mx-4 mb-5 rounded-2xl border border-amber-400/20 bg-amber-900/20 p-4">
-                                                <h4 class="text-[11px] font-bold text-amber-300 mb-3 uppercase tracking-wider flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-ticket text-amber-400"></i> השוברים שלך ממתינים למימוש
-                                                </h4>
-                                                <div class="space-y-2">
-                                                    ${(App.State.purchasedRewards || []).filter(r => !r.used).map(r => `
-                                                        <div class="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-3">
-                                                            <div class="flex items-center gap-2 flex-1 min-w-0">
-                                                                <span class="text-lg">${r.emoji || '🎁'}</span>
-                                                                <span class="text-xs font-bold text-white truncate">${r.text}</span>
-                                                            </div>
-                                                            <button onclick="App.Actions.useReward(${r.id})" class="shrink-0 text-[10px] font-bold bg-amber-400 text-stone-900 px-3 py-1.5 rounded-lg active:scale-95 transition flex items-center gap-1">
-                                                                <i class="fa-solid fa-scissors text-[9px]"></i> מימוש
-                                                            </button>
-                                                        </div>
-                                                    `).join('')}
-                                                </div>
-                                            </div>` : ''}
-                                        </div>
-                                    </div>`;
-                            },
+                        <div class="mb-0" style="margin-top: 8px;">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest px-1 mb-2"><i class="fa-solid fa-gift ml-1 text-orange-400"></i> בנק הרעיונות ✨</h3>
+                            <div class="overflow-x-auto no-scrollbar pb-2 px-1">
+                                <div class="overflow-x-auto no-scrollbar pb-2 px-1">
+                                    ${bankHTML}
+                                </div>
+                            </div>
+                        </div>
+                        ${wallOfFameHTML}
+                    </div>
+                `;
+            },
 
                             TripPlanner() {
                                 const trips = App.State.trips || [];
