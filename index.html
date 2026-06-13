@@ -1368,6 +1368,25 @@
                         </div>
 
                         <div class="space-y-3 px-1 pt-2">
+                            <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1 text-emerald-400"></i> בנק הרעיונות ✨</h3>
+                            <div class="overflow-x-auto no-scrollbar pb-2 px-0.5">
+                                <div class="flex gap-3 w-max">
+                                    ${App.Data.wishesBank.filter(wish => !App.State.bucketList.some(b => b.text === wish.text)).map(wish => {
+                                        const originalIdx = App.Data.wishesBank.findIndex(w => w.text === wish.text);
+                                        return `
+                                        <div onclick="App.Actions.addFromBank(${originalIdx})" class="flex-shrink-0 w-44 h-full p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between">
+                                            <span class="text-xs font-bold text-stone-700 block line-clamp-2 mb-3">${wish.text}</span>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
+                                                <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
+                                            </div>
+                                        </div>`;
+                                    }).join('') || `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 px-1 pt-2">
                             <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
                                 <span><i class="fa-solid fa-wand-magic-sparkles ml-1 text-amber-400"></i> חלומות משותפים</span>
                                 <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 shadow-sm">+ הוסף חלום</button>
