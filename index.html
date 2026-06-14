@@ -112,12 +112,12 @@
     </style>
   </head>
   <body class="h-screen w-full flex flex-col overflow-hidden select-none relative">
-    <div id="toast-container" class="fixed top-6 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <div id="toast-container" class="fixed top-6 left-4 right-4 z-[80] flex flex-col gap-2 pointer-events-none"></div>
 
-    <div
-      id="custom-modal"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300"
-    >
+  <div
+    id="custom-modal"
+    class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity duration-300"
+  >
       <div
         class="bg-white/95 rounded-[32px] p-6 w-[90%] max-w-sm shadow-xl border border-white/40 transform scale-95 transition-transform duration-300"
         id="modal-body"
@@ -3196,6 +3196,40 @@
                                 });
                                 this._renderWhiteFlag('chat');
                             },
+                            openTimeoutModal() {
+                                App.UI.showModal(`
+                                    <div class="space-y-4 text-right" dir="rtl">
+                                        <div class="text-center mb-4">
+                                            <div class="text-4xl mb-2">⏳</div>
+                                            <h3 class="text-lg font-bold text-stone-800">פסק זמן חיובי</h3>
+                                            <p class="text-xs text-stone-500 mt-1 leading-relaxed">זה טבעי לקחת אוויר כשמוצפים. הבטחה לחזור לזה שומרת על הביטחון של שניכם.</p>
+                                        </div>
+                                        <div class="grid grid-cols-1 gap-2">
+                                            <button onclick="App.Actions.sendTimeoutMessage('בעוד חצי שעה')" class="py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 active:scale-95 transition hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600">בעוד חצי שעה</button>
+                                            <button onclick="App.Actions.sendTimeoutMessage('הערב, כשנירגע קצת')" class="py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 active:scale-95 transition hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600">הערב, כשנירגע קצת</button>
+                                            <button onclick="App.Actions.sendTimeoutMessage('מחר בבוקר בראש צלול')" class="py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 active:scale-95 transition hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600">מחר בבוקר בראש צלול</button>
+                                        </div>
+                                        <button onclick="App.UI.closeModal()" class="w-full mt-2 text-xs font-bold text-stone-400 py-2">ביטול</button>
+                                    </div>
+                                `);
+                            },
+                            sendTimeoutMessage(timeLabel) {
+                                const who = prompt("מי לוקח את פסק הזמן? (לדוגמה: אני, יעל, נדב)", App.State.userName || "אני");
+                                if(!who) return;
+                                
+                                App.UI.closeModal();
+                                const text = `אני אוהב/ת אותך וחשוב לי לפתור את זה, אבל אני עדיין מוצף/ת. בוא/י נחזור לזה ${timeLabel}.`;
+                                
+                                this._wf.messages.push({
+                                    id: Date.now(), 
+                                    author: 'me',
+                                    customName: who,
+                                    isTimeout: true,
+                                    text: text,
+                                    ts: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+                                });
+                                this._renderWhiteFlag('chat');
+                            },
                             clearConflictSession() {
                                 this._wf.messages = [];
                                 this._renderWhiteFlag('chat');
@@ -3242,13 +3276,15 @@
                                         ? `<div class="text-center text-stone-400 text-xs py-10">השיחה עוד לא התחילה. בחרו תבנית, מלאו, שלחו.</div>`
                                         : wf.messages.map(m => {
                                             const t = this._wfTemplates[m.templateId];
-                                            const text = t.render(m.parts);
+                                            const text = m.isTimeout ? m.text : t.render(m.parts);
                                             const mine = m.author === 'me';
-                                            const who = mine ? (App.State.userName || 'אני') : (App.State.partnerName || 'שותפ/ה');
+                                            const who = m.customName ? m.customName : (mine ? (App.State.userName || 'אני') : (App.State.partnerName || 'שותפ/ה'));
+                                            const label = m.isTimeout ? 'פסק זמן ⏳' : t.label;
+                                            const bgClass = m.isTimeout ? 'bg-orange-50 border-orange-200 text-orange-800' : (mine ? 'bg-white border-stone-200 text-stone-700' : 'bg-stone-50 border-stone-200 text-stone-700');
                                             return `<div class="flex ${mine ? 'justify-start' : 'justify-end'}">
-                                                <div class="max-w-[82%] rounded-2xl px-4 py-3 border ${mine ? 'bg-white border-stone-200' : 'bg-stone-50 border-stone-200'} text-stone-700">
-                                                    <div class="text-[10px] font-semibold text-stone-400 mb-1">${escape(who)} · ${m.ts} · ${t.label}</div>
-                                                    <div class="text-sm leading-relaxed">${escape(text)}</div>
+                                                <div class="max-w-[82%] rounded-2xl px-4 py-3 border ${bgClass}">
+                                                    <div class="text-[10px] font-semibold ${m.isTimeout ? 'text-orange-500' : 'text-stone-400'} mb-1">${escape(who)} · ${m.ts} · ${label}</div>
+                                                    <div class="text-sm leading-relaxed ${m.isTimeout ? 'font-bold' : ''}">${escape(text)}</div>
                                                 </div>
                                             </div>`;
                                         }).join('');
@@ -3262,6 +3298,42 @@
                                             <div class="text-[10px] text-stone-400 text-left"><span id="wf-count-${f.id}">0</span>/150</div>
                                         </div>
                                     `).join('');
+                                    
+                                    let anchorHTML = '';
+                                    const S = App.State;
+                                    const highlights = Object.keys(S.journalHighlights || {}).filter(k => (S.journalHighlights || {})[k]);
+                                    if (highlights.length > 0) {
+                                        const randKey = highlights[Math.floor(Math.random() * highlights.length)];
+                                        const note = (S.journalNotes || {})[randKey] || '';
+                                        const photos = (S.journalPhotos || {})[randKey] || [];
+                                        const photoSrc = (typeof photos === 'string') ? photos : (photos.length > 0 ? photos[0] : null);
+                                        const parts = randKey.split('-');
+                                        const fmtDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : randKey;
+                                        
+                                        anchorHTML = `
+                                        <div class="bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 rounded-2xl p-3 mb-2 shadow-sm flex items-center gap-3">
+                                            ${photoSrc ? `<img src="${photoSrc}" class="w-12 h-12 object-cover rounded-lg shadow-sm transform -rotate-2 border border-white">` : `<div class="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center text-lg shadow-inner"><i class="fa-solid fa-heart"></i></div>`}
+                                            <div class="flex-1 text-right">
+                                                <div class="text-[10px] font-extrabold text-rose-500 tracking-wider">תזכורת למה שחשוב באמת ❤️</div>
+                                                <div class="text-xs text-stone-700 font-bold mt-0.5 line-clamp-2">${note || 'יום זהב ששמרנו ביומן'}</div>
+                                                <div class="text-[9px] text-stone-400 mt-0.5">${fmtDate}</div>
+                                            </div>
+                                        </div>`;
+                                    } else {
+                                        const completedWishes = (S.bucketList || []).filter(i => i.completed);
+                                        if (completedWishes.length > 0) {
+                                            const randWish = completedWishes[Math.floor(Math.random() * completedWishes.length)];
+                                            anchorHTML = `
+                                            <div class="bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 rounded-2xl p-3 mb-2 shadow-sm flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-lg shadow-inner"><i class="fa-solid fa-star"></i></div>
+                                                <div class="flex-1 text-right">
+                                                    <div class="text-[10px] font-extrabold text-rose-500 tracking-wider">תזכורת למה שחשוב באמת ❤️</div>
+                                                    <div class="text-xs text-stone-700 font-bold mt-0.5 line-clamp-2">הגשמנו יחד: ${randWish.text}</div>
+                                                </div>
+                                            </div>`;
+                                        }
+                                    }
+
                                     host.innerHTML = `${styleBlock}
                                         <div class="relative min-h-full p-5 pt-16 pb-8 flex flex-col gap-5 max-w-xl mx-auto text-stone-700 wf-fade" dir="rtl">
                                             ${closeBtn}
@@ -3270,6 +3342,7 @@
                                                 <h2 class="text-base font-semibold text-stone-700">מרחב הדגל הלבן</h2>
                                                 <p class="text-[11px] text-stone-400 mt-1">תקשורת בתבניות בלבד · עד 150 תווים לשדה</p>
                                             </div>
+                                            ${anchorHTML}
                                             <div class="bg-white/70 border border-stone-200 rounded-2xl p-4 min-h-[200px] max-h-[40vh] overflow-y-auto space-y-2">
                                                 ${messagesHTML}
                                             </div>
@@ -3279,6 +3352,11 @@
                                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                                     <button onclick="App.Actions.sendConflictMessage('me')" class="py-2.5 rounded-xl bg-stone-700 text-white text-sm font-medium hover:bg-stone-800 active:scale-95 transition">שלח כ-${(App.State.userName || 'אני')}</button>
                                                     <button onclick="App.Actions.sendConflictMessage('partner')" class="py-2.5 rounded-xl bg-stone-100 border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-200 active:scale-95 transition">שלח כ-${(App.State.partnerName || 'שותפ/ה')}</button>
+                                                </div>
+                                                <div class="border-t border-stone-100 pt-3 mt-2">
+                                                    <button onclick="App.Actions.openTimeoutModal()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 text-xs font-bold hover:bg-orange-100 active:scale-95 transition">
+                                                        <i class="fa-regular fa-clock"></i> אני מוצף, צריך/ה פסק זמן
+                                                    </button>
                                                 </div>
                                             </div>
                                             <button onclick="App.Actions.clearConflictSession()" class="text-[11px] text-stone-400 hover:text-stone-600 transition self-center">סיימנו · נקה שיחה</button>
