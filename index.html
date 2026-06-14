@@ -2070,7 +2070,7 @@
                                 const isFinishable = totalAnswered === 10;
 
                                 return `
-                                    <div class="space-y-4">
+                                    <div id="tot-wrapper" class="space-y-4">
                                       <div class="flex justify-between items-center bg-white p-3 rounded-2xl border shadow-sm">
                                             <div class="text-right">
                                                 <h3 class="font-extrabold text-stone-800 text-sm">משחק זה או זה</h3>
@@ -2081,7 +2081,7 @@
                                             </button>
                                         </div>
 
-                                        <div class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
+                                        <div id="tot-scroll" class="space-y-3.5 max-h-[60vh] overflow-y-auto no-scrollbar pb-4 px-0.5">
                                             ${itemsHTML}
                                         </div>
 
@@ -4439,7 +4439,19 @@
                             selectGameAnswer(qIdx, choice) {
                                 const answers = {...App.State.gameAnswers}; answers[qIdx] = choice;
                                 App.State.save('gameAnswers', answers);
-                                App.Navigation.navigate('intimacy');
+                                
+                                const wrapper = document.getElementById('tot-wrapper');
+                                if (wrapper) {
+                                    const scroller = document.getElementById('tot-scroll');
+                                    const scrollPos = scroller ? scroller.scrollTop : 0;
+                                    
+                                    wrapper.outerHTML = App.Components.renderThisOrThatGame();
+                                    
+                                    const newScroller = document.getElementById('tot-scroll');
+                                    if (newScroller) newScroller.scrollTop = scrollPos;
+                                } else {
+                                    App.Navigation.navigate('intimacy');
+                                }
                             },
 
                             submitThisOrThatGame() {
