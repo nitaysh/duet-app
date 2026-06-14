@@ -3206,6 +3206,8 @@
                                 this._renderWhiteFlag('chat');
                             },
                             openTimeoutModal() {
+                                const meName = App.State.userName || 'אני';
+                                const partnerName = App.State.partnerName || 'שותפ/ה';
                                 App.UI.showModal(`
                                     <div class="space-y-4 text-right" dir="rtl">
                                         <div class="text-center mb-4">
@@ -3213,6 +3215,17 @@
                                             <h3 class="text-lg font-bold text-stone-800">פסק זמן חיובי</h3>
                                             <p class="text-xs text-stone-500 mt-1 leading-relaxed">זה טבעי לקחת אוויר כשמוצפים. הבטחה לחזור לזה שומרת על הביטחון של שניכם.</p>
                                         </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="text-[11px] font-bold text-stone-400 block mb-1">מי מבקש את פסק הזמן?</label>
+                                            <div class="flex gap-2">
+                                                <button onclick="document.getElementById('to-who-val').value='me'; this.classList.add('bg-orange-100','border-orange-300','text-orange-700'); this.nextElementSibling.classList.remove('bg-orange-100','border-orange-300','text-orange-700'); this.nextElementSibling.classList.add('bg-stone-50','text-stone-600');" class="flex-1 py-2.5 rounded-xl border text-sm font-bold bg-orange-100 border-orange-300 text-orange-700 transition">אני (${meName})</button>
+                                                <button onclick="document.getElementById('to-who-val').value='partner'; this.classList.add('bg-orange-100','border-orange-300','text-orange-700'); this.classList.remove('bg-stone-50','text-stone-600'); this.previousElementSibling.classList.remove('bg-orange-100','border-orange-300','text-orange-700'); this.previousElementSibling.classList.add('bg-stone-50','text-stone-600');" class="flex-1 py-2.5 rounded-xl border border-stone-200 text-sm font-bold bg-stone-50 text-stone-600 transition">${partnerName}</button>
+                                            </div>
+                                            <input type="hidden" id="to-who-val" value="me">
+                                        </div>
+
+                                        <label class="text-[11px] font-bold text-stone-400 block mb-1">מתי נחזור לזה?</label>
                                         <div class="grid grid-cols-1 gap-2">
                                             <button onclick="App.Actions.sendTimeoutMessage('בעוד חצי שעה')" class="py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 active:scale-95 transition hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600">בעוד חצי שעה</button>
                                             <button onclick="App.Actions.sendTimeoutMessage('הערב, כשנירגע קצת')" class="py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm font-bold text-stone-700 active:scale-95 transition hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600">הערב, כשנירגע קצת</button>
@@ -3223,16 +3236,16 @@
                                 `);
                             },
                             sendTimeoutMessage(timeLabel) {
-                                const who = prompt("מי לוקח את פסק הזמן? (לדוגמה: אני, יעל, נדב)", App.State.userName || "אני");
-                                if(!who) return;
+                                const author = document.getElementById('to-who-val').value;
+                                const whoName = author === 'me' ? (App.State.userName || 'אני') : (App.State.partnerName || 'שותפ/ה');
                                 
                                 App.UI.closeModal();
                                 const text = `אני אוהב/ת אותך וחשוב לי לפתור את זה, אבל אני עדיין מוצף/ת. בוא/י נחזור לזה ${timeLabel}.`;
                                 
                                 this._wf.messages.push({
                                     id: Date.now(), 
-                                    author: 'me',
-                                    customName: who,
+                                    author: author,
+                                    customName: whoName,
                                     isTimeout: true,
                                     text: text,
                                     ts: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
