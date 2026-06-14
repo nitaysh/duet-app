@@ -2579,8 +2579,12 @@
     <input id="lr-emoji" type="text" maxlength="2" placeholder="🍝" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-orange-400">
     <input id="lr-mood" type="text" maxlength="40" placeholder="אווירה / טעימה (לא חובה)" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
 </div>
-<div>
-    <input id="lr-img" type="url" placeholder="קישור לתמונת המנה (URL)" dir="ltr" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
+<div class="flex gap-2 items-center">
+    <input id="lr-img" type="text" placeholder="קישור לתמונה (URL) או העלאה מגלריה" dir="ltr" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
+    <label class="w-12 h-12 flex-shrink-0 bg-white/80 text-stone-600 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white transition border border-stone-200 shadow-sm active:scale-95" title="העלאת תמונה">
+        <i class="fa-solid fa-image text-lg text-orange-500"></i>
+        <input type="file" accept="image/*" class="hidden" onchange="App.Actions.handleRecipePhotoUpload(event, 'lr-img')">
+    </label>
 </div>
                                                 <button onclick="App.Actions.saveLinkRecipe()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-2xl font-extrabold text-sm active:scale-95 transition shadow">שמור מתכון</button>
                                             </div>
@@ -2599,8 +2603,12 @@
     <input id="nr-emoji" type="text" maxlength="2" placeholder="🍽️" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-rose-400">
     <input id="nr-mood" type="text" maxlength="40" placeholder="אווירה / תיאור קצר" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
 </div>
-<div>
-    <input id="nr-img" type="url" placeholder="קישור לתמונת המנה (URL)" dir="ltr" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
+<div class="flex gap-2 items-center">
+    <input id="nr-img" type="text" placeholder="קישור לתמונה (URL) או העלאה מגלריה" dir="ltr" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
+    <label class="w-12 h-12 flex-shrink-0 bg-white/80 text-stone-600 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white transition border border-stone-200 shadow-sm active:scale-95" title="העלאת תמונה">
+        <i class="fa-solid fa-image text-lg text-rose-500"></i>
+        <input type="file" accept="image/*" class="hidden" onchange="App.Actions.handleRecipePhotoUpload(event, 'nr-img')">
+    </label>
 </div>
                                                 <div class="flex gap-2">
                                                     <input id="nr-time" type="text" maxlength="20" placeholder="זמן (45 דק')" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
@@ -3931,6 +3939,19 @@
                                             <button onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 shadow text-xs"><i class="fa-solid fa-xmark"></i></button>
                                         </div>
                                     `);
+                                }
+                            },
+
+                            async handleRecipePhotoUpload(event, targetInputId) {
+                                const file = event.target.files[0];
+                                if (file) {
+                                    App.UI.showToast("מכווץ ומעלה תמונה...", "info");
+                                    const compressedBase64 = await App.Utils.compressImage(file);
+                                    const input = document.getElementById(targetInputId);
+                                    if (input) {
+                                        input.value = compressedBase64;
+                                        App.UI.showToast("התמונה צורפה בהצלחה! 📸", "success");
+                                    }
                                 }
                             },
 
