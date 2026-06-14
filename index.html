@@ -2576,9 +2576,12 @@
                                                 <input id="lr-name" type="text" maxlength="80" placeholder="שם המתכון" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-orange-400">
                                                 <input id="lr-url" type="url" maxlength="500" placeholder="https://..." dir="ltr" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
                                                 <div class="flex gap-2">
-                                                    <input id="lr-emoji" type="text" maxlength="2" placeholder="🍝" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-orange-400">
-                                                    <input id="lr-mood" type="text" maxlength="40" placeholder="אווירה / טעימה (לא חובה)" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
-                                                </div>
+    <input id="lr-emoji" type="text" maxlength="2" placeholder="🍝" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-orange-400">
+    <input id="lr-mood" type="text" maxlength="40" placeholder="אווירה / טעימה (לא חובה)" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
+</div>
+<div>
+    <input id="lr-img" type="url" placeholder="קישור לתמונת המנה (URL)" dir="ltr" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-medium text-stone-700 focus:outline-none focus:border-orange-400">
+</div>
                                                 <button onclick="App.Actions.saveLinkRecipe()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-2xl font-extrabold text-sm active:scale-95 transition shadow">שמור מתכון</button>
                                             </div>
                                         </div>
@@ -2593,9 +2596,12 @@
                                             <div class="space-y-3 text-right">
                                                 <input id="nr-name" type="text" maxlength="80" placeholder="שם המתכון *" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-rose-400">
                                                 <div class="flex gap-2">
-                                                    <input id="nr-emoji" type="text" maxlength="2" placeholder="🍽️" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-rose-400">
-                                                    <input id="nr-mood" type="text" maxlength="40" placeholder="אווירה / תיאור קצר" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
-                                                </div>
+    <input id="nr-emoji" type="text" maxlength="2" placeholder="🍽️" class="w-16 text-center bg-white/80 border border-stone-200 rounded-xl py-3 text-xl focus:outline-none focus:border-rose-400">
+    <input id="nr-mood" type="text" maxlength="40" placeholder="אווירה / תיאור קצר" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
+</div>
+<div>
+    <input id="nr-img" type="url" placeholder="קישור לתמונת המנה (URL)" dir="ltr" class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
+</div>
                                                 <div class="flex gap-2">
                                                     <input id="nr-time" type="text" maxlength="20" placeholder="זמן (45 דק')" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm text-stone-700 focus:outline-none focus:border-rose-400">
                                                     <select id="nr-difficulty" class="flex-1 bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-700 focus:outline-none focus:border-rose-400">
@@ -2638,10 +2644,10 @@
                                                 <button onclick="event.stopPropagation(); App.Actions.deleteRecipe('${modalRecipe.id}')" class="w-10 h-10 rounded-full bg-white/95 hover:bg-rose-100 text-rose-500 flex items-center justify-center shadow-md transition active:scale-90" title="מחק מתכון"><i class="fa-solid fa-trash text-sm"></i></button>
                                             </div>
                                             <div class="relative bg-gradient-to-br ${modalRecipe.accent} px-6 pt-2 pb-8">
-                                                <div class="pointer-events-none pt-2">
-
-                                                    <div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>
-                                                    <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
+    ${modalRecipe.img ? `<div class="w-full h-40 rounded-2xl overflow-hidden mb-3 shadow-sm border border-white/20"><img src="${modalRecipe.img}" class="w-full h-full object-cover"></div>` : ''}
+    <div class="pointer-events-none pt-2">
+        ${modalRecipe.img ? '' : `<div class="text-6xl text-center drop-shadow-sm">${modalRecipe.emoji}</div>`}
+        <h2 class="text-2xl font-extrabold text-stone-800 font-hand tracking-wider text-center mt-2">${modalRecipe.name}</h2>
                                                     <p class="text-center text-xs font-bold text-stone-600 mt-1">${modalRecipe.mood}</p>
                                                     <div class="flex justify-center gap-2 mt-3">
                                                         <span class="bg-white/70 text-stone-700 text-[11px] font-bold px-3 py-1 rounded-full border border-white/80"><i class="fa-regular fa-clock ml-1"></i>${modalRecipe.time}</span>
@@ -2699,8 +2705,8 @@
                                                 <div onclick="event.stopPropagation()" class="glass-panel rounded-[28px] shadow-xl border border-white w-full max-w-xs p-5 relative">
                                                     <button onclick="App.Actions.closeLinkActions()" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/80 text-stone-600 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
                                                     <div class="text-center mb-4 pt-2">
-                                                        <div class="text-4xl">${lr.emoji || '🔗'}</div>
-                                                        <h3 class="font-extrabold text-stone-800 font-hand text-lg mt-1">${lr.name}</h3>
+    ${lr.img ? `<div class="w-full h-32 rounded-xl overflow-hidden mb-2 shadow-inner"><img src="${lr.img}" class="w-full h-full object-cover"></div>` : `<div class="text-4xl">${lr.emoji || '🔗'}</div>`}
+    <h3 class="font-extrabold text-stone-800 font-hand text-lg mt-1">${lr.name}</h3>
                                                         <p class="text-[10px] text-stone-500 break-all mt-1 px-2" dir="ltr">${lr.url}</p>
                                                     </div>
                                                     <div class="space-y-2">
@@ -4815,9 +4821,10 @@
                                     const r = stored.find(x => String(x.id) === String(id));
                                     if (!r) return;
                                     const n = document.getElementById('lr-name'); if (n) n.value = r.name || '';
-                                    const u = document.getElementById('lr-url'); if (u) u.value = r.url || '';
-                                    const e = document.getElementById('lr-emoji'); if (e) e.value = r.emoji || '';
-                                    const m = document.getElementById('lr-mood'); if (m) m.value = r.mood || '';
+const u = document.getElementById('lr-url'); if (u) u.value = r.url || '';
+const e = document.getElementById('lr-emoji'); if (e) e.value = r.emoji || '';
+const m = document.getElementById('lr-mood'); if (m) m.value = r.mood || '';
+const i = document.getElementById('lr-img'); if (i) i.value = r.img || '';
                                 }, 50);
                             },
 
@@ -4844,47 +4851,49 @@
                             },
 
                             saveLinkRecipe() {
-                                const nameEl = document.getElementById('lr-name');
-                                const urlEl = document.getElementById('lr-url');
-                                const emojiEl = document.getElementById('lr-emoji');
-                                const moodEl = document.getElementById('lr-mood');
-                                const name = (nameEl?.value || '').trim().slice(0, 80);
-                                let url = (urlEl?.value || '').trim().slice(0, 500);
-                                const emoji = (emojiEl?.value || '').trim().slice(0, 2) || '🔗';
-                                const mood = (moodEl?.value || '').trim().slice(0, 40) || 'מתכון שמור';
-                                if (!name) return App.UI.showToast('צריך שם למתכון', 'info');
-                                if (!url) return App.UI.showToast('צריך להדביק לינק', 'info');
-                                if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-                                try { new URL(url); } catch { return App.UI.showToast('הלינק לא תקין', 'error'); }
-                                const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
-                                const editId = App.State.editingLinkId;
-                                if (editId) {
-                                    const idx = stored.findIndex(r => String(r.id) === String(editId));
-                                    if (idx !== -1) {
-                                        stored[idx] = { ...stored[idx], name, url, emoji, mood };
-                                    }
-                                    localStorage.setItem('duet_recipes', JSON.stringify(stored));
-                                    App.State.editingLinkId = null;
-                                    App.State.showAddLinkRecipe = false;
-                                    App.UI.showToast('הלינק עודכן ✨', 'success');
-                                    App.Navigation.navigate('intimacy');
-                                    return;
-                                }
-                                const accents = ['from-rose-200 to-orange-200', 'from-amber-200 to-yellow-200', 'from-emerald-200 to-teal-200', 'from-sky-200 to-indigo-200', 'from-pink-200 to-rose-200'];
-                                const accent = accents[Math.floor(Math.random() * accents.length)];
-                                const recipe = {
-                                    id: 'link-' + Date.now(),
-                                    name, emoji, mood, accent, url,
-                                    isLink: true,
-                                    time: '', difficulty: '',
-                                    ingredients: [], steps: []
-                                };
-                                stored.unshift(recipe);
-                                localStorage.setItem('duet_recipes', JSON.stringify(stored));
-                                App.State.showAddLinkRecipe = false;
-                                App.UI.showToast('המתכון נשמר! 🔗', 'success');
-                                App.Navigation.navigate('intimacy');
-                            },
+    const nameEl = document.getElementById('lr-name');
+    const urlEl = document.getElementById('lr-url');
+    const emojiEl = document.getElementById('lr-emoji');
+    const moodEl = document.getElementById('lr-mood');
+    const imgEl = document.getElementById('lr-img');
+    const name = (nameEl?.value || '').trim().slice(0, 80);
+    let url = (urlEl?.value || '').trim().slice(0, 500);
+    const emoji = (emojiEl?.value || '').trim().slice(0, 2) || '🔗';
+    const mood = (moodEl?.value || '').trim().slice(0, 40) || 'מתכון שמור';
+    const img = (imgEl?.value || '').trim();
+    if (!name) return App.UI.showToast('צריך שם למתכון', 'info');
+    if (!url) return App.UI.showToast('צריך להדביק לינק', 'info');
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    try { new URL(url); } catch { return App.UI.showToast('הלינק לא תקין', 'error'); }
+    const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
+    const editId = App.State.editingLinkId;
+    if (editId) {
+        const idx = stored.findIndex(r => String(r.id) === String(editId));
+        if (idx !== -1) {
+            stored[idx] = { ...stored[idx], name, url, emoji, mood, img };
+        }
+        localStorage.setItem('duet_recipes', JSON.stringify(stored));
+        App.State.editingLinkId = null;
+        App.State.showAddLinkRecipe = false;
+        App.UI.showToast('הלינק והתמונה עודכנו ✨', 'success');
+        App.Navigation.navigate('intimacy');
+        return;
+    }
+    const accents = ['from-rose-200 to-orange-200', 'from-amber-200 to-yellow-200', 'from-emerald-200 to-teal-200', 'from-sky-200 to-indigo-200', 'from-pink-200 to-rose-200'];
+    const accent = accents[Math.floor(Math.random() * accents.length)];
+    const recipe = {
+        id: 'link-' + Date.now(),
+        name, emoji, mood, accent, url, img,
+        isLink: true,
+        time: '', difficulty: '',
+        ingredients: [], steps: []
+    };
+    stored.unshift(recipe);
+    localStorage.setItem('duet_recipes', JSON.stringify(stored));
+    App.State.showAddLinkRecipe = false;
+    App.UI.showToast('המתכון נשמר! 🔗', 'success');
+    App.Navigation.navigate('intimacy');
+},
 
                             openAddRecipe() {
                                 App.State.showAddRecipe = true;
@@ -4897,10 +4906,11 @@
                             },
 
                             saveNewRecipe() {
-                                const $ = (id) => document.getElementById(id);
-                                const name = ($('nr-name')?.value || '').trim().slice(0, 80);
-                                const emoji = ($('nr-emoji')?.value || '').trim().slice(0, 2) || '🍽️';
-                                const mood = ($('nr-mood')?.value || '').trim().slice(0, 40) || 'מתכון אישי';
+    const $ = (id) => document.getElementById(id);
+    const name = ($('nr-name')?.value || '').trim().slice(0, 80);
+    const emoji = ($('nr-emoji')?.value || '').trim().slice(0, 2) || '🍽️';
+    const mood = ($('nr-mood')?.value || '').trim().slice(0, 40) || 'מתכון אישי';
+    const img = ($('nr-img')?.value || '').trim();
                                 const time = ($('nr-time')?.value || '').trim().slice(0, 20) || '30 דק׳';
                                 const difficulty = ($('nr-difficulty')?.value || 'בינוני').slice(0, 10);
                                 const accent = ($('nr-accent-val')?.value || 'from-rose-200 to-orange-200');
@@ -4910,10 +4920,10 @@
                                 if (ingredients.length === 0) return App.UI.showToast('הוסיפו לפחות מצרך אחד', 'info');
                                 if (steps.length === 0) return App.UI.showToast('הוסיפו לפחות שלב הכנה אחד', 'info');
                                 const recipe = {
-                                    id: 'r-' + Date.now(),
-                                    name, emoji, mood, time, difficulty, accent,
-                                    ingredients, steps
-                                };
+    id: 'r-' + Date.now(),
+    name, emoji, mood, time, difficulty, accent, img,
+    ingredients, steps
+};
                                 const stored = JSON.parse(localStorage.getItem('duet_recipes') || '[]');
                                 stored.unshift(recipe);
                                 localStorage.setItem('duet_recipes', JSON.stringify(stored));
@@ -4950,15 +4960,15 @@
                                 const text = `🍳 מבשלים הערב: ${recipe.name}\n\nרשימת קניות:\n` + recipe.ingredients.map(i => `• ${i}`).join('\n');
                                 const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
                                 notes.unshift({
-                                    id: Date.now(),
-                                    text: text,
-                                    author: App.State.userName,
-                                    color: 'bg-emerald-100',
-                                    magnet: '🍳',
-                                    type: 'text',
-                                    image: null,
-                                    rot: Math.floor(Math.random() * 6) - 3
-                                });
+    id: Date.now(),
+    text: text,
+    author: App.State.userName,
+    color: 'bg-emerald-100',
+    magnet: '🍳',
+    type: recipe.img ? 'photo' : 'text',
+    image: recipe.img || null,
+    rot: Math.floor(Math.random() * 6) - 3
+});
                                 localStorage.setItem('duet_board_notes', JSON.stringify(notes));
                                 App.State.save('chefsModalRecipeId', null);
                                 App.State.save('intimacyMode', 'qa');
