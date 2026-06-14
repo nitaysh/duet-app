@@ -5268,21 +5268,9 @@
             App.Navigation.mainTabs = ['garden', 'journal', 'board', 'intimacy', 'profile'];
 
             App.Actions.swipeMainTab = function(direction) {
-                const tabs = App.Navigation.mainTabs;
-                const currentIndex = tabs.indexOf(App.State.activeTab);
-                if (currentIndex === -1) return;
-
-                // בטאבים הראשיים הכיוון צריך להתאים לתחושת ההחלקה בפועל:
-                // שמאלה = חזרה לאינדקס הקודם, ימינה = מעבר לאינדקס הבא.
-                const nextIndex = direction === 'left'
-                    ? currentIndex - 1
-                    : currentIndex + 1;
-
-                if (nextIndex < 0 || nextIndex >= tabs.length) return;
-
-                App.Navigation._swipeDir = direction;
-                App.Navigation.navigate(tabs[nextIndex]);
-            };
+    // ניווט בין הטאבים הראשיים ע"י Swipe בוטל.
+    return;
+};
 
 
             // ביומן: לוח שנה -> פיד -> מפה. בקצוות נופלים חזרה למעבר בין הטאבים הראשיים.
