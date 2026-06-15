@@ -1038,7 +1038,23 @@
                                   ingredients: ["200 גרם שוקולד מריר", "4 ביצים מופרדות", "3 כפות סוכר", "1 כוס שמנת להקצפה", "1 כפית תמצית וניל", "קורט מלח", "תותים לקישוט"],
                                   steps: ["ממיסים שוקולד בבן מארי ומקררים מעט.", "מקציפים חלבונים עם סוכר לקצף יציב.", "מקציפים שמנת בנפרד עם וניל.", "מקפלים חלמונים לשוקולד, אחר כך שמנת ולבסוף חלבונים.", "מחלקים לכוסיות יפות.", "מצננים במקרר 3 שעות ומקשטים בתותים."]
                                 }
-                            ]
+                            ],
+                            libraryBank: {
+                                podcasts: [
+                                    { title: "איך לריב נכון? (פרק 52)", author: "חושבים טוב - יהודית כץ", duration: "50 דק'", url: "https://open.spotify.com/episode/3G76wG4j0hZ1y12P9s1rK2", icon: "fa-podcast", color: "text-purple-600 bg-purple-50" },
+                                    { title: "תקשורת מקרבת בזוגיות", author: "פודקאסט יחסים", duration: "40 דק'", url: "https://open.spotify.com", icon: "fa-headphones", color: "text-indigo-600 bg-indigo-50" },
+                                    { title: "חמש שפות האהבה - מדריך", author: "זמן זוגי", duration: "30 דק'", url: "https://open.spotify.com", icon: "fa-microphone", color: "text-blue-600 bg-blue-50" }
+                                ],
+                                videos: [
+                                    { title: "הכוח של הפגיעות (עברית)", author: "ברנה בראון (TED)", duration: "20 דק'", url: "https://www.youtube.com/watch?v=iCvmsMzlF7o", icon: "fa-youtube", color: "text-rose-600 bg-rose-50" },
+                                    { title: "הסוד לתשוקה בזוגיות ארוכה", author: "אסתר פרל (TED)", duration: "19 דק'", url: "https://www.youtube.com/watch?v=sa0RUmGTCYY", icon: "fa-circle-play", color: "text-orange-600 bg-orange-50" },
+                                    { title: "מה עושה זוגיות לטובה?", author: "רוברט וולדינגר (TED)", duration: "12 דק'", url: "https://www.youtube.com/watch?v=8KkKuTCFvzI", icon: "fa-tv", color: "text-amber-600 bg-amber-50" }
+                                ],
+                                articles: [
+                                    { title: "36 השאלות שיובילו לאהבה", author: "ד״ר ארתור ארון (NYT)", duration: "10 דק' קריאה", url: "https://www.nytimes.com/2015/01/09/style/no-37-big-wedding-or-small.html", icon: "fa-book-open", color: "text-emerald-600 bg-emerald-50" },
+                                    { title: "איך לתת פידבק בזוגיות", author: "מגזין פסיכולוגיה", duration: "5 דק' קריאה", url: "#", icon: "fa-file-lines", color: "text-teal-600 bg-teal-50" }
+                                ]
+                            }
                         },
 
                         Navigation: {
@@ -1779,9 +1795,52 @@
                                     `<div class="w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl font-bold text-center shadow-sm border border-emerald-100 mt-4">סיימתם 5 שאלות עומק להיום! נתראה מחר 🌱</div>`
                                 ) : '';
 
+                                const libraryModalHTML = App.State.showLibraryModal ? `
+                                    <div onclick="App.Actions.closeLibrary()" class="fixed inset-0 z-50 bg-stone-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-page-entry">
+                                        <div onclick="event.stopPropagation()" class="glass-panel rounded-[28px] shadow-xl border border-white w-full max-w-md max-h-[85vh] overflow-y-auto p-6 relative">
+                                            <button onclick="App.Actions.closeLibrary()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/90 text-stone-600 flex items-center justify-center shadow-sm active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                            <div class="text-center mb-6 pt-2">
+                                                <div class="text-4xl mb-2">📚</div>
+                                                <h3 class="text-xl font-extrabold text-stone-800 font-hand tracking-wider">הספרייה הזוגית</h3>
+                                                <p class="text-xs text-stone-500">כלים, פודקאסטים והשראה להעמקת הקשר</p>
+                                            </div>
+                                            
+                                            <div class="space-y-5 text-right" dir="rtl">
+                                                <div>
+                                                    <h4 class="text-xs font-extrabold text-purple-600 uppercase tracking-widest mb-3"><i class="fa-solid fa-headphones ml-1"></i> פודקאסטים מומלצים</h4>
+                                                    <div class="space-y-2">${App.Data.libraryBank.podcasts.map(item => `<a href="${item.url}" target="_blank" class="flex items-center gap-3 bg-white/60 p-3 rounded-2xl border border-white shadow-sm hover:bg-white transition active:scale-[0.98]"><div class="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${item.icon}"></i></div><div class="flex-1"><h5 class="text-sm font-bold text-stone-800">${item.title}</h5><p class="text-[10px] text-stone-500">${item.author} • ${item.duration}</p></div><i class="fa-solid fa-chevron-left text-stone-300 text-xs"></i></a>`).join('')}</div>
+                                                </div>
+                                                
+                                                <div>
+                                                    <h4 class="text-xs font-extrabold text-rose-600 uppercase tracking-widest mb-3"><i class="fa-solid fa-play ml-1"></i> צפייה משותפת</h4>
+                                                    <div class="space-y-2">${App.Data.libraryBank.videos.map(item => `<a href="${item.url}" target="_blank" class="flex items-center gap-3 bg-white/60 p-3 rounded-2xl border border-white shadow-sm hover:bg-white transition active:scale-[0.98]"><div class="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${item.icon}"></i></div><div class="flex-1"><h5 class="text-sm font-bold text-stone-800">${item.title}</h5><p class="text-[10px] text-stone-500">${item.author} • ${item.duration}</p></div><i class="fa-solid fa-chevron-left text-stone-300 text-xs"></i></a>`).join('')}</div>
+                                                </div>
+
+                                                <div>
+                                                    <h4 class="text-xs font-extrabold text-emerald-600 uppercase tracking-widest mb-3"><i class="fa-solid fa-book-open ml-1"></i> מאמרים</h4>
+                                                    <div class="space-y-2">${App.Data.libraryBank.articles.map(item => `<a href="${item.url}" target="_blank" class="flex items-center gap-3 bg-white/60 p-3 rounded-2xl border border-white shadow-sm hover:bg-white transition active:scale-[0.98]"><div class="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${item.icon}"></i></div><div class="flex-1"><h5 class="text-sm font-bold text-stone-800">${item.title}</h5><p class="text-[10px] text-stone-500">${item.author} • ${item.duration}</p></div><i class="fa-solid fa-chevron-left text-stone-300 text-xs"></i></a>`).join('')}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : '';
+
+                                const libraryBannerHTML = `
+                                    <div onclick="App.Actions.openLibrary()" class="bg-gradient-to-l from-indigo-500 to-purple-600 rounded-[28px] p-5 shadow-md flex items-center justify-between cursor-pointer active:scale-95 transition hover:brightness-110 mb-4 overflow-hidden relative">
+                                        <div class="absolute -left-4 -bottom-4 text-7xl opacity-20">📚</div>
+                                        <div class="text-right z-10 text-white">
+                                            <h3 class="font-extrabold text-base tracking-wide flex items-center gap-2">הספרייה הזוגית <i class="fa-solid fa-arrow-left text-[10px] bg-white/20 p-1.5 rounded-full"></i></h3>
+                                            <p class="text-xs text-indigo-100 font-medium mt-0.5">פודקאסטים, הרצאות וכלים</p>
+                                        </div>
+                                        <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm z-10">🎧</div>
+                                    </div>
+                                `;
+
                                 return `
                                     <div class="space-y-6">
                                         ${streakHTML}
+                                        ${libraryBannerHTML}
+                                        ${libraryModalHTML}
                                         <div class="glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm">
                                             <div class="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
                                                 <div class="flex items-center gap-3">
@@ -1974,6 +2033,15 @@
 
                                 return `
                                     <div class="space-y-4">
+                                        <div onclick="App.Actions.openLibrary()" class="bg-gradient-to-l from-indigo-500 to-purple-600 rounded-[28px] p-5 shadow-md flex items-center justify-between cursor-pointer active:scale-95 transition hover:brightness-110 mb-2 overflow-hidden relative">
+                                            <div class="absolute -left-4 -bottom-4 text-7xl opacity-20">📚</div>
+                                            <div class="text-right z-10 text-white">
+                                                <h3 class="font-extrabold text-base tracking-wide flex items-center gap-2">הספרייה הזוגית <i class="fa-solid fa-arrow-left text-[10px] bg-white/20 p-1.5 rounded-full"></i></h3>
+                                                <p class="text-xs text-indigo-100 font-medium mt-0.5">פודקאסטים, הרצאות וכלים</p>
+                                            </div>
+                                            <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm z-10">🎧</div>
+                                        </div>
+
                                         <div class="text-center py-2">
                                             <h2 class="text-2xl font-bold text-stone-800">בואו נצלול עמוק...</h2>
                                             <p class="text-stone-500 text-sm">בחרו פעילות או חפיסת שאלות להיום</p>
@@ -4896,6 +4964,57 @@
                             },
 
 
+                            openLibrary() {
+                                App.State.libraryTab = 'podcasts';
+                                this.renderLibraryModal();
+                            },
+                            setLibraryTab(tab) {
+                                App.State.libraryTab = tab;
+                                this.renderLibraryModal();
+                            },
+                            renderLibraryModal() {
+                                const libPodcasts = App.Data.libraryBank?.podcasts || [];
+                                const libVideos = App.Data.libraryBank?.videos || [];
+                                const libArticles = App.Data.libraryBank?.articles || [];
+                                const activeTab = App.State.libraryTab || 'podcasts';
+                                
+                                let currentListHTML = '';
+                                if (activeTab === 'podcasts') {
+                                    currentListHTML = `<div class="space-y-2 animate-page-entry">${libPodcasts.map(item => `<a href="${item.url}" target="_blank" class="flex items-center gap-3 bg-stone-50/80 p-3 rounded-2xl border border-stone-200 shadow-sm hover:bg-white transition active:scale-[0.98]"><div class="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${item.icon}"></i></div><div class="flex-1"><h5 class="text-sm font-bold text-stone-800">${item.title}</h5><p class="text-[10px] text-stone-500">${item.author} • ${item.duration}</p></div><i class="fa-solid fa-chevron-left text-stone-300 text-xs"></i></a>`).join('')}</div>`;
+                                } else if (activeTab === 'videos') {
+                                    currentListHTML = `<div class="space-y-2 animate-page-entry">${libVideos.map(item => `<a href="${item.url}" target="_blank" class="flex items-center gap-3 bg-stone-50/80 p-3 rounded-2xl border border-stone-200 shadow-sm hover:bg-white transition active:scale-[0.98]"><div class="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${item.icon}"></i></div><div class="flex-1"><h5 class="text-sm font-bold text-stone-800">${item.title}</h5><p class="text-[10px] text-stone-500">${item.author} • ${item.duration}</p></div><i class="fa-solid fa-chevron-left text-stone-300 text-xs"></i></a>`).join('')}</div>`;
+                                } else if (activeTab === 'articles') {
+                                    currentListHTML = `<div class="space-y-2 animate-page-entry">${libArticles.map(item => `<a href="${item.url}" target="_blank" class="flex items-center gap-3 bg-stone-50/80 p-3 rounded-2xl border border-stone-200 shadow-sm hover:bg-white transition active:scale-[0.98]"><div class="w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${item.icon}"></i></div><div class="flex-1"><h5 class="text-sm font-bold text-stone-800">${item.title}</h5><p class="text-[10px] text-stone-500">${item.author} • ${item.duration}</p></div><i class="fa-solid fa-chevron-left text-stone-300 text-xs"></i></a>`).join('')}</div>`;
+                                }
+
+                                const html = `
+                                    <div class="flex flex-col relative max-h-[75vh]" dir="rtl">
+                                        <div class="text-center mb-4 pt-1 shrink-0">
+                                            <div class="text-4xl mb-2">📚</div>
+                                            <h3 class="text-xl font-extrabold text-stone-800 font-hand tracking-wider">הספרייה הזוגית</h3>
+                                            <p class="text-xs text-stone-500 mt-1">כלים, פודקאסטים והשראה להעמקת הקשר</p>
+                                        </div>
+
+                                        <div class="flex bg-stone-100 p-1 rounded-xl mb-4 shrink-0 shadow-inner mx-1 border border-stone-200">
+                                            <button onclick="App.Actions.setLibraryTab('podcasts')" class="flex-1 py-2 text-xs font-bold rounded-lg transition ${activeTab === 'podcasts' ? 'bg-white shadow-sm text-purple-600' : 'text-stone-500 hover:text-stone-700'}">🎧 שמע</button>
+                                            <button onclick="App.Actions.setLibraryTab('videos')" class="flex-1 py-2 text-xs font-bold rounded-lg transition ${activeTab === 'videos' ? 'bg-white shadow-sm text-rose-600' : 'text-stone-500 hover:text-stone-700'}">▶️ צפייה</button>
+                                            <button onclick="App.Actions.setLibraryTab('articles')" class="flex-1 py-2 text-xs font-bold rounded-lg transition ${activeTab === 'articles' ? 'bg-white shadow-sm text-emerald-600' : 'text-stone-500 hover:text-stone-700'}">📖 קריאה</button>
+                                        </div>
+                                        
+                                        <div class="flex-1 overflow-y-auto no-scrollbar pb-2 px-1">
+                                            ${currentListHTML}
+                                        </div>
+                                        
+                                        <button onclick="App.UI.closeModal()" class="mt-4 w-full bg-stone-100 hover:bg-stone-200 text-stone-600 py-3 rounded-xl font-bold active:scale-95 transition shadow-sm shrink-0">סגור ספרייה</button>
+                                    </div>
+                                `;
+                                App.UI.showModal(html);
+                            },
+                            
+
+                            
+
+                            
 
                             openChefsCorner() {
                                 App.State.save('chefsModalRecipeId', null);
