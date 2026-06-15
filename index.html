@@ -878,9 +878,12 @@
                                 { q: "כריך מושלם בבוקר: עם גבינה צהובה מותכת או ממרח שוקולד עשיר?", a1: "צהובה מותכת 🥪", a2: "שוקולד 🍫" }
                             ],
                             decks: {
-                                deep: { name: "עומק ורגש", icon: "fa-brain-circuit", color: "bg-purple-100 text-purple-600", questions: ["מהו הרגע השבוע שבו הרגשת הכי קרוב/ה אליי?", "איזו תכונה שלי גורמת לך להרגיש בטוח/ה?", "מה גורם לך להרגיש שהקשבתי לך באמת?"] },
-                                fun: { name: "קליל וכיף", icon: "fa-face-laugh-beam", color: "bg-amber-100 text-amber-600", questions: ["מהו המקום האהוב עליך שהיינו בו יחד?", "על מה אנחנו תמיד מצליחים לצחוק?", "איזו הפתעה תשמח אותך היום?"] },
-                                future: { name: "חלומות ועתיד", icon: "fa-sparkles", color: "bg-blue-100 text-blue-600", questions: ["איזה חלום משותף נקדם החודש?", "אם היינו טסים מחר, לאן זה היה?", "איך הבית שלנו ייראה בעוד 5 שנים?"] }
+                                deep: { name: "עומק ורגש", icon: "fa-brain-circuit", color: "bg-purple-100 text-purple-600", questions: ["מהו הרגע השבוע שבו הרגשת הכי קרוב/ה אליי?", "איזו תכונה שלי גורמת לך להרגיש בטוח/ה?", "מה גורם לך להרגיש שהקשבתי לך באמת?", "מה הדבר שהכי היית רוצה לשמוע ממני בסוף יום קשה?", "איזו מילה שלי תמיד מצליחה לחזק אותך?"] },
+                                fun: { name: "קליל וכיף", icon: "fa-face-laugh-beam", color: "bg-amber-100 text-amber-600", questions: ["מהו המקום האהוב עליך שהיינו בו יחד?", "על מה אנחנו תמיד מצליחים לצחוק?", "איזו הפתעה קטנה תשמח אותך השבוע?", "אם היינו יכולים לאכול רק מאכל אחד לשארית חיינו, מה זה היה?", "מהי הבדיחה הפנימית שלנו שאת/ה הכי אוהב/ת?"] },
+                                future: { name: "חלומות ועתיד", icon: "fa-sparkles", color: "bg-blue-100 text-blue-600", questions: ["איזה חלום משותף נקדם החודש?", "אם היינו טסים מחר, לאן זה היה?", "איך הבית שלנו ייראה בעוד 5 שנים?", "איזה תחביב חדש כדאי שנלמד יחד השנה?", "מה ההרפתקה הבאה שהיית רוצה שנעבור?"] },
+                                nostalgia: { name: "מסע בזמן", icon: "fa-camera-retro", color: "bg-orange-100 text-orange-600", questions: ["מה הדבר הראשון שחשבת עליי כשנפגשנו?", "איזה זיכרון מהחודש הראשון שלנו תמיד מעלה לך חיוך?", "איך הרגשת רגע לפני הדייט הראשון שלנו?", "איזה משבר עברנו יחד שהפך אותנו לחזקים יותר?"] },
+                                spicy: { name: "שאלות פלפל", icon: "fa-pepper-hot", color: "bg-red-100 text-red-600", questions: ["איזו מחווה קטנה שלי תמיד גורמת לך לפרפרים?", "מה הדבר שהכי מושך אותך בי היום?", "איזה זיכרון אינטימי משותף שלנו את/ה הכי אוהב/ת?", "מה יכול להפוך את השבוע שלנו לקצת יותר רומנטי?"] },
+                                vip: { name: "הכספת הסודית", icon: "fa-gem", color: "bg-stone-800 text-amber-400", reqStreak: 3, questions: ["מהו פחד שאת/ה מסתיר/ה כדי לא להדאיג אותי?", "מתי לאחרונה הרגשת גאווה עצומה בי, ולא אמרת לי?", "איזה חלום ילדות שלך היית רוצה שאעזור לך להחיות?", "מתי הרגשת שהחיבור שלנו הגיע לרמה שאי אפשר להסביר במילים?"] }
                             },
                             mockPartnerAnswers: ["אני מרגישה שהחיבור מתחזק כשאנחנו מדברים בלי טלפונים.", "הכי כיף לי כשאתה מחבק אותי בסוף היום.", "אני חולמת שנטייל יחד יותר, רק שנינו.", "הצחוק המשותף שלנו הכי חשוב לי."],
                             writingPrompts: ["הדבר הכי מצחיק שקרה לנו היום היה...", "הייתי כל כך גאה בך היום כש...", "רגע קטן של שקט שהיה לנו היום...", "המחשבה הראשונה שלי עליך הבוקר הייתה..."],
@@ -1839,19 +1842,32 @@
                                 return `
                                     <div class="space-y-6">
                                         ${streakHTML}
-                                        ${libraryBannerHTML}
                                         ${libraryModalHTML}
-                                        <div class="glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm">
-                                            <div class="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 rounded-xl ${deck.color} flex items-center justify-center shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
-                                                    <span class="text-xs font-bold text-stone-500 tracking-widest uppercase">${deck.name}</span>
+                                        <style>
+                                            .deck-card-scene { perspective: 1000px; }
+                                            .deck-card-inner { width: 100%; transform-style: preserve-3d; animation: flipIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+                                            .deck-card-face { backface-visibility: hidden; }
+                                            .deck-card-back { transform: rotateY(180deg); }
+                                            @keyframes flipIn { 0% { transform: rotateY(180deg) scale(0.9); opacity: 0; } 100% { transform: rotateY(0deg) scale(1); opacity: 1; } }
+                                        </style>
+                                        <div class="deck-card-scene w-full">
+                                            <div class="deck-card-inner relative">
+                                                <div class="deck-card-face deck-card-back absolute inset-0 bg-stone-800 rounded-[32px] border-4 border-stone-200 shadow-xl flex items-center justify-center">
+                                                    <i class="fa-solid ${deck.icon} text-6xl text-stone-600"></i>
                                                 </div>
-                                                <button onclick="App.Actions.exitDeck()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl hover:bg-red-100 active:scale-95 transition flex items-center gap-1.5 shadow-sm">
-                                                    <i class="fa-solid fa-arrow-right"></i> יציאה
-                                                </button>
+                                                <div class="deck-card-face glass-panel rounded-[32px] p-6 border-2 border-white shadow-sm relative z-10 bg-gradient-to-br from-white to-stone-50">
+                                                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-stone-100">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="w-10 h-10 rounded-xl ${deck.color} flex items-center justify-center shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
+                                                            <span class="text-xs font-bold text-stone-500 tracking-widest uppercase">${deck.name}</span>
+                                                        </div>
+                                                        <button onclick="App.Actions.exitDeck()" class="text-xs font-bold bg-red-50 text-red-500 border border-red-100 py-1.5 px-3 rounded-xl hover:bg-red-100 active:scale-95 transition flex items-center gap-1.5 shadow-sm">
+                                                            <i class="fa-solid fa-arrow-right"></i> יציאה
+                                                        </button>
+                                                    </div>
+                                                    <h2 class="text-xl font-bold text-stone-800 leading-relaxed min-h-[60px] flex items-center">${question}</h2>
+                                                </div>
                                             </div>
-                                            <h2 class="text-xl font-bold text-stone-800 leading-relaxed">${question}</h2>
                                         </div>
 
                                         <div class="glass-panel rounded-[32px] p-6 space-y-4">
@@ -1881,7 +1897,14 @@
                                             ${partnerMoodDisplay}
 
                                             <div id="partner-answer-container" class="mt-8 w-full ${!isUnlocked ? 'blur-lg opacity-20 scale-95 pointer-events-none' : 'reveal-animation'}">
-                                                <p class="text-center italic text-stone-600 font-medium">${App.Data.mockPartnerAnswers[App.State.questionIndex % 3]}</p>
+                                                <p class="text-center italic text-stone-600 font-medium">${App.Data.mockPartnerAnswers[App.State.questionIndex % App.Data.mockPartnerAnswers.length]}</p>
+                                                ${isUnlocked ? `
+                                                <div class="flex justify-center gap-3 mt-5">
+                                                    <button onclick="App.UI.showToast('שלחת תגובה ❤️', 'success')" class="text-2xl hover:scale-125 transition active:scale-95 bg-white/80 rounded-full w-12 h-12 shadow-sm border border-stone-200 flex items-center justify-center">❤️</button>
+                                                    <button onclick="App.UI.showToast('שלחת תגובה 😂', 'success')" class="text-2xl hover:scale-125 transition active:scale-95 bg-white/80 rounded-full w-12 h-12 shadow-sm border border-stone-200 flex items-center justify-center">😂</button>
+                                                    <button onclick="App.UI.showToast('שלחת תגובה 🥺', 'success')" class="text-2xl hover:scale-125 transition active:scale-95 bg-white/80 rounded-full w-12 h-12 shadow-sm border border-stone-200 flex items-center justify-center">🥺</button>
+                                                </div>
+                                                ` : ''}
                                             </div>
 
                                             ${!isUnlocked ? `<div class="absolute inset-0 flex flex-col items-center justify-center mt-6"><div class="w-12 h-12 bg-white/80 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm"><i class="fa-solid fa-lock text-stone-400 text-xl"></i></div></div>` : ''}
@@ -2104,15 +2127,23 @@
                                                 <h3 class="text-lg font-extrabold text-green-800">שאלה למחשבה</h3>
                                             </div>
                                             <div class="grid grid-cols-1 gap-3">
-                                                ${Object.entries(App.Data.decks).map(([key, deck]) => `
-                                                    <div onclick="App.Actions.selectDeck('${key}')" class="category-card bg-white/80 rounded-[28px] p-4 flex items-center gap-4 border border-white cursor-pointer hover:bg-white transition shadow-sm">
-                                                        <div class="w-12 h-12 rounded-[20px] ${deck.color} flex items-center justify-center text-xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
-                                                        <div>
-                                                            <h3 class="font-bold text-base text-stone-800">${deck.name}</h3>
-                                                            <p class="text-xs text-stone-400">שאלות עומק וקרבה בנושא ${deck.name.toLowerCase()}</p>
-                                                        </div>
-                                                    </div>
-                                                `).join('')}
+                                            ${Object.entries(App.Data.decks).map(([key, deck]) => {
+                            const isLocked = deck.reqStreak && (App.State.intimacyStreak || 0) < deck.reqStreak;
+                            const lockStr = isLocked ? 'opacity-60 cursor-not-allowed grayscale' : 'cursor-pointer hover:bg-white hover:scale-[1.02]';
+                            const onClick = isLocked ? "App.UI.showToast('נעול! דורש רצף ימי חיבור 🔥', 'info')" : `App.Actions.selectDeck('${key}')`;
+                            return `
+                                <div onclick="${onClick}" class="category-card bg-white/80 rounded-[28px] p-4 flex items-center justify-between gap-4 border border-white transition-all shadow-sm ${lockStr}">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-[20px] ${deck.color} flex items-center justify-center text-xl shadow-inner"><i class="fa-solid ${deck.icon}"></i></div>
+                                        <div>
+                                            <h3 class="font-bold text-base text-stone-800">${deck.name}</h3>
+                                            <p class="text-xs ${isLocked ? 'text-amber-500 font-bold' : 'text-stone-400'}">${isLocked ? `דורש רצף של ${deck.reqStreak} ימים` : `שאלות בנושא ${deck.name}`}</p>
+                                        </div>
+                                    </div>
+                                    ${isLocked ? `<div class="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center"><i class="fa-solid fa-lock text-stone-400 text-sm"></i></div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
                                             </div>
                                         </div>
                                     </div>`;
