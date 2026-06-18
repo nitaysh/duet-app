@@ -2116,13 +2116,46 @@
                                                       <h3 class="font-extrabold text-base relative z-10">פינת השף שלנו</h3>
                                                       <p class="text-white/95 text-[11px] mt-1 relative z-10">בחרו מתכון לערב — והמצרכים יקפצו למקרר</p>
                                                   </div>
-                                                  <div onclick="App.Actions.startRetroGame()" class="category-card rounded-[32px] p-5 flex items-center justify-center gap-3 cursor-pointer transition shadow-md hover:brightness-105 mb-3 col-span-2 relative overflow-hidden" style="background: repeating-linear-gradient(45deg, #fde7e0 0 8px, #fbd8cc 8px 16px); border: 2px solid #78716c;">
-                                                      <div class="text-3xl" style="image-rendering: pixelated;">🕹️</div>
-                                                      <div class="text-right">
-                                                          <h3 class="font-extrabold text-base text-stone-800" style="font-family: ui-monospace, monospace; letter-spacing: 1px;">RETRO · לב-טאפ</h3>
-                                                          <p class="text-stone-600 text-[11px] mt-0.5" style="font-family: ui-monospace, monospace;">60 שניות · ‎+20 XP בסיום</p>
+                                                  <details class="col-span-2 mb-3 group" ${localStorage.getItem('duet_games_banner_open') === '1' ? 'open' : ''} ontoggle="localStorage.setItem('duet_games_banner_open', this.open ? '1' : '0')">
+                                                      <summary class="list-none cursor-pointer rounded-[32px] p-5 flex items-center justify-between gap-3 shadow-md transition active:scale-[0.98] hover:brightness-105 relative overflow-hidden" style="background: linear-gradient(135deg, #fb923c 0%, #f43f5e 100%); border: 2px solid rgba(255,255,255,0.4);">
+                                                          <div class="absolute -left-2 -bottom-3 text-7xl opacity-20">🎲</div>
+                                                          <div class="flex items-center gap-3 z-10">
+                                                              <div class="w-12 h-12 rounded-2xl bg-white/25 flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm">🎮</div>
+                                                              <div class="text-right text-white">
+                                                                  <h3 class="font-extrabold text-base tracking-wide">משחקים זוגיים</h3>
+                                                                  <p class="text-white/90 text-[11px] mt-0.5">להפיג את השעמום יחד</p>
+                                                              </div>
+                                                          </div>
+                                                          <i class="fa-solid fa-chevron-down text-white text-sm transition-transform duration-300 group-open:rotate-180 z-10"></i>
+                                                      </summary>
+                                                      <div class="grid grid-cols-2 gap-3 mt-3 animate-fade-in">
+                                                          <div onclick="App.Actions.startRetroGame()" class="category-card rounded-[24px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 relative overflow-hidden" style="background: repeating-linear-gradient(45deg, #fde7e0 0 8px, #fbd8cc 8px 16px); border: 2px solid #78716c;">
+                                                              <div class="text-2xl mb-1" style="image-rendering: pixelated;">🕹️</div>
+                                                              <h3 class="font-extrabold text-sm text-stone-800" style="font-family: ui-monospace, monospace;">לב-טאפ</h3>
+                                                              <p class="text-stone-600 text-[10px] mt-0.5" style="font-family: ui-monospace, monospace;">RETRO · 60 שניות</p>
+                                                          </div>
+                                                          <div onclick="App.Actions.startTicTacToe()" class="category-card bg-gradient-to-br from-sky-500 to-blue-600 rounded-[24px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white">
+                                                              <div class="text-2xl mb-1">🎯</div>
+                                                              <h3 class="font-extrabold text-sm">טיק-טק-טו</h3>
+                                                              <p class="text-white/90 text-[10px] mt-0.5">קלאסי · שני שחקנים</p>
+                                                          </div>
+                                                          <div onclick="App.Actions.startMemoryGame()" class="category-card bg-gradient-to-br from-fuchsia-500 to-pink-500 rounded-[24px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white">
+                                                              <div class="text-2xl mb-1">🃏</div>
+                                                              <h3 class="font-extrabold text-sm">זיכרון רומנטי</h3>
+                                                              <p class="text-white/90 text-[10px] mt-0.5">מצאו את הזוגות</p>
+                                                          </div>
+                                                          <div onclick="App.Actions.startBlindDraw()" class="category-card bg-gradient-to-br from-emerald-500 to-teal-500 rounded-[24px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white">
+                                                              <div class="text-2xl mb-1">🎨</div>
+                                                              <h3 class="font-extrabold text-sm">ציור עיוור</h3>
+                                                              <p class="text-white/90 text-[10px] mt-0.5">תצייר · ננחש</p>
+                                                          </div>
+                                                          <div onclick="App.Actions.startCoupleTrivia()" class="category-card bg-gradient-to-br from-violet-500 to-purple-600 rounded-[24px] p-4 flex flex-col items-center justify-center text-center cursor-pointer transition shadow-md hover:brightness-105 text-white col-span-2">
+                                                              <div class="text-2xl mb-1">🧠</div>
+                                                              <h3 class="font-extrabold text-sm">טריוויה זוגית</h3>
+                                                              <p class="text-white/90 text-[10px] mt-0.5">כמה אתם מכירים אחד את השני?</p>
+                                                          </div>
                                                       </div>
-                                                  </div>
+                                                  </details>
                                               </div>
 
                                               <button onclick="App.Actions.startConflictResolution()" class="w-full flex items-center justify-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-500 py-3 rounded-2xl text-xs font-medium transition active:scale-[0.98] shadow-sm">
@@ -2992,6 +3025,370 @@
                                       ],
                                   },
                                   _retroPalette: { bg: '#f5f5f4', grid1: '#eeece9', grid2: '#e7e5e4', divider: '#a8a29e', outline: '#1c1917', text: '#1c1917', muted: '#78716c', pink: '#fb7185', pinkH: '#fecdd3', blue: '#60a5fa', blueH: '#bfdbfe', gold: '#fbbf24', goldH: '#fef3c7', skull: '#78716c', skullH: '#d6d3d1' },
+
+                                  // ===== 🎮 כלי עזר משותפים למשחקים זוגיים =====
+                                  _miniGameOverlay(id, innerHTML, bg) {
+                                      let host = document.getElementById(id);
+                                      if (!host) {
+                                          host = document.createElement('div');
+                                          host.id = id;
+                                          host.className = 'fixed inset-0 z-[60] flex flex-col items-center justify-center overflow-y-auto p-4';
+                                          host.style.background = bg || 'linear-gradient(135deg, #fff7ed 0%, #fce7f3 100%)';
+                                          document.body.appendChild(host);
+                                      }
+                                      host.innerHTML = innerHTML;
+                                      return host;
+                                  },
+                                  _closeMiniGame(id) {
+                                      const host = document.getElementById(id);
+                                      if (host) host.remove();
+                                  },
+
+                                  // ===== 🎯 טיק-טק-טו זוגי =====
+                                  _ttt: { board: Array(9).fill(null), turn: 0, winner: null, line: null, scores: [0, 0] },
+                                  startTicTacToe() {
+                                      this._ttt.board = Array(9).fill(null);
+                                      this._ttt.turn = 0;
+                                      this._ttt.winner = null;
+                                      this._ttt.line = null;
+                                      this._tttRender();
+                                  },
+                                  _tttCheckWin(b) {
+                                      const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+                                      for (const ln of lines) {
+                                          const [a,b1,c] = ln;
+                                          if (b[a] !== null && b[a] === b[b1] && b[a] === b[c]) return { winner: b[a], line: ln };
+                                      }
+                                      if (b.every(x => x !== null)) return { winner: -1, line: null };
+                                      return null;
+                                  },
+                                  _tttTap(i) {
+                                      const T = this._ttt;
+                                      if (T.winner !== null || T.board[i] !== null) return;
+                                      T.board[i] = T.turn;
+                                      const result = this._tttCheckWin(T.board);
+                                      if (result) {
+                                          T.winner = result.winner;
+                                          T.line = result.line;
+                                          if (result.winner === 0) T.scores[0]++;
+                                          else if (result.winner === 1) T.scores[1]++;
+                                          if (result.winner !== -1) {
+                                              try { App.State.addXP(10); } catch (e) {}
+                                          }
+                                      } else {
+                                          T.turn = 1 - T.turn;
+                                      }
+                                      this._tttRender();
+                                  },
+                                  _tttReset() {
+                                      this._ttt.board = Array(9).fill(null);
+                                      this._ttt.turn = 0;
+                                      this._ttt.winner = null;
+                                      this._ttt.line = null;
+                                      this._tttRender();
+                                  },
+                                  _tttRender() {
+                                      const T = this._ttt;
+                                      const me = App.State.userName || 'אני';
+                                      const pa = App.State.partnerName || 'שותפ/ה';
+                                      const names = [me, pa];
+                                      const symbols = ['✕', '◯'];
+                                      const colors = ['text-rose-500', 'text-sky-500'];
+                                      let statusHTML;
+                                      if (T.winner === -1) {
+                                          statusHTML = `<div class="text-stone-600 font-bold text-base">תיקו! 🤝</div>`;
+                                      } else if (T.winner !== null) {
+                                          statusHTML = `<div class="text-emerald-600 font-extrabold text-base">${names[T.winner]} ניצח/ה! 🎉 +10 XP</div>`;
+                                      } else {
+                                          statusHTML = `<div class="text-stone-600 font-bold text-sm">תור של <span class="${colors[T.turn]} font-extrabold">${names[T.turn]} (${symbols[T.turn]})</span></div>`;
+                                      }
+                                      const cells = T.board.map((v, i) => {
+                                          const inLine = T.line && T.line.includes(i);
+                                          const bg = inLine ? 'bg-emerald-100 border-emerald-400' : 'bg-white border-stone-200';
+                                          const content = v === null ? '' : `<span class="${colors[v]}">${symbols[v]}</span>`;
+                                          return `<button onclick="App.Actions._tttTap(${i})" class="aspect-square ${bg} border-2 rounded-2xl text-5xl font-extrabold flex items-center justify-center active:scale-95 transition shadow-sm">${content}</button>`;
+                                      }).join('');
+                                      const html = `
+                                          <button onclick="App.Actions._closeMiniGame('mini-ttt')" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-white shadow-md text-stone-700 flex items-center justify-center active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                          <div class="bg-white/90 backdrop-blur rounded-[32px] p-6 max-w-sm w-full shadow-xl border border-white" dir="rtl">
+                                              <div class="text-center mb-4">
+                                                  <div class="text-3xl mb-1">🎯</div>
+                                                  <h2 class="text-lg font-extrabold text-stone-800">טיק-טק-טו זוגי</h2>
+                                                  <div class="mt-2">${statusHTML}</div>
+                                              </div>
+                                              <div class="flex justify-between bg-stone-50 rounded-2xl p-3 mb-4 text-xs font-bold">
+                                                  <div class="text-rose-500">${me} (✕): ${T.scores[0]}</div>
+                                                  <div class="text-sky-500">${pa} (◯): ${T.scores[1]}</div>
+                                              </div>
+                                              <div class="grid grid-cols-3 gap-2 mb-4">${cells}</div>
+                                              <button onclick="App.Actions._tttReset()" class="w-full bg-gradient-to-r from-orange-500 to-rose-500 text-white py-3 rounded-2xl font-extrabold active:scale-95 transition shadow-md">סיבוב חדש</button>
+                                          </div>`;
+                                      this._miniGameOverlay('mini-ttt', html);
+                                  },
+
+                                  // ===== 🃏 זיכרון רומנטי =====
+                                  _mem: { cards: [], flipped: [], matched: [], turn: 0, scores: [0, 0], locked: false },
+                                  startMemoryGame() {
+                                      const emojis = ['💕','💍','🌹','🍷','🌙','⭐','🦋','🕯️'];
+                                      const deck = [...emojis, ...emojis]
+                                          .map(e => ({ e, k: Math.random() }))
+                                          .sort((a, b) => a.k - b.k)
+                                          .map(o => o.e);
+                                      this._mem.cards = deck;
+                                      this._mem.flipped = [];
+                                      this._mem.matched = [];
+                                      this._mem.turn = 0;
+                                      this._mem.scores = [0, 0];
+                                      this._mem.locked = false;
+                                      this._memRender();
+                                  },
+                                  _memFlip(i) {
+                                      const M = this._mem;
+                                      if (M.locked || M.flipped.includes(i) || M.matched.includes(i)) return;
+                                      M.flipped.push(i);
+                                      this._memRender();
+                                      if (M.flipped.length === 2) {
+                                          M.locked = true;
+                                          const [a, b] = M.flipped;
+                                          if (M.cards[a] === M.cards[b]) {
+                                              setTimeout(() => {
+                                                  M.matched.push(a, b);
+                                                  M.scores[M.turn]++;
+                                                  M.flipped = [];
+                                                  M.locked = false;
+                                                  if (M.matched.length === 16) {
+                                                      try { App.State.addXP(20); } catch (e) {}
+                                                  }
+                                                  this._memRender();
+                                              }, 600);
+                                          } else {
+                                              setTimeout(() => {
+                                                  M.flipped = [];
+                                                  M.turn = 1 - M.turn;
+                                                  M.locked = false;
+                                                  this._memRender();
+                                              }, 900);
+                                          }
+                                      }
+                                  },
+                                  _memRender() {
+                                      const M = this._mem;
+                                      const me = App.State.userName || 'אני';
+                                      const pa = App.State.partnerName || 'שותפ/ה';
+                                      const names = [me, pa];
+                                      const done = M.matched.length === 16;
+                                      const winner = done ? (M.scores[0] > M.scores[1] ? me : M.scores[1] > M.scores[0] ? pa : null) : null;
+                                      const cellsHTML = M.cards.map((emj, i) => {
+                                          const shown = M.flipped.includes(i) || M.matched.includes(i);
+                                          const matched = M.matched.includes(i);
+                                          if (shown) {
+                                              return `<div class="aspect-square rounded-2xl flex items-center justify-center text-3xl shadow-sm transition ${matched ? 'bg-emerald-100 border-2 border-emerald-300' : 'bg-white border-2 border-pink-300'}">${emj}</div>`;
+                                          }
+                                          return `<button onclick="App.Actions._memFlip(${i})" class="aspect-square rounded-2xl bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white text-2xl shadow-sm active:scale-95 transition flex items-center justify-center">💗</button>`;
+                                      }).join('');
+                                      let statusHTML;
+                                      if (done) {
+                                          statusHTML = winner
+                                              ? `<div class="text-emerald-600 font-extrabold text-base">${winner} ניצח/ה! 🎉 +20 XP</div>`
+                                              : `<div class="text-stone-600 font-bold text-base">תיקו מושלם! 🤝 +20 XP</div>`;
+                                      } else {
+                                          statusHTML = `<div class="text-stone-600 font-bold text-sm">תור של <span class="text-fuchsia-600 font-extrabold">${names[M.turn]}</span></div>`;
+                                      }
+                                      const html = `
+                                          <button onclick="App.Actions._closeMiniGame('mini-mem')" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-white shadow-md text-stone-700 flex items-center justify-center active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                          <div class="bg-white/90 backdrop-blur rounded-[32px] p-6 max-w-sm w-full shadow-xl border border-white" dir="rtl">
+                                              <div class="text-center mb-4">
+                                                  <div class="text-3xl mb-1">🃏</div>
+                                                  <h2 class="text-lg font-extrabold text-stone-800">זיכרון רומנטי</h2>
+                                                  <div class="mt-2">${statusHTML}</div>
+                                              </div>
+                                              <div class="flex justify-between bg-stone-50 rounded-2xl p-3 mb-4 text-xs font-bold">
+                                                  <div class="text-fuchsia-500">${me}: ${M.scores[0]} זוגות</div>
+                                                  <div class="text-pink-500">${pa}: ${M.scores[1]} זוגות</div>
+                                              </div>
+                                              <div class="grid grid-cols-4 gap-2 mb-4">${cellsHTML}</div>
+                                              <button onclick="App.Actions.startMemoryGame()" class="w-full bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white py-3 rounded-2xl font-extrabold active:scale-95 transition shadow-md">משחק חדש</button>
+                                          </div>`;
+                                      this._miniGameOverlay('mini-mem', html, 'linear-gradient(135deg, #fdf4ff 0%, #fce7f3 100%)');
+                                  },
+
+                                  // ===== 🎨 ציור עיוור =====
+                                  _draw: { word: '', revealed: false, drawing: false, lastX: 0, lastY: 0 },
+                                  _drawWords: ['פיצה','חתול','שמש','בננה','מטוס','דג','עץ','בית','אופניים','שקיעה','ברווז','כוכב','גזר','גיטרה','פיל','קפה','חוף ים','שלג','דובי','עוגה','רוקט','מטריה','משקפיים','ספר','מנורה','אפרסק','קסדה','דינוזאור','עוגן','גלידה'],
+                                  startBlindDraw() {
+                                       this._drawNewWord();
+                                  },
+                                  _drawNewWord() {
+                                      const W = this._draw;
+                                      W.word = this._drawWords[Math.floor(Math.random() * this._drawWords.length)];
+                                      W.revealed = false;
+                                      this._drawRender();
+                                      setTimeout(() => this._drawClear(), 0);
+                                  },
+                                  _drawReveal() {
+                                      this._draw.revealed = true;
+                                      try { App.State.addXP(15); } catch (e) {}
+                                      this._drawRender();
+                                  },
+                                  _drawClear() {
+                                      const cvs = document.getElementById('blind-draw-canvas');
+                                      if (!cvs) return;
+                                      const ctx = cvs.getContext('2d');
+                                      ctx.fillStyle = '#ffffff';
+                                      ctx.fillRect(0, 0, cvs.width, cvs.height);
+                                  },
+                                  _drawAttachCanvas() {
+                                      const cvs = document.getElementById('blind-draw-canvas');
+                                      if (!cvs) return;
+                                      const ctx = cvs.getContext('2d');
+                                      ctx.fillStyle = '#ffffff';
+                                      ctx.fillRect(0, 0, cvs.width, cvs.height);
+                                      ctx.lineCap = 'round';
+                                      ctx.lineJoin = 'round';
+                                      ctx.strokeStyle = '#0f766e';
+                                      ctx.lineWidth = 4;
+                                      const getPos = (e) => {
+                                          const r = cvs.getBoundingClientRect();
+                                          const sx = cvs.width / r.width;
+                                          const sy = cvs.height / r.height;
+                                          return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+                                      };
+                                      const D = this._draw;
+                                      cvs.addEventListener('pointerdown', (e) => {
+                                          e.preventDefault();
+                                          cvs.setPointerCapture(e.pointerId);
+                                          D.drawing = true;
+                                          const p = getPos(e);
+                                          D.lastX = p.x; D.lastY = p.y;
+                                          ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fillStyle = '#0f766e'; ctx.fill();
+                                      });
+                                      cvs.addEventListener('pointermove', (e) => {
+                                          if (!D.drawing) return;
+                                          e.preventDefault();
+                                          const p = getPos(e);
+                                          ctx.beginPath();
+                                          ctx.moveTo(D.lastX, D.lastY);
+                                          ctx.lineTo(p.x, p.y);
+                                          ctx.stroke();
+                                          D.lastX = p.x; D.lastY = p.y;
+                                      });
+                                      const stop = () => { D.drawing = false; };
+                                      cvs.addEventListener('pointerup', stop);
+                                      cvs.addEventListener('pointercancel', stop);
+                                      cvs.addEventListener('pointerleave', stop);
+                                  },
+                                  _drawRender() {
+                                      const W = this._draw;
+                                      const wordBox = W.revealed
+                                          ? `<div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 text-center"><div class="text-[10px] font-bold text-emerald-600 mb-1">המילה הייתה</div><div class="text-2xl font-extrabold text-emerald-700">${W.word}</div></div>`
+                                          : `<div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-center"><div class="text-[10px] font-bold text-amber-600 mb-1">המילה הסודית (רק לצייר/ת):</div><div class="text-2xl font-extrabold text-amber-700 select-none" style="filter: blur(7px);" onclick="this.style.filter=this.style.filter?'':'blur(7px)'">${W.word}</div><div class="text-[10px] text-amber-600 mt-2">לחצו על המילה לחשיפה זמנית</div></div>`;
+                                      const html = `
+                                          <button onclick="App.Actions._closeMiniGame('mini-draw')" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-white shadow-md text-stone-700 flex items-center justify-center active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                          <div class="bg-white/90 backdrop-blur rounded-[32px] p-5 max-w-sm w-full shadow-xl border border-white" dir="rtl">
+                                              <div class="text-center mb-3">
+                                                  <div class="text-3xl mb-1">🎨</div>
+                                                  <h2 class="text-lg font-extrabold text-stone-800">ציור עיוור</h2>
+                                                  <p class="text-[11px] text-stone-500 mt-1">אחד מצייר · השני מנחש</p>
+                                              </div>
+                                              ${wordBox}
+                                              <canvas id="blind-draw-canvas" width="320" height="320" class="block w-full aspect-square bg-white rounded-2xl border-2 border-stone-200 mt-3 shadow-inner" style="touch-action: none;"></canvas>
+                                              <div class="grid grid-cols-3 gap-2 mt-3">
+                                                  <button onclick="App.Actions._drawClear()" class="bg-stone-100 text-stone-600 py-2.5 rounded-xl text-xs font-bold active:scale-95"><i class="fa-solid fa-eraser ml-1"></i>נקה</button>
+                                                  <button onclick="App.Actions._drawReveal()" class="bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold active:scale-95">חשוף תשובה</button>
+                                                  <button onclick="App.Actions._drawNewWord()" class="bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold active:scale-95">מילה חדשה</button>
+                                              </div>
+                                          </div>`;
+                                      this._miniGameOverlay('mini-draw', html, 'linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%)');
+                                      this._drawAttachCanvas();
+                                  },
+
+                                  // ===== 🧠 טריוויה זוגית =====
+                                  _trivia: { questions: [], idx: 0, score: 0, showAnswer: false },
+                                  _triviaBank: [
+                                      'מה המאכל המועדף עליי?',
+                                      'מהו הסרט שאני יכול/ה לראות שוב ושוב?',
+                                      'איזה צבע אני הכי אוהב/ת?',
+                                      'מה הזיכרון הילדותי הכי אהוב עליי?',
+                                      'מהו החלום הגדול שלי?',
+                                      'איזה שיר תמיד מעלה לי חיוך?',
+                                      'מה הדבר שהכי מעצבן אותי?',
+                                      'מה היה הספר/סדרה האחרון שאהבתי?',
+                                      'איזה יעד נסיעות הכי בא לי לבקר בו?',
+                                      'מה אני הכי אוהב/ת לעשות בסוף שבוע פנוי?',
+                                      'מה הקינוח המועדף עליי?',
+                                      'מי החבר/ה הכי טוב/ה שלי?',
+                                      'איזו תחביב הייתי רוצה לפתח?',
+                                      'מה הדבר הכי רומנטי שעשית בשבילי?',
+                                      'איזו מתנה הכי הפתיעה אותי לטובה?',
+                                  ],
+                                  startCoupleTrivia() {
+                                      const shuffled = [...this._triviaBank].sort(() => Math.random() - 0.5).slice(0, 10);
+                                      this._trivia.questions = shuffled;
+                                      this._trivia.idx = 0;
+                                      this._trivia.score = 0;
+                                      this._trivia.showAnswer = false;
+                                      this._triviaRender();
+                                  },
+                                  _triviaShow() {
+                                      this._trivia.showAnswer = true;
+                                      this._triviaRender();
+                                  },
+                                  _triviaAnswer(ok) {
+                                      if (ok) this._trivia.score++;
+                                      this._trivia.idx++;
+                                      this._trivia.showAnswer = false;
+                                      if (this._trivia.idx >= this._trivia.questions.length) {
+                                          try { App.State.addXP(25); } catch (e) {}
+                                      }
+                                      this._triviaRender();
+                                  },
+                                  _triviaRender() {
+                                      const T = this._trivia;
+                                      const total = T.questions.length;
+                                      const done = T.idx >= total;
+                                      let body;
+                                      if (done) {
+                                          const pct = Math.round((T.score / total) * 100);
+                                          let verdict = pct >= 80 ? '💖 מכירים אחד את השני מצוין!' : pct >= 50 ? '😊 לא רע! יש על מה לעבוד' : '🤔 הגיע הזמן לשיחות עומק...';
+                                          body = `
+                                              <div class="text-center py-4">
+                                                  <div class="text-5xl mb-3">🏆</div>
+                                                  <h3 class="text-2xl font-extrabold text-violet-700 mb-1">${T.score} / ${total}</h3>
+                                                  <p class="text-stone-600 font-bold mb-3">${pct}%</p>
+                                                  <p class="text-sm text-stone-700 mb-4">${verdict}</p>
+                                                  <p class="text-[11px] text-emerald-600 font-bold mb-4">+25 XP לגינה הזוגית 🌱</p>
+                                                  <button onclick="App.Actions.startCoupleTrivia()" class="w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white py-3 rounded-2xl font-extrabold active:scale-95 transition shadow-md">סבב חדש</button>
+                                              </div>`;
+                                      } else {
+                                          const q = T.questions[T.idx];
+                                          body = `
+                                              <div class="text-center text-xs font-bold text-stone-400 mb-2">שאלה ${T.idx + 1} מתוך ${total}</div>
+                                              <div class="bg-violet-50 border-2 border-violet-200 rounded-2xl p-5 text-center mb-4 min-h-[100px] flex items-center justify-center">
+                                                  <p class="font-extrabold text-stone-800 text-base leading-relaxed">${q}</p>
+                                              </div>
+                                              <p class="text-[11px] text-stone-500 text-center mb-3">בן/בת הזוג עונה בקול רם, ואז לוחצים אם צדק/ה</p>
+                                              ${T.showAnswer ? `
+                                                  <div class="grid grid-cols-2 gap-2">
+                                                      <button onclick="App.Actions._triviaAnswer(false)" class="bg-rose-100 text-rose-600 border-2 border-rose-200 py-3 rounded-2xl font-bold active:scale-95">❌ לא צדק/ה</button>
+                                                      <button onclick="App.Actions._triviaAnswer(true)" class="bg-emerald-500 text-white py-3 rounded-2xl font-bold active:scale-95">✅ צדק/ה</button>
+                                                  </div>
+                                              ` : `
+                                                  <button onclick="App.Actions._triviaShow()" class="w-full bg-gradient-to-r from-violet-500 to-purple-600 text-white py-3 rounded-2xl font-extrabold active:scale-95 transition shadow-md">המשך לבדיקה</button>
+                                              `}
+                                              <div class="mt-3 text-center text-xs text-stone-500">ניקוד: <span class="font-extrabold text-violet-600">${T.score}</span></div>`;
+                                      }
+                                      const html = `
+                                          <button onclick="App.Actions._closeMiniGame('mini-trivia')" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-white shadow-md text-stone-700 flex items-center justify-center active:scale-90"><i class="fa-solid fa-xmark"></i></button>
+                                          <div class="bg-white/90 backdrop-blur rounded-[32px] p-6 max-w-sm w-full shadow-xl border border-white" dir="rtl">
+                                              <div class="text-center mb-3">
+                                                  <div class="text-3xl mb-1">🧠</div>
+                                                  <h2 class="text-lg font-extrabold text-stone-800">טריוויה זוגית</h2>
+                                              </div>
+                                              ${body}
+                                          </div>`;
+                                      this._miniGameOverlay('mini-trivia', html, 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)');
+                                  },
+
 
                                   startRetroGame() {
                                       let host = document.getElementById('retro-game-overlay');
