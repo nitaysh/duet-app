@@ -1355,20 +1355,19 @@
                           wallOfFameHTML += `</div></div>`;
                       }
 
-                      return `
-                          <div class="space-y-6">
+                      // ===== עמוד 1: הגינה והמשימות =====
+                      const pageMainHTML = `
+                          <div class="space-y-6 px-1 pb-8">
                               <div class="glass-panel rounded-[32px] border-2 border-white shadow-md relative overflow-hidden flex flex-col justify-between ${skyClass}" style="min-height: 290px;">
                                   <div class="p-4 flex justify-between items-center z-20">
                                       <div class="text-xl opacity-80">${timeIcon}</div>
                                       <button onclick="App.Actions.waterPlant()" class="bg-white/80 backdrop-blur-sm text-stone-700 hover:bg-white text-xs font-bold py-1.5 px-3 rounded-full shadow-sm border border-stone-200/50 active:scale-95 transition flex items-center gap-1">🌱 השקה גינה</button>
                                   </div>
-
                                   <div class="absolute inset-0 top-12 bottom-0 w-full pointer-events-none">
                                       ${decorationsHTML}
                                       <span class="absolute bottom-[12%] left-1/2 -translate-x-1/2 text-7xl z-10 filter drop-shadow-lg transition-all duration-1000 scale-110">${evo.plant}</span>
                                       <div class="absolute bottom-0 left-0 right-0 h-8 bg-emerald-500/10 backdrop-blur-[1px] border-t border-emerald-500/5"></div>
                                   </div>
-
                                   <div class="p-5 text-center z-20 bg-gradient-to-t from-white/90 via-white/75 to-transparent pt-12 rounded-b-[30px] border-t border-white/20">
                                       <h2 class="text-xl font-extrabold text-stone-800 tracking-tight leading-none">${evo.name}</h2>
                                       <div class="w-full bg-stone-200/60 h-2.5 rounded-full mt-3 overflow-hidden p-0.5 shadow-inner">
@@ -1380,104 +1379,167 @@
                                       </div>
                                   </div>
                               </div>
-
                               <div class="space-y-3 px-1">
                                   <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clipboard-check ml-1 text-emerald-500"></i> משימות יומיות לגינה</h3>
                                   ${questsHTML}
                               </div>
+                          </div>`;
 
-                              <div onclick="App.Actions.openTripPlanner()" class="relative overflow-hidden rounded-[32px] p-5 cursor-pointer transition shadow-md active:scale-[0.98] hover:brightness-105 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-500 text-white">
-                                  <div class="absolute -left-3 -top-3 text-7xl opacity-25 select-none">✈️</div>
-                                  <div class="relative z-10 flex items-center justify-between gap-3">
-                                      <div class="text-right">
-                                          <h3 class="font-extrabold text-lg font-hand tracking-wider">מתכנן הטיולים שלנו</h3>
-                                          <p class="text-white/95 text-[11px] font-bold mt-0.5">תיקיות מסע, צ׳ק־ליסטים ומפות אישיות</p>
-                                          <p class="text-white/80 text-[10px] font-bold mt-2"><i class="fa-solid fa-folder-open ml-1"></i> ${App.State.trips.length} טיולים פעילים</p>
+                      // ===== עמוד 2: מתכנן הטיולים =====
+                      const pageTripsHTML = `<div class="px-1 pb-8 pt-2">${this.TripPlanner()}</div>`;
+
+                      // ===== עמוד 3: בנק הרעיונות =====
+                      const ideasCardsHTML = App.Data.wishesBank
+                          .filter(wish => !App.State.bucketList.some(b => b.text === wish.text))
+                          .map(wish => {
+                              const originalIdx = App.Data.wishesBank.findIndex(w => w.text === wish.text);
+                              return `
+                                  <div onclick="App.Actions.addFromBank(${originalIdx})" class="p-4 bg-white/80 backdrop-blur-sm border border-amber-200 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between min-h-[110px]">
+                                      <span class="text-xs font-bold text-stone-700 block line-clamp-3 mb-3">${wish.text}</span>
+                                      <div class="flex justify-between items-center">
+                                          <span class="text-[9px] font-bold text-amber-600 uppercase tracking-wide">${wish.category}</span>
+                                          <i class="fa-solid fa-circle-plus text-amber-500 text-base"></i>
                                       </div>
-                                      <div class="w-12 h-12 rounded-2xl bg-white/25 flex items-center justify-center text-2xl shadow-inner backdrop-blur-sm"><i class="fa-solid fa-suitcase-rolling"></i></div>
+                                  </div>`;
+                          }).join('');
+
+                      const pageIdeasHTML = `
+                          <div class="space-y-5 px-2 pb-8">
+                              <div class="text-center pt-2">
+                                  <h2 class="text-2xl font-extrabold text-amber-800 font-hand tracking-wider">בנק הרעיונות ✨</h2>
+                                  <p class="text-amber-700/70 text-xs font-bold mt-1">לחצו על רעיון כדי להוסיף לחלומות הפעילים</p>
+                              </div>
+                              ${ideasCardsHTML
+                                  ? `<div class="grid grid-cols-2 gap-3">${ideasCardsHTML}</div>`
+                                  : `<div class="text-center py-10 bg-white/50 border border-dashed border-amber-300 rounded-2xl"><div class="text-4xl mb-2">🌟</div><p class="text-sm font-bold text-amber-700">הוספתם את כל הרעיונות מהבנק!</p></div>`}
+                          </div>`;
+
+                      // ===== עמוד 4: חלומות משותפים =====
+                      const pageDreamsHTML = `
+                          <div class="space-y-5 px-2 pb-8">
+                              <div class="flex items-center justify-between pt-2">
+                                  <div class="text-right">
+                                      <h2 class="text-2xl font-extrabold text-purple-800 font-hand tracking-wider">חלומות משותפים ✨</h2>
+                                      <p class="text-purple-700/70 text-xs font-bold mt-0.5">הרשימה שתהפוך למציאות</p>
                                   </div>
+                                  <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-white bg-gradient-to-r from-purple-500 to-fuchsia-500 px-3 py-2 rounded-xl shadow-md active:scale-95 transition">+ הוסף חלום</button>
                               </div>
+                              <div class="space-y-2">${activeListHTML}</div>
+                              ${wallOfFameHTML}
+                          </div>`;
 
-                              <div class="space-y-3 px-1 pt-2">
-                                  <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1 text-emerald-400"></i> בנק הרעיונות ✨</h3>
-                                  <div class="overflow-x-auto no-scrollbar pb-2 px-0.5">
-                                      <div class="flex gap-3 w-max">
-                                          ${App.Data.wishesBank.filter(wish => !App.State.bucketList.some(b => b.text === wish.text)).map(wish => {
-                                              const originalIdx = App.Data.wishesBank.findIndex(w => w.text === wish.text);
-                                              return `
-                                              <div onclick="App.Actions.addFromBank(${originalIdx})" class="flex-shrink-0 w-44 h-full p-4 bg-orange-50/70 border border-orange-100 rounded-2xl text-right cursor-pointer active:scale-95 transition shadow-sm hover:bg-white flex flex-col justify-between">
-                                                  <span class="text-xs font-bold text-stone-700 block line-clamp-2 mb-3">${wish.text}</span>
-                                                  <div class="flex justify-between items-center">
-                                                      <span class="text-[9px] font-bold text-orange-400 uppercase tracking-wide">${wish.category}</span>
-                                                      <i class="fa-solid fa-circle-plus text-orange-400 text-sm"></i>
-                                                  </div>
-                                              </div>`;
-                                          }).join('') || `<div class="text-xs font-bold text-stone-400 py-3 w-full text-center bg-stone-100/50 rounded-2xl border border-dashed">הוספתם את כל הרעיונות מהבנק! 🌟</div>`}
-                                      </div>
-                                  </div>
-                              </div>
+                      // ===== עמוד 5: שוברים מהחנות =====
+                      const pendingVouchers = App.State.purchasedRewards.filter(r => !r.used);
+                      const usedVouchers = App.State.purchasedRewards.filter(r => r.used);
 
-                              <div class="space-y-3 px-1 pt-2">
-                                  <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center justify-between">
-                                      <span><i class="fa-solid fa-wand-magic-sparkles ml-1 text-amber-400"></i> חלומות משותפים</span>
-                                      <button onclick="App.Actions.promptAddBucketItem()" class="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 shadow-sm">+ הוסף חלום</button>
-                                  </h3>
-                                  <div class="space-y-2">${activeListHTML}</div>
-                              </div>
-
-                              <div class="space-y-3 px-1 pt-2">
-                                  <div class="flex items-center justify-between">
-                                      <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
-                                          <i class="fa-solid fa-store ml-1 text-purple-500"></i> שוברי חוויה ופינוק זוגיים
-                                      </span>
-                                      <span class="text-xs font-black text-purple-600 bg-purple-50 border border-purple-100 px-2.5 py-0.5 rounded-xl shadow-inner">${App.State.gardenXP} XP זמין</span>
-                                  </div>
-                                  ${categoriesHTML}
-                                  ${bankHTML}
-                              </div>
-
-                              <div class="flex items-center justify-between mb-2 px-1 pt-2">
-                                  <span class="text-sm font-bold text-stone-500 uppercase tracking-widest flex items-center">
-                                      <i class="fa-solid fa-gift ml-1 text-emerald-500"></i> פינוקים קטנים מהחנות
-                                  </span>
-                              </div>
+                      const pendingHTML = pendingVouchers.length === 0 ? '' : `
+                          <div class="space-y-3">
+                              <h4 class="text-xs font-extrabold text-rose-700 uppercase tracking-widest"><i class="fa-solid fa-ticket ml-1"></i> שוברים פעילים — מוכנים למימוש</h4>
                               <div class="flex flex-col gap-3">
-                                  ${App.State.storeItems.map(item => {
-                                      const finalCost = item.cost;
-                                      const canAfford = App.State.gardenXP >= finalCost;
-                                      return `
-                                      <div class="flex items-center justify-between bg-white border border-stone-100 p-3 rounded-xl shadow-sm relative overflow-hidden">
-                                          <div class="flex items-center gap-3 pr-2">
-                                              <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
-                                              <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
+                                  ${pendingVouchers.map(r => `
+                                      <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-rose-50 to-pink-50 border-2 border-rose-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-500">
+                                          <div class="flex-1 p-3.5 border-l-2 border-dashed border-rose-300 flex items-center gap-2">
+                                              <span class="text-2xl">${r.emoji || '🎟️'}</span>
+                                              <span class="text-sm font-extrabold text-stone-700">${r.text}</span>
                                           </div>
-                                          <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition flex flex-col items-center leading-none gap-1">
-                                              <span>${finalCost} XP</span>
+                                          <button onclick="App.Actions.useReward(${r.id})" class="w-20 bg-rose-200 hover:bg-rose-300 text-rose-700 font-extrabold text-[11px] flex flex-col items-center justify-center transition active:scale-95 shrink-0 gap-1">
+                                              <i class="fa-solid fa-scissors text-base"></i>
+                                              <span>גזירת שובר</span>
                                           </button>
                                       </div>
-                                  `}).join('')}
+                                  `).join('')}
                               </div>
+                          </div>`;
 
-                              ${App.State.purchasedRewards.filter(r => !r.used).length > 0 ? `
-                              <div class="mt-6 pt-4 border-t border-stone-100">
-                                  <h4 class="text-[11px] font-bold text-stone-400 mb-3 uppercase tracking-wider">שוברים שממתינים למימוש</h4>
+                      const usedHTML = usedVouchers.length === 0 ? '' : `
+                          <div class="space-y-3 pt-2">
+                              <h4 class="text-xs font-extrabold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clock-rotate-left ml-1"></i> היסטוריית מימושים</h4>
+                              <div class="grid grid-cols-2 gap-2">
+                                  ${usedVouchers.map(r => `
+                                      <div class="relative bg-white/60 border border-stone-200 rounded-2xl p-3 opacity-70" style="transform: rotate(-1deg);">
+                                          <span class="absolute top-1 left-1 text-[8px] font-extrabold text-rose-500 border border-rose-300 px-1.5 py-0.5 rounded uppercase tracking-wider" style="transform: rotate(-8deg);">מומש</span>
+                                          <div class="text-lg text-center">${r.emoji || '🎟️'}</div>
+                                          <span class="text-[11px] font-bold text-stone-600 block text-center line-clamp-2 mt-1">${r.text}</span>
+                                      </div>
+                                  `).join('')}
+                              </div>
+                          </div>`;
+
+                      const pageVouchersHTML = `
+                          <div class="space-y-5 px-2 pb-8">
+                              <div class="flex items-center justify-between pt-2">
+                                  <div class="text-right">
+                                      <h2 class="text-2xl font-extrabold text-rose-800 font-hand tracking-wider">חנות השוברים 🎟️</h2>
+                                      <p class="text-rose-700/70 text-xs font-bold mt-0.5">פינוקים זוגיים בתמורה ל-XP</p>
+                                  </div>
+                                  <span class="text-xs font-black text-rose-700 bg-white/80 border border-rose-200 px-3 py-1.5 rounded-xl shadow-sm">${App.State.gardenXP} XP זמין</span>
+                              </div>
+                              ${categoriesHTML}
+                              ${bankHTML}
+                              <div class="space-y-3 pt-1">
+                                  <h4 class="text-xs font-extrabold text-rose-700 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1"></i> פינוקים קטנים מהחנות</h4>
                                   <div class="flex flex-col gap-3">
-                                      ${App.State.purchasedRewards.filter(r => !r.used).map(r => `
-                                          <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl shadow-sm overflow-hidden transition-all duration-500">
-                                              <div class="flex-1 p-3 border-l-2 border-dashed border-orange-300 flex items-center">
-                                                  <span class="text-xs font-extrabold text-stone-700">${r.text}</span>
+                                      ${App.State.storeItems.map(item => {
+                                          const finalCost = item.cost;
+                                          const canAfford = App.State.gardenXP >= finalCost;
+                                          return `
+                                          <div class="flex items-center justify-between bg-white/80 backdrop-blur-sm border border-rose-100 p-3 rounded-2xl shadow-sm">
+                                              <div class="flex items-center gap-3 pr-2">
+                                                  <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
+                                                  <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
                                               </div>
-                                              <button onclick="App.Actions.useReward(${r.id})" class="w-16 bg-orange-100 hover:bg-orange-200 text-orange-600 font-bold text-[10px] flex flex-col items-center justify-center transition active:bg-orange-300 shrink-0">
-                                                  <i class="fa-solid fa-scissors mb-1 text-sm opacity-50"></i>
-                                                  <span>תלוש</span>
+                                              <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-rose-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition">
+                                                  ${finalCost} XP
                                               </button>
-                                          </div>
-                                      `).join('')}
+                                          </div>`;
+                                      }).join('')}
                                   </div>
                               </div>
-                              ` : ''}
+                              ${pendingHTML}
+                              ${usedHTML}
+                          </div>`;
 
-                              ${wallOfFameHTML}
+                      // ===== Carousel meta =====
+                      const subPages = [
+                          { key: 'main',     icon: '🌱', label: 'הגינה',    grad: 'from-amber-100 via-stone-50 to-emerald-100',  chipGrad: 'from-emerald-500 to-teal-500',   html: pageMainHTML },
+                          { key: 'trips',    icon: '🗺️', label: 'טיולים',   grad: 'from-sky-100 via-blue-50 to-cyan-100',         chipGrad: 'from-sky-500 to-cyan-500',        html: pageTripsHTML },
+                          { key: 'ideas',    icon: '💡', label: 'רעיונות',  grad: 'from-amber-50 via-yellow-100 to-orange-100',   chipGrad: 'from-amber-500 to-orange-500',    html: pageIdeasHTML },
+                          { key: 'dreams',   icon: '✨', label: 'חלומות',   grad: 'from-purple-100 via-violet-50 to-fuchsia-100', chipGrad: 'from-purple-500 to-fuchsia-500',  html: pageDreamsHTML },
+                          { key: 'vouchers', icon: '🎟️', label: 'שוברים',   grad: 'from-rose-100 via-pink-50 to-rose-200',        chipGrad: 'from-rose-500 to-pink-500',       html: pageVouchersHTML },
+                      ];
+                      const savedIdx = Math.min(4, Math.max(0, parseInt(localStorage.getItem('duet_garden_sub_page') || '0')));
+
+                      const chipsHTML = subPages.map((p, i) => `
+                          <button data-garden-chip="${i}" onclick="App.Actions.gardenGoSubPage(${i})"
+                              class="garden-chip snap-start shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-xs font-extrabold border transition active:scale-95 ${i === savedIdx ? `bg-gradient-to-r ${p.chipGrad} text-white shadow-lg border-transparent scale-105` : 'bg-white/80 text-stone-600 border-stone-200 shadow-sm'}"
+                              data-chip-grad="${p.chipGrad}">
+                              <span class="ml-1">${p.icon}</span>${p.label}
+                          </button>`).join('');
+
+                      const pagesHTML = subPages.map((p, i) => `
+                          <section data-idx="${i}" class="snap-start shrink-0 w-full min-h-[60vh] rounded-3xl bg-gradient-to-br ${p.grad}" style="padding-top:8px;">
+                              ${p.html}
+                          </section>`).join('');
+
+                      requestAnimationFrame(() => App.Actions._gardenInitCarousel(savedIdx));
+
+                      return `
+                          <style>
+                              #garden-carousel::-webkit-scrollbar, #garden-chips::-webkit-scrollbar { display: none; }
+                              #garden-carousel, #garden-chips { scrollbar-width: none; -ms-overflow-style: none; }
+                              .garden-chip { transition: all 0.25s cubic-bezier(.4,0,.2,1); }
+                          </style>
+                          <div class="-mx-4">
+                              <div id="garden-chips" class="sticky top-0 z-30 flex gap-2 overflow-x-auto snap-x snap-mandatory px-4 py-3 bg-gradient-to-b from-white/95 via-white/80 to-transparent backdrop-blur-md">
+                                  ${chipsHTML}
+                              </div>
+                              <div id="garden-carousel" class="flex overflow-x-auto snap-x snap-mandatory gap-0" style="scroll-behavior:smooth;">
+                                  ${pagesHTML}
+                              </div>
+                              <button id="garden-back-btn" onclick="App.Actions.gardenGoSubPage(0)" style="display:${savedIdx === 0 ? 'none' : 'flex'};"
+                                  class="fixed bottom-24 left-4 z-40 items-center gap-2 px-4 py-2.5 rounded-full bg-white/95 backdrop-blur-sm border border-stone-200 text-stone-700 text-xs font-extrabold shadow-lg active:scale-95 transition">
+                                  <i class="fa-solid fa-arrow-rotate-right"></i> חזרה לגינה
+                              </button>
                           </div>
                       `;
                   },
@@ -4527,7 +4589,47 @@
                                       App.Navigation.navigate('garden');
                                   },
 
-                                  useReward(id) {
+                                  gardenGoSubPage(idx) {
+                                      const c = document.getElementById('garden-carousel');
+                                      if (!c) return;
+                                      const target = c.children[idx];
+                                      if (target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+                                      try { navigator.vibrate && navigator.vibrate(8); } catch(e){}
+                                      localStorage.setItem('duet_garden_sub_page', String(idx));
+                                  },
+
+                                  _gardenInitCarousel(savedIdx) {
+                                      const c = document.getElementById('garden-carousel');
+                                      if (!c) return;
+                                      if (savedIdx > 0 && c.children[savedIdx]) {
+                                          c.children[savedIdx].scrollIntoView({ inline:'start', block:'nearest' });
+                                      }
+                                      if (c._observerSetup) return;
+                                      c._observerSetup = true;
+                                      const obs = new IntersectionObserver((entries) => {
+                                          entries.forEach(e => {
+                                              if (e.isIntersecting && e.intersectionRatio >= 0.55) {
+                                                  const idx = parseInt(e.target.dataset.idx);
+                                                  document.querySelectorAll('[data-garden-chip]').forEach(chip => {
+                                                      const cIdx = parseInt(chip.dataset.gardenChip);
+                                                      const grad = chip.dataset.chipGrad;
+                                                      if (cIdx === idx) {
+                                                          chip.className = `garden-chip snap-start shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-xs font-extrabold border transition active:scale-95 bg-gradient-to-r ${grad} text-white shadow-lg border-transparent scale-105`;
+                                                          chip.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+                                                      } else {
+                                                          chip.className = 'garden-chip snap-start shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-xs font-extrabold border transition active:scale-95 bg-white/80 text-stone-600 border-stone-200 shadow-sm';
+                                                      }
+                                                  });
+                                                  const back = document.getElementById('garden-back-btn');
+                                                  if (back) back.style.display = idx === 0 ? 'none' : 'flex';
+                                                  localStorage.setItem('duet_garden_sub_page', String(idx));
+                                              }
+                                          });
+                                      }, { root: c, threshold: [0.55] });
+                                      Array.from(c.children).forEach(child => obs.observe(child));
+                                  },
+
+                                  useReward(id) {
                                       let purchased = [...App.State.purchasedRewards];
                                       const idx = purchased.findIndex(i => i.id === id);
                                       if (idx > -1) {
