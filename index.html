@@ -497,29 +497,40 @@
         <button
           onclick="App.Navigation.navigate('board')"
           id="btn-nav-board"
-          class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
+          class="flex-shrink-0 w-[18vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-                          <i class="fa-solid fa-note-sticky text-2xl mb-1"></i
-          ><span class="text-[11px] font-medium">מקרר</span>            
+                          <i class="fa-solid fa-note-sticky text-2xl mb-1"></i
+          ><span class="text-[11px] font-medium">פתקים</span>            
         </button>
-                   
+                   
         <button
           onclick="App.Navigation.navigate('intimacy')"
           id="btn-nav-intimacy"
-          class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
+          class="flex-shrink-0 w-[18vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-                          <i class="fa-solid fa-heart text-2xl mb-1"></i
-          ><span class="text-[11px] font-medium">אינטימיות</span>            
+                          <i class="fa-solid fa-heart text-2xl mb-1"></i
+          ><span class="text-[11px] font-medium">אינטימיות</span>            
         </button>
-                   
+                   
+        <button
+          onclick="App.Navigation.navigate('whiteflag')"
+          id="btn-nav-whiteflag"
+          class="flex-shrink-0 w-[18vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
+        >
+                          <span class="text-2xl mb-1 leading-none" aria-hidden="true">🏳️</span
+          ><span class="text-[11px] font-medium">דגל לבן</span>            
+        </button>
+                   
         <button
           onclick="App.Navigation.navigate('profile')"
           id="btn-nav-profile"
-          class="flex-shrink-0 w-[22vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
+          class="flex-shrink-0 w-[18vw] snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-                          <i class="fa-solid fa-user-astronaut text-2xl mb-1"></i
-          ><span class="text-[11px] font-medium">פרופיל</span>            
+                          <i class="fa-solid fa-user-astronaut text-2xl mb-1"></i
+          ><span class="text-[11px] font-medium">פרופיל</span>            
         </button>
+               
+
                
       </nav>
     </div>
@@ -1103,8 +1114,10 @@
                                           case 'garden': container.innerHTML = App.Components.Garden(); break; 
                                           case 'journal': container.innerHTML = App.Components.Journal(); break; 
                                           case 'board': container.innerHTML = App.Components.Board(); break; 
-                                          case 'intimacy': container.innerHTML = App.Components.Intimacy(); break; 
-                                          case 'profile': container.innerHTML = App.Components.Profile(); break; 
+                                          case 'intimacy': container.innerHTML = App.Components.Intimacy(); break; 
+                                          case 'whiteflag': container.innerHTML = App.Components.WhiteFlag(); break; 
+                                          case 'profile': container.innerHTML = App.Components.Profile(); break; 
+
                                       }
                                       viewport.appendChild(container);
                                   }
@@ -1798,7 +1811,43 @@
                                       feedHTML += '</div>'; return feedHTML;
                                   },
 
+                                  WhiteFlag() {
+                                      return `
+                                          <div class="space-y-6 px-1" dir="rtl">
+                                              <div class="text-center pt-2">
+                                                  <div class="text-5xl mb-2 leading-none">🏳️</div>
+                                                  <h2 class="text-3xl font-bold text-stone-800 tracking-wider">דגל לבן</h2>
+                                                  <p class="text-stone-500 text-sm mt-1">מרחב בטוח לפתרון קונפליקטים 🤍</p>
+                                              </div>
+
+                                              <div class="bg-gradient-to-br from-stone-50 to-white border border-stone-200 rounded-[32px] p-6 shadow-sm space-y-4">
+                                                  <p class="text-sm text-stone-600 leading-relaxed text-center">
+                                                      כשהשיחה מסתבכת — עוצרים, נושמים יחד, ומדברים לפי תבנית מקרבת. בלי האשמות, בלי לפתור — רק להישמע.
+                                                  </p>
+                                                  <div class="grid grid-cols-3 gap-3 text-center">
+                                                      <div class="bg-white rounded-2xl p-3 border border-stone-100">
+                                                          <div class="text-2xl mb-1">🌬️</div>
+                                                          <div class="text-[11px] font-bold text-stone-600">נשימה<br>60 שניות</div>
+                                                      </div>
+                                                      <div class="bg-white rounded-2xl p-3 border border-stone-100">
+                                                          <div class="text-2xl mb-1">💬</div>
+                                                          <div class="text-[11px] font-bold text-stone-600">תבנית<br>תקשורת</div>
+                                                      </div>
+                                                      <div class="bg-white rounded-2xl p-3 border border-stone-100">
+                                                          <div class="text-2xl mb-1">⏳</div>
+                                                          <div class="text-[11px] font-bold text-stone-600">פסק זמן<br>חיובי</div>
+                                                      </div>
+                                                  </div>
+                                                  <button onclick="App.Actions.startConflictResolution()" class="w-full flex items-center justify-center gap-2 bg-stone-800 hover:bg-stone-900 text-white py-3.5 rounded-2xl text-sm font-bold transition active:scale-[0.98] shadow-sm">
+                                                      <span class="text-base leading-none">🏳️</span>
+                                                      <span>הרמת דגל לבן · התחלת מרחב בטוח</span>
+                                                  </button>
+                                              </div>
+                                          </div>`;
+                                  },
+
                                   Intimacy() {
+
                                       const todayStr = new Date().toDateString();
                                       if (App.State.questionDate !== todayStr) {
                                           App.State.save('questionDate', todayStr); App.State.save('selectedDeck', null); App.State.save('answeredToday', false); App.State.save('savedAnswer', ''); App.State.save('userMood', ''); App.State.save('questionsAnsweredCountToday', 0); App.State.save('dailyDeepQCount', 0);
@@ -2220,10 +2269,8 @@
                                                   </details>
                                               </div>
 
-                                              <button onclick="App.Actions.startConflictResolution()" class="w-full flex items-center justify-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-200 text-stone-500 py-3 rounded-2xl text-xs font-medium transition active:scale-[0.98] shadow-sm">
-                                                  <i class="fa-solid fa-flag text-stone-400"></i>
-                                                  <span>דגל לבן · מרחב בטוח לפתרון קונפליקטים 🤍</span>
-                                              </button>
+
+
 
                                               ${this.renderCoupleScoreboard()}
 
@@ -2682,7 +2729,7 @@
                                       const notes = JSON.parse(localStorage.getItem('duet_board_notes')) || [];
                                       let notesHTML = '';
                                       if (notes.length === 0) {
-                                          notesHTML = `<div class="text-center text-stone-400 font-bold mt-10 w-full col-span-2">המקרר ריק... השאירו פתק ראשון! 📝</div>`;
+                                          notesHTML = `<div class="text-center text-stone-400 font-bold mt-10 w-full col-span-2">לוח הפתקים ריק... השאירו פתק ראשון! 📝</div>`;
                                       } else {
                                             notes.forEach(n => {
                                               let contentHTML = '';
@@ -2713,7 +2760,7 @@
                                       return `
                                           <div class="space-y-6 px-1">
                                               <div class="text-center pt-2">
-                                                  <h2 class="text-3xl font-bold text-stone-800 font-hand tracking-wider">המקרר שלנו</h2>
+                                                  <h2 class="text-3xl font-bold text-stone-800 font-hand tracking-wider">הפתקים שלנו</h2>
                                                   <p class="text-stone-500 text-sm">השאירו פתק קטן אחד לשנייה</p>
                                               </div>
                                               <div class="glass-panel rounded-[32px] p-5 shadow-sm border border-white flex flex-col gap-3 relative overflow-visible">
