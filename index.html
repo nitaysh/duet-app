@@ -3750,7 +3750,7 @@
                                   },
 
                                   // ===== דגל לבן 🤍 — מרחב בטוח לפתרון קונפליקטים =====
-                                  _wf: { breathInterval: null, breathSecondsLeft: 60, breathReady: { me: false, partner: false }, selectedTemplate: 'nvc', messages: [] },
+                                  _wf: { breathInterval: null, breathSecondsLeft: 60, breathReady: { me: false, partner: false }, selectedTemplate: 'nvc', messages: [], mode: 'templates', imago: { phase: 'setup', sender: 'me', share: '', mirror: '', validate: '', empathy: '', senderConfirmedMirror: false, mirrorPending: false } },
                                   _wfTemplates: {
                                       nvc: { label: "תקשורת מקרבת", fields: [
                                           { id: 'x', label: 'כאשר קרה...', placeholder: 'הסיטואציה, בלי פרשנות' },
@@ -3780,6 +3780,8 @@
                                       this._wf.breathReady = { me: false, partner: false };
                                       this._wf.selectedTemplate = 'nvc';
                                       this._wf.messages = [];
+                                      this._wf.mode = 'templates';
+                                      this._wf.imago = { phase: 'setup', sender: 'me', share: '', mirror: '', validate: '', empathy: '', senderConfirmedMirror: false, mirrorPending: false };
                                       let host = document.getElementById('white-flag-overlay');
                                       if (!host) {
                                           host = document.createElement('div');
@@ -3890,6 +3892,267 @@
                                       this._wf.messages = [];
                                       this._renderWhiteFlag('chat');
                                   },
+
+                                  // ===== דיאלוג אימגו — Imago state machine =====
+                                  // Backend hookup: replace bodies with socket.emit / firestore.set;
+                                  // on remote update, mutate this._wf.imago and call _renderImago().
+                                  setWfMode(mode) {
+                                      this._wf.mode = (mode === 'imago') ? 'imago' : 'templates';
+                                      this._renderWhiteFlag('chat');
+                                  },
+                                  imagoStart(sender) {
+                                      this._wf.imago.sender = (sender === 'partner') ? 'partner' : 'me';
+                                      this._wf.imago.phase = 'share';
+                                      this._renderImago();
+                                  },
+                                  imagoSetField(field, value) {
+                                      if (['share','mirror','validate','empathy'].includes(field)) {
+                                          this._wf.imago[field] = (value || '').slice(0, 600);
+                                      }
+                                  },
+                                  imagoAdvance() {
+                                      const im = this._wf.imago;
+                                      const readField = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+                                      if (im.phase === 'share') {
+                                          const v = readField('imago-input-share');
+                                          if (v.length < 15) return App.UI.showToast('שתפ/י לפחות משפט שלם — לפחות 15 תווים', 'info');
+                                          im.share = v; im.phase = 'mirror'; im.mirrorPending = false; im.senderConfirmedMirror = false;
+                                      } else if (im.phase === 'mirror') {
+                                          const v = readField('imago-input-mirror');
+                                          if (v.length < 15) return App.UI.showToast('נסה/י לשקף במילים שלך — לפחות 15 תווים', 'info');
+                                          im.mirror = v; im.mirrorPending = true;
+                                      } else if (im.phase === 'validate') {
+                                          const v = readField('imago-input-validate');
+                                          if (v.length < 15) return App.UI.showToast('הסבר/י למה זה הגיוני — לפחות 15 תווים', 'info');
+                                          im.validate = v; im.phase = 'empathy';
+                                      } else if (im.phase === 'empathy') {
+                                          const v = readField('imago-input-empathy');
+                                          if (v.length < 10) return App.UI.showToast('תן/י שם לרגש — לפחות 10 תווים', 'info');
+                                          im.empathy = v; im.phase = 'complete';
+                                      }
+                                      this._renderImago();
+                                  },
+                                  imagoConfirmMirror(ok) {
+                                      const im = this._wf.imago;
+                                      if (ok) { im.senderConfirmedMirror = true; im.mirrorPending = false; im.phase = 'validate'; }
+                                      else { im.mirrorPending = false; im.senderConfirmedMirror = false; }
+                                      this._renderImago();
+                                  },
+                                  imagoBack() {
+                                      const im = this._wf.imago;
+                                      const order = ['setup','share','mirror','validate','empathy','complete'];
+                                      const i = order.indexOf(im.phase);
+                                      if (i > 0) { im.phase = order[i-1]; im.mirrorPending = false; this._renderImago(); }
+                                  },
+                                  imagoReset() {
+                                      this._wf.imago = { phase: 'setup', sender: 'me', share: '', mirror: '', validate: '', empathy: '', senderConfirmedMirror: false, mirrorPending: false };
+                                      this._renderImago();
+                                  },
+                                  imagoSaveToCapsule() {
+                                      const im = this._wf.imago;
+                                      const senderName = im.sender === 'me' ? (App.State.userName || 'אני') : (App.State.partnerName || 'שותפ/ה');
+                                      const listenerName = im.sender === 'me' ? (App.State.partnerName || 'שותפ/ה') : (App.State.userName || 'אני');
+                                      const today = new Date().toLocaleDateString('he-IL');
+                                      App.State.intimacyHistory = App.State.intimacyHistory || [];
+                                      App.State.intimacyHistory.unshift({
+                                          date: today,
+                                          question: '🤍 דיאלוג אימגו',
+                                          userAnswer: `${senderName}: ${im.share}`,
+                                          partnerAnswer: `${listenerName} — שיקוף: ${im.mirror} | תיקוף: ${im.validate} | אמפתיה: ${im.empathy}`,
+                                          isFavorite: false
+                                      });
+                                      App.State.save('intimacyHistory', App.State.intimacyHistory);
+                                      App.UI.showToast('הדיאלוג נשמר בקפסולה 🤍', 'success');
+                                  },
+                                  _renderImago() {
+                                      const host = document.getElementById('white-flag-overlay');
+                                      if (!host) return;
+                                      const im = this._wf.imago;
+                                      const closeBtn = `<button onclick="App.Actions.exitConflictResolution()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white border border-stone-200 text-stone-400 hover:text-stone-600 flex items-center justify-center transition active:scale-90 shadow-sm" title="סגירה"><i class="fa-solid fa-xmark"></i></button>`;
+                                      const meName = App.State.userName || 'אני';
+                                      const partnerName = App.State.partnerName || 'שותפ/ה';
+                                      const senderName = im.sender === 'me' ? meName : partnerName;
+                                      const listenerName = im.sender === 'me' ? partnerName : meName;
+                                      const escape = (s) => String(s || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+                                      const styleBlock = `<style>.imago-fade{animation:imagoFade 350ms ease-out}@keyframes imagoFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}</style>`;
+
+                                      // Mode switcher (shared)
+                                      const modeTabs = `
+                                          <div class="grid grid-cols-2 gap-2 bg-white/70 border border-stone-200 rounded-2xl p-1.5">
+                                              <button onclick="App.Actions.setWfMode('templates')" class="py-2 rounded-xl text-xs font-bold transition text-stone-500 hover:bg-stone-50">תבניות תקשורת</button>
+                                              <button onclick="App.Actions.setWfMode('imago')" class="py-2 rounded-xl text-xs font-bold transition bg-stone-700 text-white shadow-sm">דיאלוג אימגו 🤍</button>
+                                          </div>`;
+
+                                      // Phase index & progress
+                                      const phaseOrder = ['share','mirror','validate','empathy'];
+                                      const phaseLabels = { share: 'שיתוף', mirror: 'שיקוף', validate: 'תיקוף', empathy: 'אמפתיה' };
+                                      const phaseIdx = phaseOrder.indexOf(im.phase);
+                                      const totalSteps = 4;
+                                      const progressPct = im.phase === 'complete' ? 100 : (im.phase === 'setup' ? 0 : ((phaseIdx + (im.mirrorPending ? 0.5 : 0)) / totalSteps) * 100);
+
+                                      const progressBar = `
+                                          <div class="space-y-2">
+                                              <div class="flex items-center justify-between text-[11px] font-bold text-stone-500">
+                                                  <span>${im.phase === 'setup' ? 'הכנה' : im.phase === 'complete' ? 'הושלם 🤍' : `שלב ${phaseIdx+1} מתוך ${totalSteps} · ${phaseLabels[im.phase]}`}</span>
+                                                  <span class="text-stone-400">${Math.round(progressPct)}%</span>
+                                              </div>
+                                              <div class="grid grid-cols-4 gap-1.5">
+                                                  ${phaseOrder.map((p,i) => {
+                                                      const done = i < phaseIdx || im.phase === 'complete';
+                                                      const active = i === phaseIdx && im.phase !== 'complete';
+                                                      return `<div class="h-1.5 rounded-full ${done ? 'bg-emerald-400' : active ? 'bg-stone-700' : 'bg-stone-200'}"></div>`;
+                                                  }).join('')}
+                                              </div>
+                                          </div>`;
+
+                                      let body = '';
+
+                                      if (im.phase === 'setup') {
+                                          body = `
+                                              <div class="bg-gradient-to-br from-rose-50 to-amber-50 border border-rose-100 rounded-3xl p-6 shadow-sm space-y-4 text-center">
+                                                  <div class="text-4xl">🤍</div>
+                                                  <h3 class="text-lg font-bold text-stone-800">דיאלוג אימגו</h3>
+                                                  <p class="text-xs text-stone-600 leading-relaxed">כלי תקשורת מונחה שמבוסס על "טיפול אימגו". אחד/ת משתפ/ת, השני/ה משקפ/ת, מתקפ/ת ומביע/ה אמפתיה. בלי לפתור — רק להישמע באמת.</p>
+                                                  <div class="bg-white/70 rounded-2xl p-3 text-[11px] text-stone-500 leading-relaxed">
+                                                      ארבעת השלבים: <b>שיתוף → שיקוף → תיקוף → אמפתיה</b><br>זמן משוער: 8–12 דקות. מומלץ במקום שקט.
+                                                  </div>
+                                              </div>
+                                              <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-3">
+                                                  <div class="text-[11px] font-bold text-stone-500 text-center">מי משתפ/ת ראשון/ה?</div>
+                                                  <div class="grid grid-cols-2 gap-2">
+                                                      <button onclick="App.Actions.imagoStart('me')" class="py-3.5 rounded-2xl border-2 ${im.sender==='me' ? 'border-stone-700 bg-stone-50' : 'border-stone-200 bg-white hover:border-stone-300'} text-sm font-bold text-stone-700 transition active:scale-95">${escape(meName)}</button>
+                                                      <button onclick="App.Actions.imagoStart('partner')" class="py-3.5 rounded-2xl border-2 ${im.sender==='partner' ? 'border-stone-700 bg-stone-50' : 'border-stone-200 bg-white hover:border-stone-300'} text-sm font-bold text-stone-700 transition active:scale-95">${escape(partnerName)}</button>
+                                                  </div>
+                                                  <p class="text-[10px] text-stone-400 text-center leading-relaxed">בחירת השולח/ת מתחילה את הדיאלוג. אפשר להתחלף בסבב הבא.</p>
+                                              </div>`;
+                                      } else if (im.phase === 'share') {
+                                          // Sender's turn
+                                          body = `
+                                              <div class="bg-rose-50 border border-rose-100 rounded-2xl p-3 flex items-center justify-between gap-2">
+                                                  <div class="flex items-center gap-2"><span class="text-lg">🗣️</span><div><div class="text-[11px] font-bold text-rose-600">תורו/ה של ${escape(senderName)} — שולח/ת</div><div class="text-[10px] text-stone-500">${escape(listenerName)}: רק להקשיב, בלי להגיב</div></div></div>
+                                              </div>
+                                              <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-3">
+                                                  <div class="bg-amber-50/60 border border-amber-100 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">💡 דבר/י מהלב על מה שאת/ה חווה. השתמש/י ב"אני מרגיש/ה" במקום "אתה תמיד". זה לא הזמן לפתור — רק לשתף.</div>
+                                                  <label class="text-[11px] font-bold text-stone-500">השיתוף שלי</label>
+                                                  <textarea id="imago-input-share" rows="5" maxlength="600" oninput="App.Actions._imagoLiveCheck()" placeholder="כשקרה X, הרגשתי Y, כי אני צריך/ה Z..." class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 transition leading-relaxed">${escape(im.share)}</textarea>
+                                                  <div id="imago-tip" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-2.5 text-[11px] text-orange-700 leading-relaxed">⚠️ שמתי לב למילים כמו "אתה תמיד / אף פעם / חייב". נסה/י לנסח שוב ב"שפת אני": <i>"כשקרה ___, הרגשתי ___, כי הייתי צריך/ה ___"</i>.</div>
+                                                  <div class="text-[10px] text-stone-400 text-left">לפחות 15 תווים</div>
+                                              </div>`;
+                                      } else if (im.phase === 'mirror' && !im.mirrorPending) {
+                                          body = `
+                                              <div class="bg-sky-50 border border-sky-100 rounded-2xl p-3 flex items-center gap-2">
+                                                  <span class="text-lg">👂</span><div><div class="text-[11px] font-bold text-sky-700">תורו/ה של ${escape(listenerName)} — מאזין/ה</div><div class="text-[10px] text-stone-500">חזרה במילים שלך, בלי תוספות</div></div>
+                                              </div>
+                                              <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-3">
+                                                  <div class="text-[11px] font-bold text-stone-500">מה ש-${escape(senderName)} שיתפ/ה:</div>
+                                                  <div class="bg-rose-50/60 border border-rose-100 rounded-xl p-3 text-sm text-stone-700 leading-relaxed">${escape(im.share)}</div>
+                                                  <div class="bg-amber-50/60 border border-amber-100 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">💡 לא להגיב, לא להסביר — רק לחזור על מה ששמעת במילים שלך. זה הרגע של ההקשבה.</div>
+                                                  <label class="text-[11px] font-bold text-stone-500">השיקוף שלי</label>
+                                                  <textarea id="imago-input-mirror" rows="5" maxlength="600" placeholder="אם הבנתי נכון, את/ה אומר/ת ש..." class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 transition leading-relaxed">${escape(im.mirror)}</textarea>
+                                                  <div class="text-[10px] text-stone-400 text-left">לפחות 15 תווים</div>
+                                              </div>`;
+                                      } else if (im.phase === 'mirror' && im.mirrorPending) {
+                                          // Sender confirms mirror
+                                          body = `
+                                              <div class="bg-rose-50 border border-rose-100 rounded-2xl p-3 flex items-center gap-2">
+                                                  <span class="text-lg">🤍</span><div><div class="text-[11px] font-bold text-rose-600">${escape(senderName)} — האם הרגשת מובן/ת?</div><div class="text-[10px] text-stone-500">רק את/ה יכול/ה לאשר את השיקוף</div></div>
+                                              </div>
+                                              <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-3">
+                                                  <div class="text-[11px] font-bold text-stone-500">השיקוף של ${escape(listenerName)}:</div>
+                                                  <div class="bg-sky-50/60 border border-sky-100 rounded-xl p-3 text-sm text-stone-700 leading-relaxed">${escape(im.mirror)}</div>
+                                                  <div class="grid grid-cols-1 gap-2 pt-1">
+                                                      <button onclick="App.Actions.imagoConfirmMirror(true)" class="py-3 rounded-2xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 active:scale-95 transition shadow-sm">✓ כן, הרגשתי שהקשבת</button>
+                                                      <button onclick="App.Actions.imagoConfirmMirror(false)" class="py-3 rounded-2xl bg-white border border-stone-200 text-stone-600 text-sm font-bold hover:bg-stone-50 active:scale-95 transition">לא בדיוק — נסה/י שוב</button>
+                                                  </div>
+                                                  <p class="text-[10px] text-stone-400 text-center leading-relaxed">הדיאלוג ימשיך רק אחרי שתאשר/י את השיקוף.</p>
+                                              </div>`;
+                                      } else if (im.phase === 'validate') {
+                                          body = `
+                                              <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 flex items-center gap-2">
+                                                  <span class="text-lg">🧭</span><div><div class="text-[11px] font-bold text-emerald-700">תורו/ה של ${escape(listenerName)} — תיקוף</div><div class="text-[10px] text-stone-500">תן/י מקום להיגיון של ${escape(senderName)}</div></div>
+                                              </div>
+                                              <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-3">
+                                                  <div class="bg-sky-50/60 border border-sky-100 rounded-xl p-3 text-[11px] text-stone-600 leading-relaxed"><b>השיקוף שאושר:</b> ${escape(im.mirror)}</div>
+                                                  <div class="bg-amber-50/60 border border-amber-100 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">💡 גם אם את/ה לא מסכים/ה — תן/י מקום להיגיון הפנימי של ${escape(senderName)}. "זה הגיוני כי..."</div>
+                                                  <label class="text-[11px] font-bold text-stone-500">התיקוף שלי</label>
+                                                  <textarea id="imago-input-validate" rows="5" maxlength="600" placeholder="זה הגיוני שתרגיש/י ככה כי..." class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 transition leading-relaxed">${escape(im.validate)}</textarea>
+                                                  <div class="text-[10px] text-stone-400 text-left">לפחות 15 תווים</div>
+                                              </div>`;
+                                      } else if (im.phase === 'empathy') {
+                                          body = `
+                                              <div class="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex items-center gap-2">
+                                                  <span class="text-lg">💞</span><div><div class="text-[11px] font-bold text-amber-700">תורו/ה של ${escape(listenerName)} — אמפתיה</div><div class="text-[10px] text-stone-500">לדמיין איך זה מרגיש בלב של ${escape(senderName)}</div></div>
+                                              </div>
+                                              <div class="bg-white border border-stone-200 rounded-2xl p-4 space-y-3">
+                                                  <div class="bg-amber-50/60 border border-amber-100 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">💡 נסה/י לדמיין איך זה מרגיש בגוף ובלב של ${escape(senderName)}. שם/י שם לרגש.</div>
+                                                  <label class="text-[11px] font-bold text-stone-500">האמפתיה שלי</label>
+                                                  <textarea id="imago-input-empathy" rows="4" maxlength="600" placeholder="אני מתאר/ת לעצמי שאת/ה מרגיש/ה... [שם רגש]" class="w-full px-3 py-3 rounded-xl bg-stone-50 border border-stone-200 text-sm text-stone-700 placeholder:text-stone-300 focus:outline-none focus:border-stone-400 transition leading-relaxed">${escape(im.empathy)}</textarea>
+                                                  <div class="text-[10px] text-stone-400 text-left">לפחות 10 תווים</div>
+                                              </div>`;
+                                      } else if (im.phase === 'complete') {
+                                          body = `
+                                              <div class="bg-gradient-to-br from-emerald-50 via-rose-50 to-amber-50 border border-emerald-100 rounded-3xl p-6 text-center space-y-2 shadow-sm">
+                                                  <div class="text-4xl">🤍</div>
+                                                  <h3 class="text-lg font-bold text-stone-800">עברתם יחד את כל ארבעת השלבים</h3>
+                                                  <p class="text-xs text-stone-600 leading-relaxed">זה לא תמיד פותר — אבל זה תמיד מקרב.</p>
+                                              </div>
+                                              <div class="space-y-2.5">
+                                                  <div class="bg-white border border-rose-100 rounded-2xl p-3.5">
+                                                      <div class="text-[10px] font-bold text-rose-500 mb-1">🗣️ שיתוף · ${escape(senderName)}</div>
+                                                      <div class="text-sm text-stone-700 leading-relaxed">${escape(im.share)}</div>
+                                                  </div>
+                                                  <div class="bg-white border border-sky-100 rounded-2xl p-3.5">
+                                                      <div class="text-[10px] font-bold text-sky-600 mb-1">👂 שיקוף · ${escape(listenerName)}</div>
+                                                      <div class="text-sm text-stone-700 leading-relaxed">${escape(im.mirror)}</div>
+                                                  </div>
+                                                  <div class="bg-white border border-emerald-100 rounded-2xl p-3.5">
+                                                      <div class="text-[10px] font-bold text-emerald-600 mb-1">🧭 תיקוף · ${escape(listenerName)}</div>
+                                                      <div class="text-sm text-stone-700 leading-relaxed">${escape(im.validate)}</div>
+                                                  </div>
+                                                  <div class="bg-white border border-amber-100 rounded-2xl p-3.5">
+                                                      <div class="text-[10px] font-bold text-amber-600 mb-1">💞 אמפתיה · ${escape(listenerName)}</div>
+                                                      <div class="text-sm text-stone-700 leading-relaxed">${escape(im.empathy)}</div>
+                                                  </div>
+                                              </div>
+                                              <div class="grid grid-cols-1 gap-2">
+                                                  <button onclick="App.Actions.imagoSaveToCapsule()" class="py-3 rounded-2xl bg-stone-700 text-white text-sm font-bold hover:bg-stone-800 active:scale-95 transition shadow-sm">💾 שמור בקפסולה</button>
+                                                  <button onclick="App.Actions.imagoReset()" class="py-3 rounded-2xl bg-white border border-stone-200 text-stone-600 text-sm font-bold hover:bg-stone-50 active:scale-95 transition">🔄 דיאלוג חדש</button>
+                                              </div>`;
+                                      }
+
+                                      // Footer nav (back / continue) shown during active phases
+                                      let footer = '';
+                                      if (im.phase !== 'setup' && im.phase !== 'complete') {
+                                          const showContinue = !(im.phase === 'mirror' && im.mirrorPending);
+                                          footer = `
+                                              <div class="grid ${showContinue ? 'grid-cols-2' : 'grid-cols-1'} gap-2 pt-1">
+                                                  <button onclick="App.Actions.imagoBack()" class="py-2.5 rounded-xl bg-white border border-stone-200 text-stone-500 text-xs font-bold hover:bg-stone-50 active:scale-95 transition">↩ חזרה</button>
+                                                  ${showContinue ? `<button onclick="App.Actions.imagoAdvance()" class="py-2.5 rounded-xl bg-stone-700 text-white text-xs font-bold hover:bg-stone-800 active:scale-95 transition shadow-sm">המשך →</button>` : ''}
+                                              </div>`;
+                                      }
+
+                                      host.innerHTML = `${styleBlock}
+                                          <div class="relative min-h-full p-5 pt-16 pb-8 flex flex-col gap-4 max-w-xl mx-auto text-stone-700 imago-fade" dir="rtl">
+                                              ${closeBtn}
+                                              <div class="text-center">
+                                                  <div class="text-2xl mb-1">🤍</div>
+                                                  <h2 class="text-base font-semibold text-stone-700">מרחב הדגל הלבן</h2>
+                                              </div>
+                                              ${modeTabs}
+                                              ${im.phase !== 'setup' ? progressBar : ''}
+                                              ${body}
+                                              ${footer}
+                                          </div>`;
+                                  },
+                                  _imagoLiveCheck() {
+                                      const ta = document.getElementById('imago-input-share');
+                                      const tip = document.getElementById('imago-tip');
+                                      if (!ta || !tip) return;
+                                      const v = ta.value || '';
+                                      const bad = /(אתה תמיד|את תמיד|אתה אף פעם|את אף פעם|אתם תמיד|חייב להפסיק|חייבת להפסיק|למה אתה|למה את)/;
+                                      if (bad.test(v)) tip.classList.remove('hidden'); else tip.classList.add('hidden');
+                                  },
+
                                   _renderWhiteFlag(view) {
                                       const host = document.getElementById('white-flag-overlay');
                                       if (!host) return;
@@ -3925,6 +4188,7 @@
                                               </div>`;
                                           return;
                                       }
+                                      if (view === 'chat' && wf.mode === 'imago') { this._renderImago(); return; }
                                       if (view === 'chat') {
                                           const tpl = this._wfTemplates[wf.selectedTemplate];
                                           const escape = (s) => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
@@ -3997,6 +4261,10 @@
                                                       <div class="text-2xl mb-1">🤍</div>
                                                       <h2 class="text-base font-semibold text-stone-700">מרחב הדגל הלבן</h2>
                                                       <p class="text-[11px] text-stone-400 mt-1">תקשורת בתבניות בלבד · עד 150 תווים לשדה</p>
+                                                  </div>
+                                                  <div class="grid grid-cols-2 gap-2 bg-white/70 border border-stone-200 rounded-2xl p-1.5">
+                                                      <button onclick="App.Actions.setWfMode('templates')" class="py-2 rounded-xl text-xs font-bold transition bg-stone-700 text-white shadow-sm">תבניות תקשורת</button>
+                                                      <button onclick="App.Actions.setWfMode('imago')" class="py-2 rounded-xl text-xs font-bold transition text-stone-500 hover:bg-stone-50">דיאלוג אימגו 🤍</button>
                                                   </div>
                                                   ${anchorHTML}
                                                   <div class="bg-white/70 border border-stone-200 rounded-2xl p-4 min-h-[200px] max-h-[40vh] overflow-y-auto space-y-2">
