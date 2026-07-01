@@ -3812,6 +3812,14 @@
                                           }
                                       }, 1000);
                                   },
+                                  skipWfBreath() {
+                                      if (this._wf.breathInterval) {
+                                          clearInterval(this._wf.breathInterval);
+                                          this._wf.breathInterval = null;
+                                      }
+                                      this._wf.breathSecondsLeft = 0;
+                                      this._renderWhiteFlag('breathing');
+                                  },
                                   markBreathReady(side) {
                                       this._wf.breathReady[side] = true;
                                       if (this._wf.breathReady.me && this._wf.breathReady.partner) {
@@ -4262,14 +4270,15 @@
                                                       <div class="wf-breath-circle w-32 h-32 rounded-full bg-stone-200/70 flex items-center justify-center text-stone-500 text-sm font-medium">${finished ? 'מוכנים?' : 'נשמו'}</div>
                                                   </div>
                                                   ${finished ? `
-                                                      <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
-                                                          <button onclick="App.Actions.markBreathReady('me')" ${wf.breathReady.me ? 'disabled' : ''} class="py-3 rounded-2xl border ${wf.breathReady.me ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'} text-sm font-medium transition">${wf.breathReady.me ? '✓ אני מוכן/ה' : 'אני מוכן/ה'}</button>
-                                                          <button onclick="App.Actions.markBreathReady('partner')" ${wf.breathReady.partner ? 'disabled' : ''} class="py-3 rounded-2xl border ${wf.breathReady.partner ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'} text-sm font-medium transition">${wf.breathReady.partner ? '✓ שותפ/ה מוכן/ה' : 'שותפ/ה מוכן/ה'}</button>
-                                                      </div>
-                                                  ` : `
-                                                      <div class="text-stone-400 text-sm">נותרו <span id="wf-countdown" class="font-semibold text-stone-600">${wf.breathSecondsLeft}</span> שניות</div>
-                                                  `}
-                                              </div>`;
+                                                  <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
+                                                      <button onclick="App.Actions.markBreathReady('me')" ${wf.breathReady.me ? 'disabled' : ''} class="py-3 rounded-2xl border ${wf.breathReady.me ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'} text-sm font-medium transition">${wf.breathReady.me ? '✓ אני מוכן/ה' : 'אני מוכן/ה'}</button>
+                                                      <button onclick="App.Actions.markBreathReady('partner')" ${wf.breathReady.partner ? 'disabled' : ''} class="py-3 rounded-2xl border ${wf.breathReady.partner ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'} text-sm font-medium transition">${wf.breathReady.partner ? '✓ שותפ/ה מוכן/ה' : 'שותפ/ה מוכן/ה'}</button>
+                                                  </div>
+                                              ` : `
+                                                  <div class="text-stone-400 text-sm mb-4">נותרו <span id="wf-countdown" class="font-semibold text-stone-600">${wf.breathSecondsLeft}</span> שניות</div>
+                                                  <button onclick="App.Actions.skipWfBreath()" class="text-[11px] font-bold text-stone-400 hover:text-stone-600 underline underline-offset-4 transition">דלגו והתחילו</button>
+                                              `}
+                                          </div>`;
                                           return;
                                       }
                                       if (view === 'chat' && wf.mode === 'imago') { this._renderImago(); return; }
