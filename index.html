@@ -638,6 +638,8 @@
 
                                       this.quests = JSON.parse(localStorage.getItem('duet_quests')) || [];
                                       this.questsDate = localStorage.getItem('duet_quests_date') || '';
+                                      this.weeklyQuests = JSON.parse(localStorage.getItem('duet_weekly_quests')) || [];
+                                      this.weeklyQuestsDate = localStorage.getItem('duet_weekly_quests_date') || '';
 
                                       this.journalViewMode = localStorage.getItem('duet_journal_view_mode') || 'calendar';
                                       this.journalTags = JSON.parse(localStorage.getItem('duet_journal_tags')) || {};
@@ -798,9 +800,16 @@
                       if (level <= 90) return { name: "ממלכת הזיכרונות", plant: "🏰" };
                       return { name: "בית על העץ לנצח", plant: "🏡🌳" };
                   },
-                                  questsBank: [
+                  dailyQuestsBank: [
                                       "שתו קפה יחד בלי מסכים (10 דק')", "תנו חיבוק ארוך של 20 שניות", "שלחו הודעת טקסט מפרגנת באמצע היום",
-                                      "תכננו משהו קטן וכיפי לסופ״ש", "החמיאו אחד לשנייה על משהו ספציפי", "שימו שיר ששניכם אוהבים ורקדו בסלון"
+                                      "תכננו משהו קטן וכיפי לסופ״ש", "החמיאו אחד לשנייה על משהו ספציפי", "שימו שיר ששניכם אוהבים ורקדו בסלון",
+                                      "שאלו אחד את השנייה איך עבר היום והקשיבו באמת", "הכינו כוס תה או קפה לשני/ה בהפתעה", "שלחו תמונה מצחיקה או מימ",
+                                      "השאירו פתק קטן עם מילה טובה לפני שיוצאים"
+                                  ],
+                                  weeklyQuestsBank: [
+                                      "בשלו יחד ארוחת ערב מושקעת מאפס", "צאו להליכה משותפת של חצי שעה בלי טלפונים בכלל", "צפו יחד בסרט אהוב או נסו משהו חדש עם פופקורן",
+                                      "ארגנו דייט רומנטי קטן מחוץ לבית (אפילו רק קפה)", "הקדישו 20 דקות לשיחה פתוחה על תוכניות לחודש הקרוב",
+                                      "למדו יחד משהו חדש שמעניין את שניכם (מתכון, מושג, עובדה)", "עשו יחד משהו ספונטני שלא תכננתם מראש השבוע"
                                   ],
                                   journalTags: {
                                       date: { name: "דייט רומנטי", icon: "fa-glass-cheers", color: "text-rose-500 bg-rose-50" },
@@ -1208,10 +1217,29 @@
                       if (App.State.gardenView === 'trips') return this.TripPlanner();
 
                       const todayStr = new Date().toDateString();
+                      // משימות יומיות - 3 ביום
                       if (App.State.questsDate !== todayStr) {
-                          const shuffled = [...App.Data.questsBank].sort(() => 0.5 - Math.random());
-                          App.State.save('quests', [{ text: shuffled[0], completed: false }, { text: shuffled[1], completed: false }]);
+                          const shuffled = [...App.Data.dailyQuestsBank].sort(() => 0.5 - Math.random());
+                          App.State.save('quests', [
+                              { text: shuffled[0], completed: false }, 
+                              { text: shuffled[1], completed: false }, 
+                              { text: shuffled[2], completed: false }
+                          ]);
                           App.State.save('questsDate', todayStr);
+                      }
+
+                      // משימות שבועיות - 2 בשבוע (מתאפס ביום ראשון)
+                      const startOfWeek = new Date();
+                      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+                      const weekStr = startOfWeek.toDateString();
+                      
+                      if (App.State.weeklyQuestsDate !== weekStr) {
+                          const shuffledW = [...App.Data.weeklyQuestsBank].sort(() => 0.5 - Math.random());
+                          App.State.save('weeklyQuests', [
+                              { text: shuffledW[0], completed: false }, 
+                              { text: shuffledW[1], completed: false }
+                          ]);
+                          App.State.save('weeklyQuestsDate', weekStr);
                       }
 
                       const currentLevel = App.State.gardenLevel;
@@ -1262,16 +1290,33 @@
                               <div class="flex items-center justify-between p-3 bg-white/60 border ${q.completed ? 'border-emerald-200 bg-emerald-50/50' : 'border-stone-100'} rounded-2xl shadow-sm">
                                   <span class="text-sm font-bold ${q.completed ? 'text-emerald-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2 transition-all">${q.text}</span>
                                   <div class="flex items-center gap-1.5">
-                                      <button onclick="App.Actions.replaceQuest(${idx})" class="w-8 h-8 bg-white border border-stone-100 text-stone-300 hover:text-red-400 hover:bg-red-50 hover:border-red-100 rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" title="מחק והבא משימה חדשה">
+                                      <button onclick="App.Actions.replaceQuest(${idx}, 'daily')" class="w-8 h-8 bg-white border border-stone-100 text-stone-300 hover:text-red-400 hover:bg-red-50 hover:border-red-100 rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" title="מחק והבא משימה חדשה">
                                           <i class="fa-regular fa-trash-can text-xs"></i>
                                       </button>
-                                      <button onclick="App.Actions.toggleQuest(${idx})" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white shadow-inner' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0">
+                                      <button onclick="App.Actions.toggleQuest(${idx}, 'daily')" class="w-8 h-8 ${q.completed ? 'bg-emerald-500 text-white shadow-inner' : 'bg-stone-100 text-stone-400 hover:bg-emerald-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0">
                                           <i class="fa-solid fa-check text-xs"></i>
                                       </button>
                                   </div>
                               </div>`;
                       });
                       questsHTML += '</div>';
+
+                      let weeklyQuestsHTML = '<div class="space-y-2">';
+                      App.State.weeklyQuests.forEach((q, idx) => {
+                          weeklyQuestsHTML += `
+                              <div class="flex items-center justify-between p-3 bg-white/60 border ${q.completed ? 'border-blue-200 bg-blue-50/50' : 'border-stone-100'} rounded-2xl shadow-sm">
+                                  <span class="text-sm font-bold ${q.completed ? 'text-blue-600 line-through opacity-70' : 'text-stone-700'} flex-1 pl-2 transition-all">${q.text}</span>
+                                  <div class="flex items-center gap-1.5">
+                                      <button onclick="App.Actions.replaceQuest(${idx}, 'weekly')" class="w-8 h-8 bg-white border border-stone-100 text-stone-300 hover:text-red-400 hover:bg-red-50 hover:border-red-100 rounded-xl flex items-center justify-center transition active:scale-90 shadow-sm" title="מחק והבא משימה חדשה">
+                                          <i class="fa-regular fa-trash-can text-xs"></i>
+                                      </button>
+                                      <button onclick="App.Actions.toggleQuest(${idx}, 'weekly')" class="w-8 h-8 ${q.completed ? 'bg-blue-500 text-white shadow-inner' : 'bg-stone-100 text-stone-400 hover:bg-blue-50'} rounded-xl flex items-center justify-center active:scale-90 transition shadow-sm shrink-0">
+                                          <i class="fa-solid fa-check text-xs"></i>
+                                      </button>
+                                  </div>
+                              </div>`;
+                      });
+                      weeklyQuestsHTML += '</div>';
 
                       const activeWishes = App.State.bucketList.filter(i => !i.completed);
                       let activeListHTML = '';
@@ -1392,9 +1437,13 @@
                                       </div>
                                   </div>
                               </div>
-                              <div class="space-y-3 px-1">
-                                  <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clipboard-check ml-1 text-emerald-500"></i> משימות יומיות לגינה</h3>
+                              <div class="space-y-3 px-1 mb-6">
+                                  <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clipboard-check ml-1 text-emerald-500"></i> משימות יומיות לגינה (10 XP)</h3>
                                   ${questsHTML}
+                              </div>
+                              <div class="space-y-3 px-1">
+                                  <h3 class="text-sm font-bold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-calendar-week ml-1 text-blue-500"></i> משימות שבועיות (25 XP)</h3>
+                                  ${weeklyQuestsHTML}
                               </div>
                           </div>`;
 
@@ -4646,30 +4695,39 @@
 
                                   waterPlant() { const today = new Date().toDateString(); if (App.State.lastWateredDate === today) return App.UI.showToast("הגינה כבר הושקתה היום!", "info"); App.State.save('lastWateredDate', today); App.State.addXP(15); App.UI.showToast("השקיתם בהצלחה 🌱 +15 XP", "success"); App.Navigation.navigate('garden'); },
 
-                                  toggleQuest(idx) {
-                                      let q = [...App.State.quests];
+                                  toggleQuest(idx, type = 'daily') {
+                                      const isWeekly = type === 'weekly';
+                                      const stateKey = isWeekly ? 'weeklyQuests' : 'quests';
+                                      const xpVal = isWeekly ? 25 : 10;
+                                      let q = [...App.State[stateKey]];
                                       if(q[idx].completed) {
                                           q[idx].completed = false;
-                                          App.State.save('quests', q);
-                                          App.State.subtractXP(10);
-                                          App.UI.showToast("סימון משימה בוטל (-10 XP)", "info");
+                                          App.State.save(stateKey, q);
+                                          App.State.subtractXP(xpVal);
+                                          App.UI.showToast(`סימון משימה בוטל (-${xpVal} XP)`, "info");
                                       } else {
                                           q[idx].completed = true;
-                                          App.State.save('quests', q);
-                                          App.State.addXP(10);
-                                          App.UI.showToast("משימה יומית הושלמה! +10 XP 🌟", "success");
+                                          App.State.save(stateKey, q);
+                                          App.State.addXP(xpVal);
+                                          App.UI.showToast(`משימה ${isWeekly ? 'שבועית' : 'יומית'} הושלמה! +${xpVal} XP 🌟`, "success");
                                       }
                                       App.Navigation.navigate('garden');
                                   },
 
-                                  replaceQuest(idx) {
-                                      let q = [...App.State.quests];
-                                      if (q[idx].completed) { App.State.subtractXP(10); }
-                                      const available = App.Data.questsBank.filter(bankQ => !q.some(existingQ => existingQ.text === bankQ));
+                                  replaceQuest(idx, type = 'daily') {
+                                      const isWeekly = type === 'weekly';
+                                      const stateKey = isWeekly ? 'weeklyQuests' : 'quests';
+                                      const bank = isWeekly ? App.Data.weeklyQuestsBank : App.Data.dailyQuestsBank;
+                                      const xpVal = isWeekly ? 25 : 10;
+                                      
+                                      let q = [...App.State[stateKey]];
+                                      if (q[idx].completed) { App.State.subtractXP(xpVal); }
+                                      
+                                      const available = bank.filter(bankQ => !q.some(existingQ => existingQ.text === bankQ));
                                       if (available.length > 0) {
                                           const newQ = available[Math.floor(Math.random() * available.length)];
                                           q[idx] = { text: newQ, completed: false };
-                                          App.State.save('quests', q);
+                                          App.State.save(stateKey, q);
                                           App.UI.showToast("המשימה נמחקה והוחלפה בחדשה 🔄", "success");
                                       } else {
                                           App.UI.showToast("אין עוד משימות שונות בבנק!", "info");
