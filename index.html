@@ -11,7 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -109,6 +109,112 @@
 
               .category-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
               .category-card:active { transform: scale(0.92); }
+
+              /* ====== Luxe / Maison Duet — טאב שוברים ====== */
+              :root {
+                  --luxe-bordeaux: #5c1a2b;
+                  --luxe-bordeaux-soft: #7a1f38;
+                  --luxe-gold: #c9a24c;
+                  --luxe-gold-soft: #e6cf94;
+                  --luxe-cream: #faf6ef;
+                  --luxe-cream-deep: #f2ead9;
+                  --luxe-ink: #2a1a1f;
+              }
+              .font-serif-luxe { font-family: 'Cormorant Garamond', 'Playfair Display', serif; }
+              .luxe-page {
+                  background:
+                      radial-gradient(circle at 20% 0%, rgba(201,162,76,0.10), transparent 55%),
+                      radial-gradient(circle at 100% 100%, rgba(92,26,43,0.08), transparent 60%),
+                      var(--luxe-cream);
+                  position: relative;
+              }
+              .luxe-page::before {
+                  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
+                  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55  0 0 0 0 0.42  0 0 0 0 0.18  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+                  mix-blend-mode: multiply;
+              }
+              .luxe-page > * { position: relative; z-index: 1; }
+              .luxe-divider {
+                  height: 1px;
+                  background: linear-gradient(90deg, transparent, var(--luxe-gold) 20%, var(--luxe-gold) 80%, transparent);
+                  opacity: 0.55;
+              }
+              .luxe-eyebrow {
+                  font-family: 'Cormorant Garamond', serif;
+                  font-size: 10px; letter-spacing: 0.42em; text-transform: uppercase;
+                  color: var(--luxe-gold); font-weight: 600;
+              }
+              .luxe-card {
+                  position: relative; background: var(--luxe-cream);
+                  border: 1px solid rgba(201,162,76,0.35);
+                  box-shadow: 0 12px 30px -18px rgba(92,26,43,0.35), inset 0 1px 0 rgba(255,255,255,0.6);
+                  border-radius: 18px;
+              }
+              .luxe-card::before {
+                  content: ""; position: absolute; top: 0; left: 12%; right: 12%; height: 2px;
+                  background: linear-gradient(90deg, transparent, var(--luxe-gold), transparent);
+                  border-radius: 2px;
+              }
+              .luxe-corner { position: absolute; width: 14px; height: 14px; border: 1px solid var(--luxe-gold); opacity: 0.7; }
+              .luxe-corner.tl { top: 6px; right: 6px; border-left: 0; border-bottom: 0; }
+              .luxe-corner.br { bottom: 6px; left: 6px; border-right: 0; border-top: 0; }
+              .luxe-btn-dark {
+                  background: linear-gradient(180deg, var(--luxe-bordeaux-soft), var(--luxe-bordeaux));
+                  color: var(--luxe-gold-soft);
+                  border: 1px solid rgba(201,162,76,0.55);
+                  box-shadow: 0 6px 16px -8px rgba(92,26,43,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+                  letter-spacing: 0.08em;
+              }
+              .luxe-btn-dark:active { transform: scale(0.97); }
+              .luxe-btn-muted {
+                  background: var(--luxe-cream-deep); color: rgba(92,26,43,0.35);
+                  border: 1px solid rgba(92,26,43,0.12); letter-spacing: 0.08em;
+              }
+              .luxe-pill {
+                  background: var(--luxe-cream); color: var(--luxe-bordeaux);
+                  border: 1px solid rgba(92,26,43,0.18);
+              }
+              .luxe-pill-active {
+                  background: linear-gradient(180deg, var(--luxe-bordeaux-soft), var(--luxe-bordeaux));
+                  color: var(--luxe-gold-soft);
+                  border: 1px solid var(--luxe-gold);
+                  box-shadow: 0 4px 12px -6px rgba(92,26,43,0.5);
+              }
+              .luxe-chip {
+                  background: var(--luxe-cream);
+                  border: 1px solid rgba(201,162,76,0.5);
+                  color: var(--luxe-bordeaux);
+              }
+              .luxe-medallion {
+                  width: 42px; height: 42px; border-radius: 50%;
+                  background: radial-gradient(circle at 30% 30%, #fffaf0, var(--luxe-cream-deep));
+                  border: 1px solid var(--luxe-gold);
+                  box-shadow: inset 0 0 0 3px rgba(255,255,255,0.6), 0 4px 10px -4px rgba(92,26,43,0.3);
+                  display: flex; align-items: center; justify-content: center; font-size: 20px;
+              }
+              .luxe-ticket {
+                  position: relative; background: var(--luxe-cream);
+                  border: 1px solid rgba(201,162,76,0.4);
+                  border-radius: 18px; overflow: hidden;
+                  box-shadow: 0 14px 32px -20px rgba(92,26,43,0.4);
+              }
+              .luxe-ticket::before, .luxe-ticket::after {
+                  content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%;
+                  background: #fbfaf8; border: 1px solid rgba(201,162,76,0.4); z-index: 2;
+              }
+              .luxe-ticket::before { top: 50%; left: 82px; transform: translate(-50%, -50%); }
+              .luxe-ticket::after  { top: 50%; left: 82px; transform: translate(-50%, -50%); display: none; }
+              .luxe-ticket-cut {
+                  position: absolute; top: 8px; bottom: 8px; left: 82px; width: 0;
+                  border-left: 1px dashed var(--luxe-gold); opacity: 0.7;
+              }
+              .luxe-stamp {
+                  font-family: 'Cormorant Garamond', serif; font-weight: 700;
+                  letter-spacing: 0.3em; font-size: 9px;
+                  color: rgba(201,162,76,0.75);
+                  border: 1px solid rgba(201,162,76,0.5); padding: 2px 6px; border-radius: 3px;
+                  transform: rotate(-8deg); display: inline-block;
+              }
     </style>
 
     <!-- PWA -->
@@ -1377,7 +1483,7 @@
                       let categoriesHTML = `<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1">`;
                       categories.forEach(c => {
                           const isSel = activeCat === c.key;
-                          categoriesHTML += `<button onclick="App.Actions.setVoucherCategory('${c.key}')" class="whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold transition border ${isSel ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50'}">${c.emoji} ${c.name}</button>`;
+                          categoriesHTML += `<button onclick="App.Actions.setVoucherCategory('${c.key}')" class="whitespace-nowrap px-3.5 py-1.5 rounded-full text-[11px] font-bold transition ${isSel ? 'luxe-pill-active' : 'luxe-pill'}" style="letter-spacing:0.05em">${c.emoji} ${c.name}</button>`;
                       });
                       categoriesHTML += `</div>`;
 
@@ -1402,13 +1508,15 @@
                               const canAfford = App.State.gardenXP >= cost;
 
                               bankItems.push(`
-                                  <div class="flex-shrink-0 w-44 p-4 bg-white border border-stone-100 rounded-2xl text-right transition shadow-sm flex flex-col justify-between min-h-[155px]">
-                                      <div class="space-y-1">
-                                          <span class="text-xs font-bold text-stone-700 block line-clamp-2 leading-tight">${wish.text}</span>
-                                          <span class="text-[9px] font-bold text-purple-400 uppercase tracking-wider block">${wish.category}</span>
+                                  <div class="luxe-card flex-shrink-0 w-44 p-4 text-right transition flex flex-col justify-between min-h-[160px]">
+                                      <span class="luxe-corner tl"></span>
+                                      <span class="luxe-corner br"></span>
+                                      <div class="space-y-1.5">
+                                          <span class="luxe-eyebrow block">${wish.category}</span>
+                                          <span class="font-serif-luxe text-[15px] font-semibold text-[color:var(--luxe-ink)] block line-clamp-3 leading-snug">${wish.text}</span>
                                       </div>
-                                      <button onclick="App.Actions.buyVoucher('${originalIdx}', '${wish.text.replace(/'/g, "\\'")}', '${wish.text.slice(-2)}', ${cost})" class="w-full text-[11px] font-extrabold py-2 rounded-xl transition ${canAfford ? 'bg-purple-500 text-white active:scale-95 shadow-md' : 'bg-stone-100 text-stone-400'}" >
-                                          ${cost} XP
+                                      <button onclick="App.Actions.buyVoucher('${originalIdx}', '${wish.text.replace(/'/g, "\\'")}', '${wish.text.slice(-2)}', ${cost})" class="w-full text-[11px] font-bold py-2 rounded-lg transition mt-3 ${canAfford ? 'luxe-btn-dark' : 'luxe-btn-muted'}">
+                                          ${canAfford ? '◆ ' : ''}${cost} <span class="opacity-70">XP</span>
                                       </button>
                                   </div>`);
                           }
@@ -1416,7 +1524,7 @@
 
                       let bankHTML = '';
                       if (bankItems.length === 0) {
-                          bankHTML = `<div class="text-xs font-bold text-stone-400 py-6 w-full text-center bg-white/50 rounded-2xl border border-dashed border-stone-200">אין פריטים זמינים בקטגוריה זו 🔮</div>`;
+                          bankHTML = `<div class="text-[12px] font-serif-luxe text-[color:var(--luxe-bordeaux)] opacity-60 py-6 w-full text-center rounded-2xl" style="border:1px dashed rgba(201,162,76,0.5);background:rgba(250,246,239,0.5)">אין פריטים זמינים בקטגוריה זו ✧</div>`;
                       } else {
                           bankHTML = `<div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 px-0.5">${bankItems.join('')}</div>`;
                       }
@@ -1519,18 +1627,26 @@
                       const usedVouchers = App.State.purchasedRewards.filter(r => r.used);
 
                       const pendingHTML = pendingVouchers.length === 0 ? '' : `
-                          <div class="space-y-3">
-                              <h4 class="text-xs font-extrabold text-rose-700 uppercase tracking-widest"><i class="fa-solid fa-ticket ml-1"></i> שוברים פעילים — מוכנים למימוש</h4>
+                          <div class="space-y-3 pt-1">
+                              <div class="flex items-center gap-3">
+                                  <span class="luxe-eyebrow">Ready to redeem</span>
+                                  <div class="luxe-divider flex-1"></div>
+                              </div>
+                              <h4 class="font-serif-luxe text-lg font-semibold text-[color:var(--luxe-bordeaux)] -mt-1">שוברים פעילים</h4>
                               <div class="flex flex-col gap-3">
                                   ${pendingVouchers.map(r => `
-                                      <div id="reward-ticket-${r.id}" class="flex relative bg-gradient-to-r from-rose-50 to-pink-50 border-2 border-rose-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-500">
-                                          <div class="flex-1 p-3.5 border-l-2 border-dashed border-rose-300 flex items-center gap-2">
-                                              <span class="text-2xl">${r.emoji || '🎟️'}</span>
-                                              <span class="text-sm font-extrabold text-stone-700">${r.text}</span>
+                                      <div id="reward-ticket-${r.id}" class="luxe-ticket flex items-stretch transition-all duration-500">
+                                          <div class="flex-1 p-4 flex items-center gap-3 pr-4">
+                                              <div class="luxe-medallion shrink-0">${r.emoji || '🎟️'}</div>
+                                              <div class="text-right">
+                                                  <div class="luxe-eyebrow mb-0.5">Maison · Duet</div>
+                                                  <span class="font-serif-luxe text-[15px] font-semibold text-[color:var(--luxe-ink)] leading-tight block">${r.text}</span>
+                                              </div>
                                           </div>
-                                          <button onclick="App.Actions.useReward(${r.id})" class="w-20 bg-rose-200 hover:bg-rose-300 text-rose-700 font-extrabold text-[11px] flex flex-col items-center justify-center transition active:scale-95 shrink-0 gap-1">
-                                              <i class="fa-solid fa-scissors text-base"></i>
-                                              <span>גזירת שובר</span>
+                                          <div class="luxe-ticket-cut"></div>
+                                          <button onclick="App.Actions.useReward(${r.id})" class="w-[72px] luxe-btn-dark font-bold text-[10px] flex flex-col items-center justify-center gap-1.5 shrink-0 rounded-none">
+                                              <i class="fa-solid fa-scissors text-sm"></i>
+                                              <span style="letter-spacing:0.12em">גזירה</span>
                                           </button>
                                       </div>
                                   `).join('')}
@@ -1538,44 +1654,59 @@
                           </div>`;
 
                       const usedHTML = usedVouchers.length === 0 ? '' : `
-                          <div class="space-y-3 pt-2">
-                              <h4 class="text-xs font-extrabold text-stone-500 uppercase tracking-widest"><i class="fa-solid fa-clock-rotate-left ml-1"></i> היסטוריית מימושים</h4>
-                              <div class="grid grid-cols-2 gap-2">
+                          <div class="space-y-3 pt-3">
+                              <div class="flex items-center gap-3">
+                                  <span class="luxe-eyebrow" style="color:rgba(92,26,43,0.5)">Archive</span>
+                                  <div class="luxe-divider flex-1" style="opacity:0.3"></div>
+                              </div>
+                              <h4 class="font-serif-luxe text-base font-semibold text-[color:var(--luxe-bordeaux)] opacity-70 -mt-1">היסטוריית מימושים</h4>
+                              <div class="grid grid-cols-2 gap-2.5">
                                   ${usedVouchers.map(r => `
-                                      <div class="relative bg-white/60 border border-stone-200 rounded-2xl p-3 opacity-70" style="transform: rotate(-1deg);">
-                                          <span class="absolute top-1 left-1 text-[8px] font-extrabold text-rose-500 border border-rose-300 px-1.5 py-0.5 rounded uppercase tracking-wider" style="transform: rotate(-8deg);">מומש</span>
-                                          <div class="text-lg text-center">${r.emoji || '🎟️'}</div>
-                                          <span class="text-[11px] font-bold text-stone-600 block text-center line-clamp-2 mt-1">${r.text}</span>
+                                      <div class="relative rounded-2xl p-3 border" style="background:linear-gradient(135deg,#f5ecda,#eadfc4);border-color:rgba(201,162,76,0.25);opacity:0.75;">
+                                          <span class="luxe-stamp absolute top-1.5 left-1.5">REDEEMED</span>
+                                          <div class="text-lg text-center opacity-70">${r.emoji || '🎟️'}</div>
+                                          <span class="font-serif-luxe text-[13px] font-semibold text-[color:var(--luxe-ink)] block text-center line-clamp-2 mt-1 opacity-80">${r.text}</span>
                                       </div>
                                   `).join('')}
                               </div>
                           </div>`;
 
                       const pageVouchersHTML = `
-                          <div class="space-y-5 px-2 pb-8">
-                              <div class="flex items-center justify-between pt-2">
-                                  <div class="text-right">
-                                      <h2 class="text-2xl font-extrabold text-rose-800 font-hand tracking-wider">חנות השוברים 🎟️</h2>
-                                      <p class="text-rose-700/70 text-xs font-bold mt-0.5">פינוקים זוגיים בתמורה ל-XP</p>
+                          <div class="luxe-page space-y-6 px-4 pt-5 pb-10 rounded-3xl">
+                              <div class="text-center space-y-1.5">
+                                  <div class="luxe-eyebrow">Maison · Duet · Boutique</div>
+                                  <h2 class="font-serif-luxe text-[32px] leading-none font-semibold text-[color:var(--luxe-bordeaux)] tracking-tight">בוטיק הפינוקים</h2>
+                                  <p class="text-[11px] text-[color:var(--luxe-ink)] opacity-60 font-medium">אוסף פרטי של רגעים לזוגות שלנו</p>
+                                  <div class="luxe-divider mx-auto mt-3" style="max-width:180px"></div>
+                              </div>
+                              <div class="flex items-center justify-between">
+                                  <div class="luxe-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold">
+                                      <span style="color:var(--luxe-gold)">◆</span>
+                                      <span>${App.State.gardenXP}</span>
+                                      <span class="opacity-60" style="letter-spacing:0.1em">XP</span>
                                   </div>
-                                  <span class="text-xs font-black text-rose-700 bg-white/80 border border-rose-200 px-3 py-1.5 rounded-xl shadow-sm">${App.State.gardenXP} XP זמין</span>
+                                  <span class="luxe-eyebrow">Balance</span>
                               </div>
                               ${categoriesHTML}
                               ${bankHTML}
                               <div class="space-y-3 pt-1">
-                                  <h4 class="text-xs font-extrabold text-rose-700 uppercase tracking-widest"><i class="fa-solid fa-gift ml-1"></i> פינוקים קטנים מהחנות</h4>
-                                  <div class="flex flex-col gap-3">
+                                  <div class="flex items-center gap-3">
+                                      <span class="luxe-eyebrow">Petits Plaisirs</span>
+                                      <div class="luxe-divider flex-1"></div>
+                                  </div>
+                                  <h4 class="font-serif-luxe text-lg font-semibold text-[color:var(--luxe-bordeaux)] -mt-1">פינוקים קטנים</h4>
+                                  <div class="flex flex-col divide-y" style="border-top:1px solid rgba(201,162,76,0.25);border-bottom:1px solid rgba(201,162,76,0.25);">
                                       ${App.State.storeItems.map(item => {
                                           const finalCost = item.cost;
                                           const canAfford = App.State.gardenXP >= finalCost;
                                           return `
-                                          <div class="flex items-center justify-between bg-white/80 backdrop-blur-sm border border-rose-100 p-3 rounded-2xl shadow-sm">
-                                              <div class="flex items-center gap-3 pr-2">
-                                                  <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-sm shadow-inner shrink-0"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
-                                                  <span class="text-sm font-bold text-stone-700 leading-tight">${item.text}</span>
+                                          <div class="flex items-center justify-between py-3" style="border-color:rgba(201,162,76,0.2)">
+                                              <div class="flex items-center gap-3 pr-1">
+                                                  <div class="luxe-medallion shrink-0" style="width:34px;height:34px;font-size:13px;color:var(--luxe-bordeaux)"><i class="fa-solid ${item.icon || 'fa-gift'}"></i></div>
+                                                  <span class="font-serif-luxe text-[15px] font-semibold text-[color:var(--luxe-ink)] leading-tight">${item.text}</span>
                                               </div>
-                                              <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-xs font-bold shrink-0 ${canAfford ? 'bg-rose-500 text-white active:scale-95 shadow-sm' : 'bg-stone-100 text-stone-400'} px-4 py-2 rounded-xl transition">
-                                                  ${finalCost} XP
+                                              <button onclick="App.Actions.buyStoreItem(${item.id}, ${finalCost})" class="text-[11px] font-bold shrink-0 px-3.5 py-1.5 rounded-lg transition ${canAfford ? 'luxe-btn-dark' : 'luxe-btn-muted'}">
+                                                  ${canAfford ? '◆ ' : ''}${finalCost} <span class="opacity-70">XP</span>
                                               </button>
                                           </div>`;
                                       }).join('')}
@@ -1591,7 +1722,7 @@
                           { key: 'trips',    icon: '🗺️', label: 'טיולים',   grad: 'from-sky-100 via-blue-50 to-cyan-100',         chipGrad: 'from-sky-500 to-cyan-500',        html: pageTripsHTML },
                           { key: 'ideas',    icon: '💡', label: 'רעיונות',  grad: 'from-amber-50 via-yellow-100 to-orange-100',   chipGrad: 'from-amber-500 to-orange-500',    html: pageIdeasHTML },
                           { key: 'dreams',   icon: '✨', label: 'חלומות',   grad: 'from-purple-100 via-violet-50 to-fuchsia-100', chipGrad: 'from-purple-500 to-fuchsia-500',  html: pageDreamsHTML },
-                          { key: 'vouchers', icon: '🎟️', label: 'שוברים',   grad: 'from-rose-100 via-pink-50 to-rose-200',        chipGrad: 'from-rose-500 to-pink-500',       html: pageVouchersHTML },
+                          { key: 'vouchers', icon: '🎟️', label: 'שוברים',   grad: 'from-[#faf6ef] via-[#f2ead9] to-[#ede0c6]',    chipGrad: 'from-[#5c1a2b] to-[#7a1f38]',     html: pageVouchersHTML },
                       ];
                       const savedIdx = Math.min(4, Math.max(0, parseInt(localStorage.getItem('duet_garden_sub_page') || '0')));
 
