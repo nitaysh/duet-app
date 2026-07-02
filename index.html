@@ -230,6 +230,9 @@
                 type="text"
                 id="ob-user-name-splash"
                 placeholder="השם שלך"
+                required
+                aria-required="true"
+                oninput="App.Actions.validateSplashForm()"
                 class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none transition shadow-sm"
               />
             </div>
@@ -238,6 +241,9 @@
                 type="text"
                 id="ob-partner-name-splash"
                 placeholder="החצי השני"
+                required
+                aria-required="true"
+                oninput="App.Actions.validateSplashForm()"
                 class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none transition shadow-sm"
               />
             </div>
@@ -247,6 +253,9 @@
                 id="ob-user-email-splash"
                 placeholder="אימייל (לגיבוי)"
                 dir="ltr"
+                required
+                aria-required="true"
+                oninput="App.Actions.validateSplashForm()"
                 class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-sm font-bold text-stone-800 focus:border-orange-400 focus:outline-none transition shadow-sm placeholder:text-stone-300 text-left"
               />
             </div>
@@ -254,13 +263,16 @@
               <input
                 type="number"
                 id="ob-user-pin-splash"
-                placeholder=" קוד סודי (4 ספרות)"
+                placeholder="סיסמה (4 ספרות)"
                 dir="ltr"
+                required
+                aria-required="true"
                 class="w-full bg-white/80 border border-stone-200 rounded-xl py-3 px-4 text-base font-bold text-stone-800 focus:border-orange-400 focus:outline-none transition shadow-sm text-center tracking-[0.3em]"
                 maxlength="4"
-                oninput="if(this.value.length > 4) this.value = this.value.slice(0,4);"
+                oninput="if(this.value.length > 4) this.value = this.value.slice(0,4); App.Actions.validateSplashForm();"
               />
             </div>
+
             <div id="ob-children-list-splash" class="space-y-2"></div>
             <div>
               <button
@@ -273,13 +285,17 @@
             </div>
             <div class="pt-1">
               <button
+                id="splash-submit-btn"
                 onclick="App.Actions.completeSplashOnboarding()"
-                class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3.5 rounded-xl font-bold text-base active:scale-95 transition flex items-center justify-center gap-2"
+                disabled
+                class="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3.5 rounded-xl font-bold text-base active:scale-95 transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
                 style="box-shadow: 0 4px 20px rgba(249,115,22,0.4);"
               >
                 🌱 התחילו את המסע
               </button>
+              <p id="splash-submit-hint" class="text-[11px] text-stone-400 text-center mt-2 font-bold">יש למלא את כל השדות כדי להמשיך</p>
             </div>
+
             <div class="pt-3 border-t border-stone-200/60 text-center">
               <button
                 onclick="App.Actions.toggleSplashForm('join')"
@@ -480,7 +496,9 @@
           id="btn-nav-garden"
           class="flex-shrink-0 w-[20vw] min-w-[72px] h-14 snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-          <span class="h-6 flex items-center justify-center"><i class="fa-solid fa-seedling text-xl leading-none"></i></span>
+          <span class="h-6 flex items-center justify-center"
+            ><i class="fa-solid fa-seedling text-xl leading-none"></i
+          ></span>
           <span class="text-[11px] font-medium leading-none mt-1 whitespace-nowrap">הגינה</span>
         </button>
 
@@ -489,7 +507,9 @@
           id="btn-nav-journal"
           class="flex-shrink-0 w-[20vw] min-w-[72px] h-14 snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-          <span class="h-6 flex items-center justify-center"><i class="fa-solid fa-book-open text-xl leading-none"></i></span>
+          <span class="h-6 flex items-center justify-center"
+            ><i class="fa-solid fa-book-open text-xl leading-none"></i
+          ></span>
           <span class="text-[11px] font-medium leading-none mt-1 whitespace-nowrap">היומן</span>
         </button>
 
@@ -498,7 +518,9 @@
           id="btn-nav-board"
           class="flex-shrink-0 w-[20vw] min-w-[72px] h-14 snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-          <span class="h-6 flex items-center justify-center"><i class="fa-solid fa-note-sticky text-xl leading-none"></i></span>
+          <span class="h-6 flex items-center justify-center"
+            ><i class="fa-solid fa-note-sticky text-xl leading-none"></i
+          ></span>
           <span class="text-[11px] font-medium leading-none mt-1 whitespace-nowrap">פתקים</span>
         </button>
 
@@ -507,7 +529,9 @@
           id="btn-nav-intimacy"
           class="flex-shrink-0 w-[20vw] min-w-[72px] h-14 snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-          <span class="h-6 flex items-center justify-center"><i class="fa-solid fa-heart text-xl leading-none"></i></span>
+          <span class="h-6 flex items-center justify-center"
+            ><i class="fa-solid fa-heart text-xl leading-none"></i
+          ></span>
           <span class="text-[11px] font-medium leading-none mt-1 whitespace-nowrap">אינטימיות</span>
         </button>
 
@@ -525,11 +549,11 @@
           id="btn-nav-profile"
           class="flex-shrink-0 w-[20vw] min-w-[72px] h-14 snap-center flex flex-col items-center justify-center text-stone-400 transition-all duration-300 active:scale-90"
         >
-          <span class="h-6 flex items-center justify-center"><i class="fa-solid fa-user-astronaut text-xl leading-none"></i></span>
+          <span class="h-6 flex items-center justify-center"
+            ><i class="fa-solid fa-user-astronaut text-xl leading-none"></i
+          ></span>
           <span class="text-[11px] font-medium leading-none mt-1 whitespace-nowrap">פרופיל</span>
         </button>
-
-               
 
                
       </nav>
@@ -1123,9 +1147,9 @@
                                           case 'garden': container.innerHTML = App.Components.Garden(); break; 
                                           case 'journal': container.innerHTML = App.Components.Journal(); break; 
                                           case 'board': container.innerHTML = App.Components.Board(); break; 
-                                          case 'intimacy': container.innerHTML = App.Components.Intimacy(); break; 
-                                          case 'whiteflag': container.innerHTML = App.Components.WhiteFlag(); break; 
-                                          case 'profile': container.innerHTML = App.Components.Profile(); break; 
+                                          case 'intimacy': container.innerHTML = App.Components.Intimacy(); break;
+                                          case 'whiteflag': container.innerHTML = App.Components.WhiteFlag(); break;
+                                          case 'profile': container.innerHTML = App.Components.Profile(); break;
 
                                       }
                                       viewport.appendChild(container);
@@ -1221,8 +1245,8 @@
                       if (App.State.questsDate !== todayStr) {
                           const shuffled = [...App.Data.dailyQuestsBank].sort(() => 0.5 - Math.random());
                           App.State.save('quests', [
-                              { text: shuffled[0], completed: false }, 
-                              { text: shuffled[1], completed: false }, 
+                              { text: shuffled[0], completed: false },
+                              { text: shuffled[1], completed: false },
                               { text: shuffled[2], completed: false }
                           ]);
                           App.State.save('questsDate', todayStr);
@@ -1232,11 +1256,11 @@
                       const startOfWeek = new Date();
                       startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
                       const weekStr = startOfWeek.toDateString();
-                      
+
                       if (App.State.weeklyQuestsDate !== weekStr) {
                           const shuffledW = [...App.Data.weeklyQuestsBank].sort(() => 0.5 - Math.random());
                           App.State.save('weeklyQuests', [
-                              { text: shuffledW[0], completed: false }, 
+                              { text: shuffledW[0], completed: false },
                               { text: shuffledW[1], completed: false }
                           ]);
                           App.State.save('weeklyQuestsDate', weekStr);
@@ -4035,18 +4059,56 @@
                                       this._renderImago();
                                       setTimeout(() => { im.hugActive = false; this._renderImago(); }, 3200);
                                   },
-                                  imagoFinish() {
+                                  async generateImagoSummary(messages) {
+                                      const sessionText = messages.map(m => {
+                                          if (m.isTimeout) return `${m.customName} ביקש/ה פסק זמן: ${m.text}`;
+                                          const template = App.Data._wfTemplates[m.templateId];
+                                          return `${m.author === 'me' ? App.State.userName : App.State.partnerName}: ${template ? template.render(m.parts) : m.text}`;
+                                      }).join('\n');
+
+                                      try {
+                                          // כאן תזין את כתובת השרת האמיתית שלך שמתקשרת עם OpenAI
+                                          const response = await fetch('https://your-api-endpoint.com/generate-summary', {
+                                              method: 'POST',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ dialog: sessionText })
+                                          });
+                                          const data = await response.json();
+                                          return data.summary;
+                                      } catch (error) {
+                                          console.error("AI Summary generation failed", error);
+                                          return "הדיאלוג שלכם הסתיים בהצלחה. זכרו שהמטרה היא לא להסכים על הכל, אלא להבין אחד את השנייה טוב יותר. קחו רגע לחיבוק משותף 🤍";
+                                      }
+                                  },
+
+                                  async imagoFinish() {
+                                      const host = document.getElementById('white-flag-overlay');
+                                      if (host) {
+                                          host.innerHTML = `
+                                              <div class="fixed inset-0 z-[60] bg-stone-100/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-page-entry">
+                                                  <div class="text-6xl mb-6 animate-pulse">✨</div>
+                                                  <h3 class="text-xl font-bold text-stone-800 mb-2">אוספים את המילים שלכם...</h3>
+                                                  <p class="text-sm text-stone-500">מנסחים עבורכם סיכום אוהב של הסשן</p>
+                                              </div>
+                                          `;
+                                      }
+
+                                      let aiSummary = "השלמנו דיאלוג מונחה, הקשבנו באמת ונתנו מקום לרגשות.";
+                                      if (this._wf.messages && this._wf.messages.length > 0) {
+                                          aiSummary = await this.generateImagoSummary(this._wf.messages);
+                                      }
+
                                       const today = new Date().toLocaleDateString('he-IL');
                                       App.State.intimacyHistory = App.State.intimacyHistory || [];
                                       App.State.intimacyHistory.unshift({
                                           date: today,
-                                          question: '🤍 דיאלוג אימגו',
-                                          userAnswer: `השלמנו סבב דיאלוג מונחה (${this._wf.imago.round === 1 ? 'סבב אחד' : this._wf.imago.round + ' סבבים'})`,
-                                          partnerAnswer: 'שיחה פנים אל פנים · שיתוף, שיקוף, תיקוף, אמפתיה',
-                                          isFavorite: false
+                                          question: '🤍 דיאלוג אימגו - סיכום חכם',
+                                          userAnswer: `השלמנו סבב פתרון קונפליקט (${this._wf.imago.round} סבבים).`,
+                                          partnerAnswer: aiSummary,
+                                          isFavorite: true
                                       });
                                       App.State.save('intimacyHistory', App.State.intimacyHistory);
-                                      App.UI.showToast('הדיאלוג נשמר בקפסולה 🤍', 'success');
+                                      App.UI.showToast('תובנות ה-AI נשמרו בקפסולה 🤍', 'success');
                                       this.exitConflictResolution();
                                   },
 
@@ -4558,17 +4620,41 @@
                                       App.UI.showToast("הפרופיל הוגדר! ברוכים הבאים 🌻", "success"); App.Navigation.navigate('garden');
                                   },
 
+                                  validateSplashForm() {
+                                      const uEl = document.getElementById('ob-user-name-splash');
+                                      const pEl = document.getElementById('ob-partner-name-splash');
+                                      const eEl = document.getElementById('ob-user-email-splash');
+                                      const kEl = document.getElementById('ob-user-pin-splash');
+                                      const btn = document.getElementById('splash-submit-btn');
+                                      const hint = document.getElementById('splash-submit-hint');
+                                      if (!btn || !uEl || !pEl || !eEl || !kEl) return false;
+                                      const uName = uEl.value.trim();
+                                      const pName = pEl.value.trim();
+                                      const email = eEl.value.trim();
+                                      const pin = kEl.value.trim();
+                                      const emailOk = /^\S+@\S+\.\S+$/.test(email);
+                                      const pinOk = /^\d{4}$/.test(pin);
+                                      const valid = !!uName && !!pName && emailOk && pinOk;
+                                      btn.disabled = !valid;
+                                      if (hint) hint.style.display = valid ? 'none' : '';
+                                      return valid;
+                                  },
+
                                   completeSplashOnboarding() {
+                                      if (!this.validateSplashForm()) {
+                                          App.UI.showToast("יש למלא את כל השדות כדי להמשיך", "error");
+                                          return;
+                                      }
                                       const uName = document.getElementById('ob-user-name-splash').value.trim();
                                       const pName = document.getElementById('ob-partner-name-splash').value.trim();
-                                      const email = document.getElementById('ob-user-email-splash') ? document.getElementById('ob-user-email-splash').value.trim() : '';
-                                      const pin = document.getElementById('ob-user-pin-splash') ? document.getElementById('ob-user-pin-splash').value.trim() : '';
+                                      const email = document.getElementById('ob-user-email-splash').value.trim();
+                                      const pin = document.getElementById('ob-user-pin-splash').value.trim();
                                       const kids = this._collectChildren('ob-children-list-splash');
 
-                                      if(uName) App.State.save('userName', uName);
-                                      if(pName) App.State.save('partnerName', pName);
-                                      if(email) App.State.save('userEmail', email);
-                                      if(pin) App.State.save('userPin', pin);
+                                      App.State.save('userName', uName);
+                                      App.State.save('partnerName', pName);
+                                      App.State.save('userEmail', email);
+                                      App.State.save('userPin', pin);
                                       App.State.children = kids;
                                       localStorage.setItem('duet_children', JSON.stringify(kids));
                                       if (kids.length > 0) {
@@ -4581,6 +4667,7 @@
                                       const appContainer = document.getElementById('app-container'); appContainer.classList.remove('hidden'); appContainer.classList.add('flex');
                                       App.UI.showToast("ברוכים הבאים למרחב שלכם 🌻", "success"); App.Navigation.navigate('profile');
                                   },
+
 
                                   handlePinClick(digit) {
                                       if (!App.State.tempPin) App.State.tempPin = '';
@@ -4719,10 +4806,10 @@
                                       const stateKey = isWeekly ? 'weeklyQuests' : 'quests';
                                       const bank = isWeekly ? App.Data.weeklyQuestsBank : App.Data.dailyQuestsBank;
                                       const xpVal = isWeekly ? 25 : 10;
-                                      
+
                                       let q = [...App.State[stateKey]];
                                       if (q[idx].completed) { App.State.subtractXP(xpVal); }
-                                      
+
                                       const available = bank.filter(bankQ => !q.some(existingQ => existingQ.text === bankQ));
                                       if (available.length > 0) {
                                           const newQ = available[Math.floor(Math.random() * available.length)];
