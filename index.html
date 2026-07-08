@@ -215,6 +215,123 @@
                   border: 1px solid rgba(201,162,76,0.5); padding: 2px 6px; border-radius: 3px;
                   transform: rotate(-8deg); display: inline-block;
               }
+
+              /* ===== Luxe motion — quiet, boutique-grade transitions ===== */
+              @keyframes luxe-fade-up {
+                  0% { opacity: 0; transform: translateY(12px); }
+                  100% { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes luxe-scale-in {
+                  0% { opacity: 0; transform: scale(0.96); }
+                  100% { opacity: 1; transform: scale(1); }
+              }
+              @keyframes luxe-fade-soft {
+                  0% { opacity: 0; }
+                  100% { opacity: 1; }
+              }
+              @keyframes luxe-float {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); }
+              }
+              @keyframes luxe-stamp-in {
+                  0% { opacity: 0; transform: rotate(6deg) scale(0.7); }
+                  100% { opacity: 1; transform: rotate(-8deg) scale(1); }
+              }
+              @keyframes luxe-shimmer {
+                  0% { transform: translateX(-120%); }
+                  100% { transform: translateX(220%); }
+              }
+
+              .luxe-enter { animation: luxe-fade-up 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+              .luxe-enter-soft { animation: luxe-fade-soft 600ms ease-out both; }
+
+              .luxe-stagger > * {
+                  animation: luxe-fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+              }
+              .luxe-stagger > *:nth-child(1) { animation-delay: 40ms; }
+              .luxe-stagger > *:nth-child(2) { animation-delay: 90ms; }
+              .luxe-stagger > *:nth-child(3) { animation-delay: 140ms; }
+              .luxe-stagger > *:nth-child(4) { animation-delay: 190ms; }
+              .luxe-stagger > *:nth-child(5) { animation-delay: 240ms; }
+              .luxe-stagger > *:nth-child(6) { animation-delay: 290ms; }
+              .luxe-stagger > *:nth-child(7) { animation-delay: 340ms; }
+              .luxe-stagger > *:nth-child(8) { animation-delay: 390ms; }
+              .luxe-stagger > *:nth-child(n+9) { animation-delay: 440ms; }
+
+              .luxe-stagger-scale > * {
+                  animation: luxe-scale-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+              }
+              .luxe-stagger-scale > *:nth-child(1) { animation-delay: 50ms; }
+              .luxe-stagger-scale > *:nth-child(2) { animation-delay: 110ms; }
+              .luxe-stagger-scale > *:nth-child(3) { animation-delay: 170ms; }
+              .luxe-stagger-scale > *:nth-child(4) { animation-delay: 230ms; }
+              .luxe-stagger-scale > *:nth-child(n+5) { animation-delay: 290ms; }
+
+              /* Card hover / press — refined */
+              .luxe-card {
+                  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+                              box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+                              border-color 320ms ease;
+                  will-change: transform;
+              }
+              @media (hover: hover) {
+                  .luxe-card:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 20px 40px -20px rgba(92,26,43,0.45), inset 0 1px 0 rgba(255,255,255,0.7);
+                      border-color: rgba(201,162,76,0.6);
+                  }
+                  .luxe-card:hover .luxe-corner { opacity: 1; }
+              }
+              .luxe-card:active { transform: scale(0.985); transition-duration: 140ms; }
+              .luxe-corner { transition: opacity 320ms ease; }
+
+              /* Ticket hover + medallion float */
+              .luxe-ticket {
+                  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+                              box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1);
+              }
+              @media (hover: hover) {
+                  .luxe-ticket:hover {
+                      transform: translateY(-2px);
+                      box-shadow: 0 20px 44px -22px rgba(92,26,43,0.5);
+                  }
+              }
+              .luxe-medallion { animation: luxe-float 3.4s ease-in-out infinite; }
+
+              /* Buttons */
+              .luxe-btn-dark {
+                  transition: transform 200ms ease, box-shadow 260ms ease, filter 260ms ease;
+              }
+              @media (hover: hover) {
+                  .luxe-btn-dark:hover {
+                      filter: brightness(1.08);
+                      box-shadow: 0 10px 22px -10px rgba(92,26,43,0.7), inset 0 1px 0 rgba(255,255,255,0.14);
+                  }
+                  .luxe-btn-dark:hover i { transform: scale(1.08); }
+              }
+              .luxe-btn-dark i { transition: transform 220ms ease; display: inline-block; }
+
+              /* Category pills */
+              .luxe-pill, .luxe-pill-active {
+                  transition: background 260ms ease, color 260ms ease,
+                              border-color 260ms ease, box-shadow 260ms ease,
+                              transform 200ms ease;
+              }
+              .luxe-pill:active, .luxe-pill-active:active { transform: scale(0.96); }
+
+              /* Redeemed stamp entrance */
+              .luxe-stamp { animation: luxe-stamp-in 620ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+              /* Respect reduced motion */
+              @media (prefers-reduced-motion: reduce) {
+                  .luxe-enter, .luxe-enter-soft,
+                  .luxe-stagger > *, .luxe-stagger-scale > *,
+                  .luxe-medallion, .luxe-stamp {
+                      animation: none !important;
+                  }
+                  .luxe-card, .luxe-ticket, .luxe-btn-dark,
+                  .luxe-pill, .luxe-pill-active { transition: none !important; }
+              }
     </style>
 
     <!-- PWA -->
@@ -1345,6 +1462,7 @@
 
                                 Garden() {
                       if (App.State.gardenView === 'trips') return this.TripPlanner();
+                      const isGardenQuietRefresh = App.State._gardenQuietRefresh === true;
 
                       const todayStr = new Date().toDateString();
                       // משימות יומיות - 3 ביום
@@ -1410,7 +1528,7 @@
                       let decorationsHTML = '';
                       Object.entries(itemsConfig).forEach(([lvl, data]) => {
                           if (currentLevel >= parseInt(lvl)) {
-                              decorationsHTML += `<span class="absolute drop-shadow-md animate-page-entry transition-all hover:scale-125 z-10 select-none" style="${data.style}">${data.emoji}</span>`;
+                              decorationsHTML += `<span class="absolute drop-shadow-md ${isGardenQuietRefresh ? '' : 'animate-page-entry'} transition-all hover:scale-125 z-10 select-none" style="${data.style}">${data.emoji}</span>`;
                           }
                       });
 
@@ -1526,7 +1644,7 @@
                       if (bankItems.length === 0) {
                           bankHTML = `<div class="text-[12px] font-serif-luxe text-[color:var(--luxe-bordeaux)] opacity-60 py-6 w-full text-center rounded-2xl" style="border:1px dashed rgba(201,162,76,0.5);background:rgba(250,246,239,0.5)">אין פריטים זמינים בקטגוריה זו ✧</div>`;
                       } else {
-                          bankHTML = `<div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 px-0.5">${bankItems.join('')}</div>`;
+                          bankHTML = `<div class="flex gap-3 overflow-x-auto no-scrollbar pb-3 px-0.5 ${isGardenQuietRefresh ? '' : 'luxe-stagger'}">${bankItems.join('')}</div>`;
                       }
 
                       // יצירת קוד היכל התהילה המקורי למניעת קריסה
@@ -1633,7 +1751,7 @@
                                   <div class="luxe-divider flex-1"></div>
                               </div>
                               <h4 class="font-serif-luxe text-lg font-semibold text-[color:var(--luxe-bordeaux)] -mt-1">שוברים פעילים</h4>
-                              <div class="flex flex-col gap-3">
+                              <div class="flex flex-col gap-3 ${isGardenQuietRefresh ? '' : 'luxe-stagger-scale'}">
                                   ${pendingVouchers.map(r => `
                                       <div id="reward-ticket-${r.id}" class="luxe-ticket flex items-stretch transition-all duration-500">
                                           <div class="flex-1 p-4 flex items-center gap-3 pr-4">
@@ -1660,7 +1778,7 @@
                                   <div class="luxe-divider flex-1" style="opacity:0.3"></div>
                               </div>
                               <h4 class="font-serif-luxe text-base font-semibold text-[color:var(--luxe-bordeaux)] opacity-70 -mt-1">היסטוריית מימושים</h4>
-                              <div class="grid grid-cols-2 gap-2.5">
+                              <div class="grid grid-cols-2 gap-2.5 ${isGardenQuietRefresh ? '' : 'luxe-stagger'}">
                                   ${usedVouchers.map(r => `
                                       <div class="relative rounded-2xl p-3 border" style="background:linear-gradient(135deg,#f5ecda,#eadfc4);border-color:rgba(201,162,76,0.25);opacity:0.75;">
                                           <span class="luxe-stamp absolute top-1.5 left-1.5">REDEEMED</span>
@@ -1672,7 +1790,7 @@
                           </div>`;
 
                       const pageVouchersHTML = `
-                          <div class="luxe-page space-y-6 px-4 pt-5 pb-10 rounded-3xl">
+                          <div class="luxe-page ${isGardenQuietRefresh ? '' : 'luxe-enter'} space-y-6 px-4 pt-5 pb-10 rounded-3xl">
                               <div class="text-center space-y-1.5">
                                   <div class="luxe-eyebrow">Maison · Duet · Boutique</div>
                                   <h2 class="font-serif-luxe text-[32px] leading-none font-semibold text-[color:var(--luxe-bordeaux)] tracking-tight">בוטיק הפינוקים</h2>
@@ -1750,7 +1868,7 @@
                               <div id="garden-chips" class="sticky top-0 z-30 flex gap-2 overflow-x-auto snap-x snap-mandatory px-4 py-3 bg-gradient-to-b from-white/95 via-white/80 to-transparent backdrop-blur-md">
                                   ${chipsHTML}
                               </div>
-                              <div id="garden-carousel" class="flex overflow-x-auto snap-x snap-mandatory gap-0" style="scroll-behavior:smooth;">
+                              <div id="garden-carousel" class="flex overflow-x-auto snap-x snap-mandatory gap-0">
                                   ${pagesHTML}
                               </div>
                               <button id="garden-back-btn" onclick="App.Actions.gardenGoSubPage(0)" style="display:${savedIdx === 0 ? 'none' : 'flex'};"
@@ -4911,7 +5029,7 @@
 
                                   executeClearData() { localStorage.clear(); location.reload(); },
 
-                                  waterPlant() { const today = new Date().toDateString(); if (App.State.lastWateredDate === today) return App.UI.showToast("הגינה כבר הושקתה היום!", "info"); App.State.save('lastWateredDate', today); App.State.addXP(15); App.UI.showToast("השקיתם בהצלחה 🌱 +15 XP", "success"); App.Navigation.navigate('garden'); },
+                                  waterPlant() { const today = new Date().toDateString(); if (App.State.lastWateredDate === today) return App.UI.showToast("הגינה כבר הושקתה היום!", "info"); App.State.save('lastWateredDate', today); App.State.addXP(15); App.UI.showToast("השקיתם בהצלחה 🌱 +15 XP", "success"); App.UI.refreshGarden(); },
 
                                   toggleQuest(idx, type = 'daily') {
                                       const isWeekly = type === 'weekly';
@@ -4929,7 +5047,7 @@
                                           App.State.addXP(xpVal);
                                           App.UI.showToast(`משימה ${isWeekly ? 'שבועית' : 'יומית'} הושלמה! +${xpVal} XP 🌟`, "success");
                                       }
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   replaceQuest(idx, type = 'daily') {
@@ -4950,18 +5068,18 @@
                                       } else {
                                           App.UI.showToast("אין עוד משימות שונות בבנק!", "info");
                                       }
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
-                                  addFromBank(idx) { const wish = App.Data.wishesBank[idx]; let list = [...App.State.bucketList]; if (!list.some(item => item.text === wish.text)) { list.push({ id: Date.now(), text: wish.text, category: wish.category, completed: false }); App.State.save('bucketList', list); App.UI.showToast("הרעיון נוסף בהצלחה לרשימת החלומות שלכם! ✨", "success"); App.Navigation.navigate('garden'); } },
-                                  toggleBucketItem(id) { let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if (list[idx].completed) { list[idx].completed = false; App.State.subtractXP(50); App.UI.showToast("החלום חזר לרשימה (-50 XP)", "info"); } else { list[idx].completed = true; App.State.addXP(50); App.UI.showToast("מזל טוב! החלום הוגשם 🎉 +50 XP", "success"); } App.State.save('bucketList', list); App.Navigation.navigate('garden'); } },
-                                  deleteBucketItem(id) { if(!confirm("למחוק את החלום מהרשימה?")) return; let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if(list[idx].completed) App.State.subtractXP(50); list.splice(idx, 1); App.State.save('bucketList', list); App.UI.showToast("החלום נמחק", "info"); App.Navigation.navigate('garden'); } },
-                                  promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.Navigation.navigate('garden'); } },
+                                  addFromBank(idx) { const wish = App.Data.wishesBank[idx]; let list = [...App.State.bucketList]; if (!list.some(item => item.text === wish.text)) { list.push({ id: Date.now(), text: wish.text, category: wish.category, completed: false }); App.State.save('bucketList', list); App.UI.showToast("הרעיון נוסף בהצלחה לרשימת החלומות שלכם! ✨", "success"); App.UI.refreshGarden(); } },
+                                  toggleBucketItem(id) { let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if (list[idx].completed) { list[idx].completed = false; App.State.subtractXP(50); App.UI.showToast("החלום חזר לרשימה (-50 XP)", "info"); } else { list[idx].completed = true; App.State.addXP(50); App.UI.showToast("מזל טוב! החלום הוגשם 🎉 +50 XP", "success"); } App.State.save('bucketList', list); App.UI.refreshGarden(); } },
+                                  deleteBucketItem(id) { if(!confirm("למחוק את החלום מהרשימה?")) return; let list = [...App.State.bucketList]; const idx = list.findIndex(item => item.id === id); if(idx > -1) { if(list[idx].completed) App.State.subtractXP(50); list.splice(idx, 1); App.State.save('bucketList', list); App.UI.showToast("החלום נמחק", "info"); App.UI.refreshGarden(); } },
+                                  promptAddBucketItem() { const text = prompt("מה החלום המשותף שתרצו להוסיף?"); if(text && text.trim()) { let list = [...App.State.bucketList]; list.push({ id: Date.now(), text: text.trim(), category: "חזון", completed: false }); App.State.save('bucketList', list); App.UI.showToast("החלום נוסף לרשימה!", "success"); App.UI.refreshGarden(); } },
 
                                   openTripPlanner() {
                                       App.State.save('gardenView', 'trips');
                                       App.State.save('activeTripId', null);
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   closeTripPlanner() {
@@ -4970,7 +5088,7 @@
                                       App.State._tripMapInstances = {};
                                       App.State.save('gardenView', 'main');
                                       App.State.save('activeTripId', null);
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   _saveTrips() {
@@ -5104,7 +5222,7 @@
                                       App.UI.closeModal();
                                       App.State.addXP(20);
                                       App.UI.showToast("טיול חדש נוצר! ✈️ +20 XP", "success");
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   executeEditTrip(tripId) {
@@ -5117,7 +5235,7 @@
                                       this._saveTrips();
                                       App.UI.closeModal();
                                       App.UI.showToast("הטיול עודכן בהצלחה ✨", "success");
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   toggleTrip(id) {
@@ -5126,7 +5244,7 @@
                                       Object.values(App.State._tripMapInstances || {}).forEach(m => { try { m.remove(); } catch(e){} });
                                       App.State._tripMapInstances = {};
                                       App.State.save('activeTripId', newId);
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   addChecklistItem(tripId) {
@@ -5137,7 +5255,7 @@
                                           : t);
                                       App.State.save('trips', trips);
                                       this._saveTrips();
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   toggleChecklistItem(tripId, itemId) {
@@ -5146,7 +5264,7 @@
                                           : t);
                                       App.State.save('trips', trips);
                                       this._saveTrips();
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   deleteChecklistItem(tripId, itemId) {
@@ -5155,7 +5273,7 @@
                                           : t);
                                       App.State.save('trips', trips);
                                       this._saveTrips();
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   deleteTrip(id) {
@@ -5168,7 +5286,7 @@
                                       this._saveTrips();
                                       if (App.State.activeTripId === id) App.State.save('activeTripId', null);
                                       App.UI.showToast("הטיול נמחק", "info");
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   initTripMap(tripId) {
@@ -5209,7 +5327,7 @@
                                               App.State.save('trips', trips);
                                               App.Actions._saveTrips();
                                               App.UI.showToast(`הנעץ "${label}" נוסף למפה 📍`, "success");
-                                              App.Navigation.navigate('garden');
+                                              App.UI.refreshGarden();
                                           }
                                       });
                                       App.State._tripMapInstances[tripId] = map;
@@ -5227,7 +5345,7 @@
 
                                                   setVoucherCategory(cat) {
                                       App.State.voucherCategory = cat;
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   buyVoucher(id, name, emoji, xp) {
@@ -5257,7 +5375,7 @@
                                       App.UI.closeModal();
                                       App.UI.throwPetals();
                                       App.UI.showToast(`השובר "${name}" נוסף לרשימת המתנות! +50 XP 🎉`, "success");
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   buyStoreItem(id, cost) {
@@ -5270,14 +5388,63 @@
                                       purchased.push({ id: Date.now(), text: item.text, emoji: '🎁', used: false });
                                       App.State.save('purchasedRewards', purchased);
                                       App.UI.showToast("רכשתם פרס בהצלחה! 🎉", "success");
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
+                                  },
+
+                                  _gardenScrollToIndex(carousel, idx, behavior = 'auto') {
+                                      if (!carousel || !carousel.children[idx]) return;
+                                      const target = carousel.children[idx];
+                                      const delta = target.getBoundingClientRect().left - carousel.getBoundingClientRect().left;
+                                      const nextLeft = carousel.scrollLeft + delta;
+                                      if (behavior === 'auto') {
+                                          const prevBehavior = carousel.style.scrollBehavior;
+                                          carousel.style.scrollBehavior = 'auto';
+                                          carousel.scrollLeft = nextLeft;
+                                          requestAnimationFrame(() => { carousel.style.scrollBehavior = prevBehavior; });
+                                      } else {
+                                          carousel.scrollTo({ left: nextLeft, behavior });
+                                      }
+                                  },
+
+                                  _gardenGetActiveIndex(carousel) {
+                                      if (!carousel || !carousel.children.length) return parseInt(localStorage.getItem('duet_garden_sub_page') || '0');
+                                      const carouselRect = carousel.getBoundingClientRect();
+                                      const center = carouselRect.left + carouselRect.width / 2;
+                                      let bestIdx = 0;
+                                      let bestDistance = Infinity;
+                                      Array.from(carousel.children).forEach((child, idx) => {
+                                          const rect = child.getBoundingClientRect();
+                                          const childCenter = rect.left + rect.width / 2;
+                                          const distance = Math.abs(childCenter - center);
+                                          if (distance < bestDistance) {
+                                              bestDistance = distance;
+                                              bestIdx = idx;
+                                          }
+                                      });
+                                      return bestIdx;
+                                  },
+
+                                  _gardenCenterChip(chip, behavior = 'auto') {
+                                      if (!chip || !chip.parentElement) return;
+                                      const scroller = chip.parentElement;
+                                      const chipRect = chip.getBoundingClientRect();
+                                      const scrollerRect = scroller.getBoundingClientRect();
+                                      const delta = (chipRect.left + chipRect.width / 2) - (scrollerRect.left + scrollerRect.width / 2);
+                                      const nextLeft = scroller.scrollLeft + delta;
+                                      if (behavior === 'auto') {
+                                          const prevBehavior = scroller.style.scrollBehavior;
+                                          scroller.style.scrollBehavior = 'auto';
+                                          scroller.scrollLeft = nextLeft;
+                                          requestAnimationFrame(() => { scroller.style.scrollBehavior = prevBehavior; });
+                                      } else {
+                                          scroller.scrollTo({ left: nextLeft, behavior });
+                                      }
                                   },
 
                                   gardenGoSubPage(idx) {
                                       const c = document.getElementById('garden-carousel');
                                       if (!c) return;
-                                      const target = c.children[idx];
-                                      if (target) target.scrollIntoView({ behavior:'smooth', inline:'start', block:'nearest' });
+                                      App.Actions._gardenScrollToIndex(c, idx, 'smooth');
                                       try { navigator.vibrate && navigator.vibrate(8); } catch(e){}
                                       localStorage.setItem('duet_garden_sub_page', String(idx));
                                   },
@@ -5286,20 +5453,21 @@
                                       const c = document.getElementById('garden-carousel');
                                       if (!c) return;
                                       if (savedIdx > 0 && c.children[savedIdx]) {
-                                          c.children[savedIdx].scrollIntoView({ inline:'start', block:'nearest' });
+                                          App.Actions._gardenScrollToIndex(c, savedIdx, 'auto');
                                       }
                                       if (c._observerSetup) return;
                                       c._observerSetup = true;
                                       const obs = new IntersectionObserver((entries) => {
                                           entries.forEach(e => {
                                               if (e.isIntersecting && e.intersectionRatio >= 0.55) {
+                                                  if (App.State._gardenLockSubPageUntil && Date.now() < App.State._gardenLockSubPageUntil) return;
                                                   const idx = parseInt(e.target.dataset.idx);
                                                   document.querySelectorAll('[data-garden-chip]').forEach(chip => {
                                                       const cIdx = parseInt(chip.dataset.gardenChip);
                                                       const grad = chip.dataset.chipGrad;
                                                       if (cIdx === idx) {
                                                           chip.className = `garden-chip snap-start shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-xs font-extrabold border transition active:scale-95 bg-gradient-to-r ${grad} text-white shadow-lg border-transparent scale-105`;
-                                                          chip.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+                                                          App.Actions._gardenCenterChip(chip, 'smooth');
                                                       } else {
                                                           chip.className = 'garden-chip snap-start shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-xs font-extrabold border transition active:scale-95 bg-white/80 text-stone-600 border-stone-200 shadow-sm';
                                                       }
@@ -5320,7 +5488,7 @@
                                           purchased[idx].used = true;
                                           App.State.save('purchasedRewards', purchased);
                                           App.UI.showToast("הפרס נוצל, תהנו! ❤️", "success");
-                                          App.Navigation.navigate('garden');
+                                          App.UI.refreshGarden();
                                       }
                                   },
 
@@ -5334,7 +5502,7 @@
                                       items.push({ id: Date.now(), text: text.trim(), cost: cost });
                                       App.State.save('storeItems', items);
                                       App.UI.showToast("פרס חדש נוסף לחנות! 🎁", "success");
-                                      App.Navigation.navigate('garden');
+                                      App.UI.refreshGarden();
                                   },
 
                                   // פונקציות יומן משודרגות ומאובטחות!
@@ -6656,6 +6824,43 @@
                                   showToast(msg, type) { const t = document.createElement('div'); t.className = `p-4 rounded-2xl glass-panel shadow-lg border text-sm font-bold animate-page-entry z-50 ${type === 'success' ? 'border-emerald-200 text-emerald-800' : 'border-blue-200 text-blue-800'}`; t.innerText = msg; document.getElementById('toast-container').appendChild(t); setTimeout(() => t.remove(), 3500); },
                                   showModal(html) { const m = document.getElementById('custom-modal'); document.getElementById('modal-body').innerHTML = html; m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); },
                                   closeModal() { document.getElementById('custom-modal').classList.add('hidden'); },
+
+                                  refreshGarden() {
+                                      if (App.State.activeTab !== 'garden') return;
+                                      const viewport = document.getElementById('app-viewport');
+                                      if (!viewport) return;
+                                      const container = viewport.firstElementChild;
+                                      if (!container) { App.Navigation.navigate('garden'); return; }
+
+                                      // Preserve scroll positions before re-render
+                                      const scrollY = window.scrollY || window.pageYOffset || 0;
+                                      const carousel = document.getElementById('garden-carousel');
+                                      const chips = document.getElementById('garden-chips');
+                                      const activeSubPage = Math.min(4, Math.max(0, parseInt(localStorage.getItem('duet_garden_sub_page') || '0')));
+                                      const carouselLeft = carousel ? carousel.scrollLeft : null;
+                                      const chipsLeft = chips ? chips.scrollLeft : null;
+
+                                      // Re-render in place without the heavy page-entry animation
+                                      App.State._gardenQuietRefresh = true;
+                                      App.State._gardenLockSubPageUntil = Date.now() + 700;
+                                      container.classList.remove('animate-page-entry', 'animate-slide-left', 'animate-slide-right');
+                                      container.innerHTML = App.Components.Garden();
+                                      App.State._gardenQuietRefresh = false;
+
+                                      // Restore scroll positions on the next frame
+                                      const restoreGardenPosition = () => {
+                                          const newCarousel = document.getElementById('garden-carousel');
+                                          const newChips = document.getElementById('garden-chips');
+                                          if (newCarousel) App.Actions._gardenScrollToIndex(newCarousel, activeSubPage, 'auto');
+                                          if (newChips && chipsLeft !== null) newChips.scrollLeft = chipsLeft;
+                                          localStorage.setItem('duet_garden_sub_page', String(activeSubPage));
+                                          window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
+                                      };
+                                      requestAnimationFrame(() => {
+                                          restoreGardenPosition();
+                                          setTimeout(restoreGardenPosition, 80);
+                                      });
+                                  },
 
                                                   async renderMap() {
                                       const mapRoot = document.getElementById('map-root');
