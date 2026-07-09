@@ -3509,15 +3509,32 @@
                                       const host = document.getElementById(id);
                                       if (host) host.remove();
                                   },
-                                  // Grants XP once per game session. Repeat calls with the same state object are no-ops.
-                                  _awardGameXP(stateObj, amount, gameLabel) {
-                                      if (!stateObj || stateObj._rewarded) return false;
-                                      stateObj._rewarded = true;
-                                      try { App.State.addXP(amount); } catch (e) {}
-                                      const label = gameLabel ? `${gameLabel} · ` : '';
-                                      App.UI.showToast(`${label}+${amount} XP לגינה 🌱`, 'success');
-                                      return true;
-                                  },
+                                    // Grants XP once per game session, and at most once per 24h per game.
+                                    _awardGameXP(stateObj, amount, gameLabel) {
+                                        if (!stateObj) return false;
+                                        if (stateObj._rewarded) {
+                                            App.UI.showToast('הנקודות כבר נוספו - יש להמתין לצבירה מחודשת במשחק זה', 'info');
+                                            return false;
+                                        }
+                                        const cooldownKey = `xpCooldown:${gameLabel || '__default__'}`;
+                                        const now = Date.now();
+                                        const DAY = 24 * 60 * 60 * 1000;
+                                        let last = 0;
+                                        try { last = parseInt(localStorage.getItem(cooldownKey) || '0', 10) || 0; } catch (e) {}
+                                        if (last && now - last < DAY) {
+                                            const hoursLeft = Math.max(1, Math.ceil((DAY - (now - last)) / (60 * 60 * 1000)));
+                                            const labelTxt = gameLabel ? `${gameLabel} ` : '';
+                                            App.UI.showToast(`${labelTxt}כבר זכה היום — נסה שוב בעוד ${hoursLeft} שעות`, 'info');
+                                            stateObj._rewarded = true;
+                                            return false;
+                                        }
+                                        stateObj._rewarded = true;
+                                        try { App.State.addXP(amount); } catch (e) {}
+                                        try { localStorage.setItem(cooldownKey, String(now)); } catch (e) {}
+                                        const label = gameLabel ? `${gameLabel} · ` : '';
+                                        App.UI.showToast(`${label}+${amount} XP לגינה 🌱`, 'success');
+                                        return true;
+                                    },
 
                                   // ===== 🎯 טיק-טק-טו זוגי =====
                                   _ttt: { board: Array(9).fill(null), turn: 0, winner: null, line: null, scores: [0, 0], _rewarded: false },
